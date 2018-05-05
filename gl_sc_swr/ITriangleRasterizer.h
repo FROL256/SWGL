@@ -16,8 +16,9 @@ enum RENDER_MODE {
 };
 
 struct SWGL_Context;
-struct Batch;
 struct SWGL_DrawList;
+
+struct Batch;
 struct FrameBuffer;
 
 struct ITriangleRasterizer
@@ -25,8 +26,8 @@ struct ITriangleRasterizer
   ITriangleRasterizer(){}
   virtual ~ITriangleRasterizer(){}
 
-  virtual std::vector<bool> SupportedModesFlags() const                                        = 0; ///< Return flags what Raster Modes we are actually support .. i.e. Tex2D, Tex2D and e.t.c.
-  virtual void  DrawBatch(RENDER_MODE a_mode, const Batch* a_pBatch, SWGL_Context* a_pContext) = 0; ///< Only Full pipeline shall implement this function
+  virtual std::vector<bool> SupportedModesFlags() const                   = 0; ///< Return flags what Raster Modes we are actually support .. i.e. Tex2D, Tex2D and e.t.c.
+  virtual void DrawBatch(const Batch* a_pBatch, SWGL_Context* a_pContext) = 0; ///< Only Full pipeline shall implement this function
 
 };
 
