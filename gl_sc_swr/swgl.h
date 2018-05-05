@@ -497,11 +497,11 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
 {
   FrameBuffer frameBuff;
 
-  frameBuff.data = a_pContext->m_pixels2;
+  frameBuff.data    = a_pContext->m_pixels2;
   frameBuff.zbuffer = a_pContext->m_zbuffer;
   frameBuff.sbuffer = a_pContext->m_sbuffer;
-  frameBuff.w = a_pContext->m_width;
-  frameBuff.h = a_pContext->m_height;
+  frameBuff.w       = a_pContext->m_width;
+  frameBuff.h       = a_pContext->m_height;
 
   frameBuff.vx = a_state.viewport[0];
   frameBuff.vy = a_state.viewport[1];

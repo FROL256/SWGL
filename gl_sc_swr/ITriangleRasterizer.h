@@ -22,7 +22,7 @@ struct ITriangleRasterizer
   ITriangleRasterizer(){}
   virtual ~ITriangleRasterizer(){}
 
-  virtual uint64_t SupportedModesFlags()   const = 0; ///< Return flags what Raster Modes we are actually support .. i.e. Tex2D, Tex2D and e.t.c.
+  virtual uint64_t SupportedModesFlags()   const = 0;                      ///< Return flags what Raster Modes we are actually support .. i.e. Tex2D, Tex2D and e.t.c.
   virtual void     DrawBatch(SWGL_Context* a_pContext, Batch* pBatch) = 0; ///< Only Full pipeline shall implement this function
 
 };

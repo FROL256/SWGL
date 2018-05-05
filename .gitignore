@@ -18,3 +18,7 @@ main_app/zgl_log.txt
 main_app/.vs/main_app_2013/v14/.suo
 main_app/.vs/main_app/v14/.suo
 vsgl3/Release/
+main_app/x64/
+main_app/main_app_2013.VC.db
+main_app/main_app_2013.VC.VC.opendb
+gl_sc_swr/.vs/gl_sc_swr/v14/.suo

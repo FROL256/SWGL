@@ -42,9 +42,9 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
 void TriangleRasterizer_ScanLinePreciseNoSSE::DrawBatch(SWGL_Context* a_pContext, Batch* pBatch)
 {
-  FrameBuffer frameBuff = swglBatchFb(a_pContext, pBatch->state);
-
   swglRunBatchVertexShaderNoSSE(a_pContext, pBatch);
+
+  FrameBuffer frameBuff = swglBatchFb(a_pContext, pBatch->state);
   
   swglDrawBatchTriangles(a_pContext, pBatch, frameBuff);
   
