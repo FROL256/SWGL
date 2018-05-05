@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DrawSpan.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="TriRaster.cpp" />
+    <ClCompile Include="TriRasterHS.cpp" />
+    <ClCompile Include="TriRasterHS_TwoLevel.cpp" />
+    <ClCompile Include="TriRasterScanline.cpp" />
+    <ClCompile Include="gl_sc_minimal.cpp">
+      <Filter>gl_common</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_sc_standart.cpp">
+      <Filter>gl_common</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_standart.cpp">
+      <Filter>gl_common</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_win.cpp">
+      <Filter>gl_common</Filter>
+    </ClCompile>
+    <ClCompile Include="swgl.cpp">
+      <Filter>gl_common</Filter>
+    </ClCompile>
+    <ClCompile Include="TriangleRasterizer_ScanLinePreciseNoSSE.cpp">
+      <Filter>Rasterizers</Filter>
+    </ClCompile>
+    <ClCompile Include="RasterAlgorithms.cpp">
+      <Filter>Rasterizers</Filter>
+    </ClCompile>
+    <ClCompile Include="BatchExport.cpp" />
+    <ClCompile Include="pugixml.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="DrawSpan.h" />
+    <ClInclude Include="LiteMath.h" />
+    <ClInclude Include="TexSampler.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="TriRaster.h" />
+    <ClInclude Include="gl_sc.h">
+      <Filter>gl_common</Filter>
+    </ClInclude>
+    <ClInclude Include="gl_std.h">
+      <Filter>gl_common</Filter>
+    </ClInclude>
+    <ClInclude Include="swgl.h">
+      <Filter>gl_common</Filter>
+    </ClInclude>
+    <ClInclude Include="ITriangleRasterizer.h">
+      <Filter>Rasterizers</Filter>
+    </ClInclude>
+    <ClInclude Include="RasterAlgorithms.h">
+      <Filter>Rasterizers</Filter>
+    </ClInclude>
+    <ClInclude Include="pugiconfig.hpp" />
+    <ClInclude Include="pugixml.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="opengl32.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="gl_common">
+      <UniqueIdentifier>{bf778902-eaa8-4469-a3cc-d135f350ec6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rasterizers">
+      <UniqueIdentifier>{2c512f91-f868-41ef-a002-66337951d86f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
