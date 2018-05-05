@@ -310,7 +310,6 @@
     <ClCompile Include="RasterAlgorithms.cpp" />
     <ClCompile Include="swgl.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="TriangleRasterizer_ScanLinePreciseNoSSE.cpp" />
     <ClCompile Include="TriRaster.cpp" />
     <ClCompile Include="TriRasterHS.cpp" />
     <ClCompile Include="TriRasterHS_TwoLevel.cpp" />

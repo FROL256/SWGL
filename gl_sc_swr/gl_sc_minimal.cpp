@@ -538,7 +538,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
   swglAppendTriIndices2(g_pContext, currBatch, mode, lastVertSize, inIndices, count);
 
   currBatch->state = g_pContext->input.batchState; // ok
-  swglProcessBatch(g_pContext);                       // run vertex shader and triangle setup immediately
+  swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately
 
 }
 
@@ -707,12 +707,6 @@ GLAPI void APIENTRY glFlush(void)
   frameBuff.vw = frameBuff.w;
   frameBuff.vh = frameBuff.h;
 
-
-  #ifdef ENABLE_OPENCL
-
-  swglDrawAllBatchesCL(g_pContext, frameBuff);
-
-  #else
   if (ENABLE_MT)
   {
     auto* pDrawList = &g_pContext->m_drawList;
@@ -730,7 +724,6 @@ GLAPI void APIENTRY glFlush(void)
       swglInitDrawListAndTiles(pDrawList, MAX_NUM_TRIANGLES_TOTAL);
 
   }
-  #endif
 
 }
 

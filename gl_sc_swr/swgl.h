@@ -552,11 +552,11 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
   if (a_pContext->input.getCurrBatch()->vertPos.size() == 0) // if curr batch is empty, no need to change it.
     return;
 
-  if (a_pContext->m_pRasterImpl == nullptr)
-  {
-    //log_error
-    return;
-  }
+  //if (a_pContext->m_pRasterImpl == nullptr)
+  //{
+  //  //log_error
+  //  return;
+  //}
 
   // ITriangleRasterizer* pRasterImpl = a_pContext->m_pRasterImpl;
   // 
@@ -577,8 +577,8 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
     SWGL_DrawList* pDrawList = &a_pContext->m_drawList;
     FrameBuffer fb           = swglBatchFb(a_pContext, pBatch->state);
 
-    const int  triNum        = pBatch->indices.size() / 3;
-    const int  freeSpace     = swglGetDrawListFreeSpace(pDrawList);
+    const int  triNum        = int(pBatch->indices.size() / 3);
+    const int  freeSpace     = int(swglGetDrawListFreeSpace(pDrawList));
 
     if (triNum >= freeSpace)
       glFlush();

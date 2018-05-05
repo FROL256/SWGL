@@ -96,7 +96,7 @@ void SWGL_Context::InitCommon()
   if (ENABLE_MT)
     swglInitDrawListAndTiles(&m_drawList, MAX_NUM_TRIANGLES_TOTAL);
 
-  m_pRasterImpl = CreateRasterizer("ScanLinePreciseNoSSE");
+  m_pRasterImpl = nullptr; // CreateRasterizer("ScanLinePreciseNoSSE");
 
 }
 

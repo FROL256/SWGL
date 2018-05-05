@@ -1,7 +1,7 @@
 #pragma once
 
-//#define ENABLE_SSE
-//#define ENABLE_SSE_VS
+#define ENABLE_SSE
+#define ENABLE_SSE_VS
 
 #define ENABLE_MT true
 

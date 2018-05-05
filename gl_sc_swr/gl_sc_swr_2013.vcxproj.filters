@@ -22,9 +22,6 @@
     <ClCompile Include="swgl.cpp">
       <Filter>gl_common</Filter>
     </ClCompile>
-    <ClCompile Include="TriangleRasterizer_ScanLinePreciseNoSSE.cpp">
-      <Filter>Rasterizers</Filter>
-    </ClCompile>
     <ClCompile Include="RasterAlgorithms.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>

@@ -302,7 +302,12 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     localTri.curr_sval = pBatch->state.stencilValue;
     localTri.curr_smask = pBatch->state.stencilMask;
 
+    #ifdef ENABLE_SSE
+    swglTriangleSetUpSSE(a_pContext, pBatch, frameBuff, i1, i2, i3, &localTri, trianglesAreTextured);
+    #else
     swglTriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, &localTri, trianglesAreTextured);
+    #endif // ENABLE_SSE
+
     swglRasterizeTriangle(pFill, &frameBuff, localTri);
   }
 

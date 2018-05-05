@@ -1,16 +1,19 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
-static const uint64_t RM_FillColor         = 1;
-static const uint64_t RM_Colored2D         = 2;
-static const uint64_t RM_Colored3D         = 4;
-static const uint64_t RM_TexLinear2D       = 8;
-static const uint64_t RM_TexLinear3D       = 16;
-static const uint64_t RM_TexLinear2D_Blend = 32;
-static const uint64_t RM_TexLinear3D_Blend = 64;
-static const uint64_t RM_StencilFill2D     = 128;
-static const uint64_t RM_StencilFill3D     = 256;
+enum RENDER_MODE {
+  RM_FillColor         = 1,
+  RM_Colored2D         = 2,
+  RM_Colored3D         = 3,
+  RM_TexLinear2D       = 4,
+  RM_TexLinear3D       = 5,
+  RM_TexLinear2D_Blend = 6,
+  RM_TexLinear3D_Blend = 7,
+  RM_StencilFill2D     = 8,
+  RM_StencilFill3D     = 9,
+};
 
 struct SWGL_Context;
 struct Batch;
@@ -22,9 +25,9 @@ struct ITriangleRasterizer
   ITriangleRasterizer(){}
   virtual ~ITriangleRasterizer(){}
 
-  virtual uint64_t SupportedModesFlags()   const = 0;                      ///< Return flags what Raster Modes we are actually support .. i.e. Tex2D, Tex2D and e.t.c.
-  virtual void     DrawBatch(SWGL_Context* a_pContext, Batch* pBatch) = 0; ///< Only Full pipeline shall implement this function
+  virtual std::vector<bool> SupportedModesFlags() const                                        = 0; ///< Return flags what Raster Modes we are actually support .. i.e. Tex2D, Tex2D and e.t.c.
+  virtual void  DrawBatch(RENDER_MODE a_mode, const Batch* a_pBatch, SWGL_Context* a_pContext) = 0; ///< Only Full pipeline shall implement this function
 
 };
 
-ITriangleRasterizer* CreateRasterizer(char* a_name);
+//ITriangleRasterizer* CreateRasterizer(char* a_name);
