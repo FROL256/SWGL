@@ -111,9 +111,9 @@ struct TriangleDataNoSSE
   int bb_iminY;
   int bb_imaxY;
 
-  bool   edgeTest0;
-  bool   edgeTest1;
-  bool   edgeTest2;
+  bool edgeTest0;
+  bool edgeTest1;
+  bool edgeTest2;
 
   uint8_t curr_sval;
   uint8_t curr_smask;

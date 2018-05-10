@@ -49,7 +49,7 @@ GLAPI void APIENTRY glEnd(void)
   swglAppendTriIndices(g_pContext, input.getCurrBatch(), input.currPrimType, input.lastSizeVert);
 
   input.getCurrBatch()->state = g_pContext->input.batchState; // ok
-  swglProcessBatch(g_pContext);                                  // run vertex shader and triangle setup immediately
+  swglProcessBatch(g_pContext);                               // run vertex shader and triangle setup immediately
 
 }
 

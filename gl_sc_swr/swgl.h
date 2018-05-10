@@ -193,8 +193,8 @@ struct SWGL_Input
 
   float    currPointSize;         ///< current point size for drawing points
 
-  Pipeline_State_Object batchState;    ///< This state SHOULD NOT BE HERE! PSO MUST BE SEPARATE FROM ISO IN FUTURE !!!
-  uint32_t inputMatrixMode;       ///< current matrix mode set with glMatrixMode. GL_MODELVIEW or GL_PROJECTION
+  Pipeline_State_Object batchState; ///< This state SHOULD NOT BE HERE! PSO MUST BE SEPARATE FROM ISO IN FUTURE !!!
+  uint32_t inputMatrixMode;         ///< current matrix mode set with glMatrixMode. GL_MODELVIEW or GL_PROJECTION
 
   float4x4 mmwstack[MMWSTACKSIZE]; ///< world view matrix stack
   float4x4 mmpstack[MMPSTACKSIZE]; ///< projection matrix stack

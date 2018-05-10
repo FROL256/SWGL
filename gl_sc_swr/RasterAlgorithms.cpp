@@ -208,12 +208,11 @@ void swglTriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, cons
     const SWGL_TextureStorage& tex = a_pContext->m_textures[pBatch->state.slot_GL_TEXTURE_2D];
 
     t1->texS.pitch = tex.pitch;   // tex.w; // !!! this is for textures with billet
-    t1->texS.w = tex.w;       // tex.w; // !!! this is for textures with billet
-    t1->texS.h = tex.h;
-    t1->texS.data = tex.texdata; // &tex.data[0]; // !!! this is for textures with billet
+    t1->texS.w     = tex.w;       // tex.w; // !!! this is for textures with billet
+    t1->texS.h     = tex.h;
+    t1->texS.data  = tex.texdata; // &tex.data[0]; // !!! this is for textures with billet
 
-
-                                 ///////////////////////////////////////////////////////////////////////////////////////////////////// FUCKING FUCK! FUCK LEGACY STATES! FUCK OPENGL!
+    ///////////////////////////////////////////////////////////////////////////////////////////////////// FUCKING FUCK! FUCK LEGACY STATES! FUCK OPENGL!
     if (tex.modulateMode == GL_REPLACE) // don't apply vertex color, just take color from texture
     {
       if (tex.format == GL_RGBA)
@@ -229,8 +228,9 @@ void swglTriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, cons
         t1->c3.w = 1.0f;
       }
     }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////// FUCKING FUCK! FUCK LEGACY STATES! FUCK OPENGL!
+
   }
-  ///////////////////////////////////////////////////////////////////////////////////////////////////// FUCKING FUCK! FUCK LEGACY STATES! FUCK OPENGL!
 
 #ifdef PERSP_CORRECT
 

@@ -18,6 +18,7 @@ void swglTriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, cons
 
 static inline void swglRasterizeTriangle(const FillFuncPtr pFill, FrameBuffer* frameBuff, const Triangle& localTri)
 {
+  int a = 2;
 #ifdef RASTER_HALF_SPACE_TWO_LEVEL
   rasterizeTriHalfSpaceTwoLevel(pFill, frameBuff, localTri);
 #else

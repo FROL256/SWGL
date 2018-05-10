@@ -17,21 +17,21 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   m_fheight = float(m_height);
 
   BITMAPINFO bmi;
-  bmi.bmiHeader.biSize = sizeof(BITMAPINFO);
-  bmi.bmiHeader.biWidth = width;
-  bmi.bmiHeader.biHeight = -height; // Order pixels from top to bottom
-  bmi.bmiHeader.biPlanes = 1;
-  bmi.bmiHeader.biBitCount = 32; // last byte not used, 32 bit for alignment
-  bmi.bmiHeader.biCompression = BI_RGB;
-  bmi.bmiHeader.biSizeImage = 0;
+  bmi.bmiHeader.biSize          = sizeof(BITMAPINFO);
+  bmi.bmiHeader.biWidth         = width;
+  bmi.bmiHeader.biHeight        = height; // Order pixels from bottom to top 
+  bmi.bmiHeader.biPlanes        = 1;
+  bmi.bmiHeader.biBitCount      = 32; // last byte not used, 32 bit for alignment
+  bmi.bmiHeader.biCompression   = BI_RGB;
+  bmi.bmiHeader.biSizeImage     = 0;
   bmi.bmiHeader.biXPelsPerMeter = 0;
   bmi.bmiHeader.biYPelsPerMeter = 0;
-  bmi.bmiHeader.biClrUsed = 0;
-  bmi.bmiHeader.biClrImportant = 0;
-  bmi.bmiColors[0].rgbBlue = 0;
-  bmi.bmiColors[0].rgbGreen = 0;
-  bmi.bmiColors[0].rgbRed = 0;
-  bmi.bmiColors[0].rgbReserved = 0;
+  bmi.bmiHeader.biClrUsed       = 0;
+  bmi.bmiHeader.biClrImportant  = 0;
+  bmi.bmiColors[0].rgbBlue      = 0;
+  bmi.bmiColors[0].rgbGreen     = 0;
+  bmi.bmiColors[0].rgbRed       = 0;
+  bmi.bmiColors[0].rgbReserved  = 0;
 
   // Create DIB section to always give direct access to pixels
   hbmp = CreateDIBSection(a_hdc, &bmi, DIB_RGB_COLORS, (void**)&m_pixels, NULL, 0);
@@ -39,7 +39,8 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   hdcMem = CreateCompatibleDC(a_hdc);
   hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);
 
-  m_pixels2 = (int*)    _aligned_malloc(width*height*sizeof(int),     16);
+  m_pixels2 = m_pixels;
+  //m_pixels2 = (int*)    _aligned_malloc(width*height*sizeof(int),     16);
   m_zbuffer = (float*)  _aligned_malloc(width*height*sizeof(float),   16);
   m_sbuffer = (uint8_t*)_aligned_malloc(width*height*sizeof(uint8_t), 16);
 
@@ -89,7 +90,7 @@ void SWGL_Context::Destroy()
   SelectObject(hdcMem, hbmOld);
   DeleteDC(hdcMem);
 
-  _aligned_free(m_pixels2);
+  //_aligned_free(m_pixels2);
   _aligned_free(m_zbuffer);
   _aligned_free(m_sbuffer);
 
@@ -105,43 +106,6 @@ void SWGL_Context::Destroy()
 
 void SWGL_Context::CopyToScreeen()
 {
-
-#ifdef ENABLE_SSE
-  const bool sseEnabled = true;
-#else
-  const bool sseEnabled = false;
-#endif
-
-  if (sseEnabled && (m_width % 4) == 0)
-  {
-    for (int y = 0; y < m_height; y++)
-    {
-      int offset1 = y*m_width;
-      int offset2 = (m_height - y - 1)*m_width;
-
-      const float* inData = (const float*)m_pixels2 + offset2;
-      float* outData      = (float*)      m_pixels  + offset1;
-
-      for (int x = 0; x < m_width; x += 4)
-      {
-        const __m128 pixelQuad = _mm_load_ps(inData + x);
-        _mm_store_ps(outData + x, pixelQuad);
-      }
-    }
-  }
-  else
-  {
-    for (int y = 0; y < m_height; y++)
-    {
-      int offset1 = y*m_width;
-      int offset2 = (m_height - y - 1)*m_width;
-
-      for (int x = 0; x < m_width; x++)
-        m_pixels[offset1 + x] = m_pixels2[offset2 + x];
-    }
-
-  }
-
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
 }
 

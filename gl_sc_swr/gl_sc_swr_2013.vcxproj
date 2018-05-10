@@ -38,6 +38,7 @@
     <ProjectGuid>{CDD3B709-625E-42F6-B23C-9F7EDFDE0C0D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>gl_sc_swr</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
