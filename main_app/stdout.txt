@@ -1,8 +1,0 @@
-
-  Name: data/terrain.bmp
- Width: 1024
-Height: 1024
-
-  Name: data/heightmap.bmp
- Width: 256
-Height: 256

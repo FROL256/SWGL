@@ -91,13 +91,13 @@ int DrawGLScene(GLvoid)
   }
 
   //demo03_many_small_dynamic_triangles();
-  //demo04_pyramid_and_cube_3d(g_width, g_height, rtri, rquad); // rtri, rquad // 200.0f, -100.0f
+  demo04_pyramid_and_cube_3d(g_width, g_height, rtri, rquad); // rtri, rquad // 200.0f, -100.0f
   //test04_pyramid_and_cube_3d();
 
   //demo05_texture_3D(g_width, g_height, rtri, rquad);
   //demo07_triangle_fan(g_width, g_height, rtri, rquad);
   //demo14_transparent_cube(g_width, g_height, rtri, rquad);
-  demo24_draw_elements_terrain(g_width, g_height, rtri, rquad);
+  //demo24_draw_elements_terrain(g_width, g_height, rtri, rquad);
   //demo19_cubes(g_width, g_height, rtri, rquad);
 
   //demo25_teapot(g_width, g_height, rtri, rquad);

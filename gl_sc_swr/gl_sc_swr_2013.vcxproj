@@ -286,6 +286,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="SWGL_TiledFrameBuffer.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="DrawSpan.h" />
     <ClInclude Include="gl_sc.h" />
@@ -310,6 +311,7 @@
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="RasterAlgorithms.cpp" />
     <ClCompile Include="swgl.cpp" />
+    <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TriRaster.cpp" />
     <ClCompile Include="TriRasterHS.cpp" />

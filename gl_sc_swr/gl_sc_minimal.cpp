@@ -87,6 +87,10 @@ GLAPI void APIENTRY glBindTexture(GLenum target, GLuint texture)
 
 void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
 {
+#ifdef MEASURE_NOLOAD_PERF
+  return;
+#endif
+
   if (mask & GL_COLOR_BUFFER_BIT)
   {
     const int size = a_pContext->m_width*a_pContext->m_height;
@@ -238,14 +242,6 @@ GLAPI void APIENTRY glClear(GLbitfield mask)
 
   if (g_pContext->logMode <= LOG_ALL)
     *(g_pContext->m_pLog) << "glClear(" << mask << ")" << std::endl;
-
-
-#ifdef ENABLE_OPENCL
-
-  swglClearCL(g_pContext, g_pContext->input.clearColor1u, 1.0f - g_pContext->input.clearDepth, mask);
-  return;
-
-#endif
 
 
 #ifdef MEASURE_STATS

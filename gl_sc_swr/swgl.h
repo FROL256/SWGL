@@ -27,10 +27,6 @@
 
 #include "TriRaster.h"
 
-#ifndef NO_LOCAL_MATH
-  #include "local_math.h"
-#endif
-
 #define PI  ((float)3.1415926535)
 #define DEG_TO_RAD (PI/(float)180.0)
 #define RAD_TO_DEG ((float)180.0/PI)
@@ -347,6 +343,8 @@ struct SWGL_Timings
   float msTotal;
   float msBinRaster;
 };
+
+
 
 
 enum LOG_MODES { LOG_FOR_DEBUG_ERROR = 0, LOG_ALL = 1, LOG_NORMAL = 2, MOG_MINIMUM = 3, LOG_PERF = 4, LOG_NOTHING = 10 };

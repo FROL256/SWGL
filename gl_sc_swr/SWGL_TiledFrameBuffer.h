@@ -1,0 +1,33 @@
+#pragma once
+
+#include "config.h"
+#include <cstdint>
+#include <vector>
+
+struct SWGL_ScreenTile
+{
+  // tile bounding box
+  //
+  int minX;
+  int minY;
+  int maxX;
+  int maxY;
+
+  // tile data
+  //
+  int32_t m_color  [BIN_SIZE*BIN_SIZE]; // see 'biCompression' for win bitmap, format 555
+  float   m_zbuffer[BIN_SIZE*BIN_SIZE];
+  //uint8_t m_sbuffer[BIN_SIZE*BIN_SIZE];
+};
+
+
+struct SWGL_FrameBuffer
+{
+  void Resize(int a_x, int a_y);
+  void ClearColor(int32_t a_color);
+  void CopyToRowPitch(int32_t* a_data);
+
+  int sizeX;
+  int sizeY;
+  std::vector<SWGL_ScreenTile> tiles;
+};

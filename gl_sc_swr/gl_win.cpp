@@ -1,7 +1,7 @@
 #include "gl_sc.h"
 #include "swgl.h"
 
-#define MAX_CONTEXTS_COUNT 4
+#define MAX_CONTEXTS_COUNT 2
 
 #ifdef WIN32
 
@@ -21,7 +21,7 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   bmi.bmiHeader.biWidth         = width;
   bmi.bmiHeader.biHeight        = height; // Order pixels from bottom to top 
   bmi.bmiHeader.biPlanes        = 1;
-  bmi.bmiHeader.biBitCount      = 32; // last byte not used, 32 bit for alignment
+  bmi.bmiHeader.biBitCount      = 32;     // last byte not used, 32 bit for alignment
   bmi.bmiHeader.biCompression   = BI_RGB;
   bmi.bmiHeader.biSizeImage     = 0;
   bmi.bmiHeader.biXPelsPerMeter = 0;
