@@ -9,6 +9,7 @@
 #endif
 
 #include "ITriangleRasterizer.h"
+#include "SWGL_TiledFrameBuffer.h"
 
 #include "LiteMath.h"
 #include <cstdint>
@@ -358,10 +359,9 @@ struct SWGL_Context
 
 #ifdef WIN32
 
-  SWGL_Context() : hbmp(NULL), hdcMem(NULL), hbmOld(NULL), m_width(0), m_height(0), m_zbuffer(0), m_sbuffer(0), m_clBatchTop(0) //, m_pTaskPool(nullptr)
+  SWGL_Context() : hbmp(NULL), hdcMem(NULL), hbmOld(NULL), m_width(0), m_height(0), m_zbuffer(0), m_sbuffer(0) //, m_pTaskPool(nullptr)
   {
-    m_clFirstFrameLoadDataToGPU = true;
-    m_pRasterImpl               = nullptr;
+    m_pRasterImpl = nullptr;
     InitCommon();
   }
 
@@ -449,10 +449,8 @@ struct SWGL_Context
   SWGL_Timings m_timeStats;
 
   ITriangleRasterizer* m_pRasterImpl;
-
-  int m_clBatchTop;
-  bool m_clFirstFrameLoadDataToGPU;
-  // \\ end  opencl specific
+  SWGL_FrameBuffer     m_tiledFrameBuffer;
+  
 };
 
 

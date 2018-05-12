@@ -34,8 +34,8 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   bmi.bmiColors[0].rgbReserved  = 0;
 
   // Create DIB section to always give direct access to pixels
-  hbmp = CreateDIBSection(a_hdc, &bmi, DIB_RGB_COLORS, (void**)&m_pixels, NULL, 0);
-
+  //
+  hbmp   = CreateDIBSection(a_hdc, &bmi, DIB_RGB_COLORS, (void**)&m_pixels, NULL, 0);
   hdcMem = CreateCompatibleDC(a_hdc);
   hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);
 
@@ -82,6 +82,8 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
 
   m_drawList.m_tilesNumY = ty;
 
+  m_tiledFrameBuffer.Resize(m_width, m_height);
+  m_tiledFrameBuffer.TestClearChessBoard();
 }
 
 
@@ -89,6 +91,7 @@ void SWGL_Context::Destroy()
 {
   SelectObject(hdcMem, hbmOld);
   DeleteDC(hdcMem);
+  DeleteObject(hbmp);
 
   //_aligned_free(m_pixels2);
   _aligned_free(m_zbuffer);
@@ -106,6 +109,8 @@ void SWGL_Context::Destroy()
 
 void SWGL_Context::CopyToScreeen()
 {
+  m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
+  //memset(m_pixels, 0xFFFFFFFF, m_width*m_height*sizeof(int32_t));
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
 }
 
@@ -270,7 +275,6 @@ extern "C" GLAPI BOOL WINAPI wglSwapBuffers(HDC a_hdc)
   if (g_pContext != nullptr)
   {
     g_pContext->CopyToScreeen();
-    g_pContext->m_clFirstFrameLoadDataToGPU = false;
   }
 
   if (g_pContext->logMode <= LOG_ALL)

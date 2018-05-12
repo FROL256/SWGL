@@ -22,3 +22,5 @@ main_app/x64/
 main_app/main_app_2013.VC.db
 main_app/main_app_2013.VC.VC.opendb
 gl_sc_swr/.vs/gl_sc_swr/v14/.suo
+main_app/stdout.txt
+gl_sc_swr/gl_sc_swr_2013.vcxproj.user
