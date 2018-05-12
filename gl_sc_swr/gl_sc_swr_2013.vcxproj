@@ -288,7 +288,6 @@
   <ItemGroup>
     <ClInclude Include="SWGL_TiledFrameBuffer.h" />
     <ClInclude Include="config.h" />
-    <ClInclude Include="DrawSpan.h" />
     <ClInclude Include="gl_sc.h" />
     <ClInclude Include="gl_std.h" />
     <ClInclude Include="LiteMath.h" />
@@ -302,7 +301,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BatchExport.cpp" />
-    <ClCompile Include="DrawSpan.cpp" />
     <ClCompile Include="gl_sc_minimal.cpp" />
     <ClCompile Include="gl_sc_standart.cpp" />
     <ClCompile Include="gl_standart.cpp" />
@@ -312,10 +310,8 @@
     <ClCompile Include="swgl.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="TriRaster.cpp" />
     <ClCompile Include="TriRasterHS.cpp" />
     <ClCompile Include="TriRasterHS_TwoLevel.cpp" />
-    <ClCompile Include="TriRasterScanline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl32.def" />

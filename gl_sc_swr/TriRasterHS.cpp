@@ -512,8 +512,6 @@ void rasterizeTriHalfSpaceNaive(FrameBuffer* frameBuf, const Triangle& tri)
 }
 
 
-#include "DrawSpan.h"
-
 void rasterizeTriHalfSpace(const FillFuncPtr pFill, FrameBuffer* frameBuf, const Triangle& tri)
 {
 #ifdef ENABLE_SSE
@@ -536,18 +534,18 @@ void rasterizeTriHalfSpace(const FillFuncPtr pFill, FrameBuffer* frameBuf, const
   //rasterizeTriHalfSpaceNaive(frameBuf, tri);
   //return;
 
-  if (pFill == DrawSpan_Colored3D)
-  {
+  //if (pFill == DrawSpan_Colored3D)
+  //{
     rasterizeTriHalfSpaceSimple3D<Colored3D>(frameBuf, tri);
-  }
-  else if (pFill == DrawSpan_TexLinear3D)
-  {
-    rasterizeTriHalfSpaceSimple3D<ColoredTextured3D>(frameBuf, tri);
-  }
-  else
-  {
-    rasterizeTriHalfSpaceSimple2D<Colored2D>(frameBuf, tri);
-  }
+  //}
+  //else if (pFill == DrawSpan_TexLinear3D)
+  //{
+  //  rasterizeTriHalfSpaceSimple3D<ColoredTextured3D>(frameBuf, tri);
+  //}
+  //else
+  //{
+  //  rasterizeTriHalfSpaceSimple2D<Colored2D>(frameBuf, tri);
+  //}
 
 #endif
 

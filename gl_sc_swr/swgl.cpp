@@ -1,5 +1,4 @@
 #include "swgl.h"
-#include "DrawSpan.h"
 #include "RasterAlgorithms.h"
 
 #ifdef FULL_GL
@@ -88,12 +87,14 @@ void SWGL_Context::InitCommon()
   freopen("stdout.txt", "wt", stdout);
   freopen("stderr.txt", "wt", stderr);
 
-  m_currFrame = 0;
+  m_currFrame    = 0;
   m_lastNFramesT = clock();
+  m_texTop       = 0;
   m_textures.resize(1024); // max 1024 tex
-  m_texTop = 0;
 
-  swglInitDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
+  m_useTiledFB = false;
+  if(m_useTiledFB)
+    swglInitDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
 
 
@@ -890,7 +891,7 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 #endif
 
   const int  triNum = int(pBatch->indices.size() / 3);
-  const FillFuncPtr pFill = swglSelectFillFunc(a_pContext, pBatch, &frameBuff);   // set function pointer here
+  const FillFuncPtr pFill = nullptr;
 
   const int top = atomic_add(&a_pDrawList->m_triTop, triNum);
 
@@ -1004,68 +1005,6 @@ void swglDrawListInParallel(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList
 
 }
 
-void swglDrawListLines(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff)
-{
-  FrameBuffer fb = frameBuff;
-
-  // clamp to screen size
-  if (fb.vx + fb.vw >= fb.w) fb.vw = fb.w - fb.vx;
-  if (fb.vy + fb.vh >= fb.h) fb.vh = fb.h - fb.vy;
-
-  auto zbuff = fb.zbuffer;
-  auto sbuff = fb.sbuffer;
-
-  for (int i = 0; i < a_pDrawList->m_linTop; i++)
-  {
-    const Line& line = a_pDrawList->m_linMemory[i];
-    const auto* pso  = &(a_pDrawList->m_psoArray[line.psoId]);
-
-    if (pso->depthTestEnabled)
-      fb.zbuffer = zbuff;
-    else
-      fb.zbuffer = nullptr;
-
-    if (pso->stencilTestEnabled)
-      fb.sbuffer = sbuff;
-    else
-      fb.sbuffer = nullptr;
-
-    rasterizeLine(const_cast<FrameBuffer*>(&fb), line.v1, line.v2, line.c1, line.c2);
-  }
-}
-
-void swglDrawListPoints(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff)
-{
-  FrameBuffer fb = frameBuff;
-
-  // clamp to screen size
-  if (fb.vx + fb.vw >= fb.w) fb.vw = fb.w - fb.vx;
-  if (fb.vy + fb.vh >= fb.h) fb.vh = fb.h - fb.vy;
-
-  auto zbuff = fb.zbuffer;
-  auto sbuff = fb.sbuffer;
-
-  for (int i = 0; i < a_pDrawList->m_ptsTop; i++)
-  {
-    const Point& p  = a_pDrawList->m_ptsMemory[i];
-    const auto* pso = &(a_pDrawList->m_psoArray[p.psoId]);
-
-    if (pso->depthTestEnabled)
-      fb.zbuffer = zbuff;
-    else
-      fb.zbuffer = nullptr;
-
-    if (pso->stencilTestEnabled)
-      fb.sbuffer = sbuff;
-    else
-      fb.sbuffer = nullptr;
-
-    rasterizePoint(const_cast<FrameBuffer*>(&fb), p.v1, p.c1, p.psz);
-  }
-}
-
-
-
 
 void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext != nullptr && pBatch != nullptr)
 {
@@ -1082,10 +1021,6 @@ void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext !
   FrameBuffer frameBuff = swglBatchFb(a_pContext, pBatch->state);
 
   swglDrawBatchTriangles(a_pContext, pBatch, frameBuff);
-
-  swglDrawBatchLines(a_pContext, pBatch, frameBuff);
-
-  swglDrawBatchPoints(a_pContext, pBatch, frameBuff);
 }
 
 

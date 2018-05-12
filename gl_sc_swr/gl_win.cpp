@@ -111,8 +111,9 @@ void SWGL_Context::Destroy()
 
 void SWGL_Context::CopyToScreeen()
 {
-  m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
-  //memset(m_pixels, 0xFFFFFFFF, m_width*m_height*sizeof(int32_t));
+  if (m_useTiledFB)
+    m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
+  
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
 }
 

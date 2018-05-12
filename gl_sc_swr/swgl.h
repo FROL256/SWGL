@@ -446,6 +446,8 @@ struct SWGL_Context
   SWGL_Timings         m_timeStats;
   SWGL_FrameBuffer     m_tiledFrameBuffer;
   
+  bool m_useTiledFB;
+
 };
 
 
@@ -460,14 +462,11 @@ void swglPushBatchLinesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_Dr
 void swglPushBatchPointsToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
 
 void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum);
-void swglDrawListLines(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
-void swglDrawListPoints(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
 void swglDrawListInParallel(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
+void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 //int  swglGetDrawListFreeSpace(SWGL_DrawList* a_pDrawList);
 
 void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch);
-void swglDrawBatchPoints(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
-void swglDrawBatchLines(SWGL_Context* a_pContext, Batch* pBatch,  FrameBuffer& frameBuff);
 
 void swglAppendTriIndices(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPrimType, size_t lastSizeVert);
 void swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPrimType, size_t lastSizeVert, const int* inIndices, int count);
@@ -480,7 +479,6 @@ inline static bool isIdentityMatrix(const float4x4& a_mat)
 {
   float4x4 m;
   m.identity();
-
   return (memcmp(&a_mat, &m, sizeof(float) * 16) == 0);
 }
 
@@ -557,9 +555,17 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
     return;
   #endif
 
-  if(pBatch->indices.size() != 0)
-    swglPushBatchTrianglesToList(a_pContext, pBatch, pDrawList, fb);
-  
+  if (a_pContext->m_useTiledFB)
+  {
+    if (pBatch->indices.size() != 0)
+      swglPushBatchTrianglesToList(a_pContext, pBatch, pDrawList, fb);
+  }
+  else
+  {
+    swglRunBatchVertexShader(a_pContext, pBatch);
+    swglDrawBatchTriangles(a_pContext, pBatch, fb);
+  }
+
   pBatch->clear();
 
 }

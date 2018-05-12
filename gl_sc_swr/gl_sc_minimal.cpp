@@ -247,8 +247,15 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
   Timer timer(true);
 #endif
 
-  if(mask & GL_COLOR_BUFFER_BIT)
-    g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
+  if (g_pContext->m_useTiledFB)
+  {
+    if (mask & GL_COLOR_BUFFER_BIT)
+      g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
+  }
+  else
+  {
+    swglSlowClear(g_pContext, mask);
+  }
 
 #ifdef MEASURE_STATS
   g_pContext->m_timeStats.msClear += timer.getElapsed()*1000.0f;
@@ -695,13 +702,16 @@ GLAPI void APIENTRY glFlush(void)
 
   auto* pDrawList = &g_pContext->m_drawList;
 
-  g_pContext->m_tiledFrameBuffer.TestFillNonEmptyTiles();
-
-  // if (pDrawList->m_triTop != 0)
-  //   swglDrawListInParallel(g_pContext, pDrawList, frameBuff);
-
-  if (pDrawList->m_triTop != 0 || pDrawList->m_linTop != 0 || pDrawList->m_ptsTop != 0)
-    swglInitDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
+  if (g_pContext->m_useTiledFB)
+  {
+    g_pContext->m_tiledFrameBuffer.TestFillNonEmptyTiles();
+    if (pDrawList->m_triTop != 0 || pDrawList->m_linTop != 0 || pDrawList->m_ptsTop != 0)
+      swglInitDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
+  }
+  else
+  {
+    // memset(g_pContext->m_pixels2, 0xFFFFFFFF, frameBuff.w*frameBuff.h*sizeof(int));
+  }
 
 }
 

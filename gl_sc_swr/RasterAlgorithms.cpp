@@ -1,6 +1,5 @@
 #include "RasterAlgorithms.h"
 #include "TriRaster.h"
-#include "DrawSpan.h"
 
 void swglRunBatchVertexShaderNoSSE(SWGL_Context* a_pContext, Batch* a_pBatch) // pre (a_pContext != nullptr && pBatch != nullptr)
 {
@@ -41,116 +40,6 @@ void swglRunBatchVertexShaderNoSSE(SWGL_Context* a_pContext, Batch* a_pBatch) //
 
 }
 
-#ifndef ENABLE_SSE
-
-FillFuncPtr swglSelectFillFunc(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer* frameBuff) // pre (a_pContext != nullptr) && (pBatch!= nullptr) && (frameBuff != nullptr)
-{
-  bool trianglesAreTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
-
-  FillFuncPtr pFill = DrawSpan_Colored3D;
-
-  if (pBatch->state.stencilWriteEnabled && !pBatch->state.colorWriteEnabled)
-  {
-    pFill = &DrawSpan_NoColorStencilAlwaysReplace;
-  }
-  else if (pBatch->state.alphaBlendEnabled)
-  {
-    if (trianglesAreTextured)
-    {
-      if (frameBuff->zbuffer != nullptr)
-        pFill = &DrawSpan_TexLinear3D_Blend;
-      else
-        pFill = &DrawSpan_TexLinear2D_Blend;
-    }
-    else
-    {
-      if (frameBuff->zbuffer != nullptr)
-        ; // &DrawSpan_Colored3D_Blend;
-      else
-        pFill = &DrawSpan_Colored2D_Blend;
-    }
-  }
-  else
-  {
-    if (trianglesAreTextured)
-    {
-      if (frameBuff->zbuffer != nullptr)
-        pFill = &DrawSpan_TexLinear3D;
-      else
-        pFill = &DrawSpan_TexLinear2D;
-    }
-    else
-    {
-      if (frameBuff->zbuffer != nullptr)
-        pFill = &DrawSpan_Colored3D;
-      else
-        pFill = &DrawSpan_Colored2D;
-    }
-  }
-
-#ifdef FILL_COLOR_ONLY
-  pFill = &DrawSpan_FillColor;
-#endif
-
-  return pFill;
-}
-#else
-
-
-FillFuncPtr swglSelectFillFunc(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer* frameBuff) // pre (a_pContext != nullptr) && (pBatch!= nullptr) && (frameBuff != nullptr)
-{
-  bool trianglesAreTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
-
-  FillFuncPtr pFill = DrawSpan_Colored3D_SSE;
-
-  if (pBatch->state.stencilWriteEnabled && !pBatch->state.colorWriteEnabled)
-  {
-    pFill = &DrawSpan_NoColorStencilAlwaysReplace_SSE;
-  }
-  else if (pBatch->state.alphaBlendEnabled)
-  {
-    if (trianglesAreTextured)
-    {
-      if (frameBuff->zbuffer != nullptr)
-        pFill = &DrawSpan_TexLinear3D_Blend_SSE;
-      else
-        pFill = &DrawSpan_TexLinear2D_Blend_SSE;
-    }
-    else
-    {
-      if (frameBuff->zbuffer != nullptr)
-        ; // &DrawSpan_Colored3D_Blend;
-      else
-        pFill = &DrawSpan_Colored2D_Blend_SSE;
-    }
-  }
-  else
-  {
-    if (trianglesAreTextured)
-    {
-      if (frameBuff->zbuffer != nullptr)
-        pFill = &DrawSpan_TexLinear3D_SSE;
-      else
-        pFill = &DrawSpan_TexLinear2D_SSE;
-    }
-    else
-    {
-      if (frameBuff->zbuffer != nullptr)
-        pFill = &DrawSpan_Colored3D_SSE;
-      else
-        pFill = &DrawSpan_Colored2D_SSE;
-    }
-  }
-
-#ifdef FILL_COLOR_ONLY
-  pFill = &DrawSpan_FillColor_SSE;
-#endif
-
-  return pFill;
-}
-
-
-#endif
 
 #ifndef ENABLE_SSE
 
@@ -182,7 +71,6 @@ void swglTriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, cons
   t1->t3 = tx3;
 
   t1->triAreaInv = 1.0f / edgeFunction(to_float2(v1), to_float2(v2), to_float2(v3));
-  t1->k1 = t1->triAreaInv*float3(v3.y - v2.y, v1.y - v3.y, v2.y - v1.y);
 
 
   const float2 edge0 = to_float2(v3 - v2);
@@ -271,7 +159,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
   // const int vertNum = int(pBatch->vertPos.size());
   const int triNum = int(indices.size() / 3);
 
-  const FillFuncPtr pFill = swglSelectFillFunc(a_pContext, pBatch, &frameBuff);   // set function pointer here
+  const FillFuncPtr pFill = nullptr;
 
   for (int triId = 0; triId < triNum; triId++)
   {
@@ -315,39 +203,5 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
   a_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
 #endif
 
-}
-
-
-void swglDrawBatchLines(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff) // pre (a_pContext != nullptr && pBatch != nullptr)
-{
-  for (int i = 0; i < int(pBatch->indicesLines.size()); i += 2)
-  {
-    const int    i1 = pBatch->indicesLines[i + 0];
-    const int    i2 = pBatch->indicesLines[i + 1];
-
-    const float4 v1 = pBatch->vertPos[i1];
-    const float4 v2 = pBatch->vertPos[i2];
-
-    const float4 c1 = pBatch->vertColor[i1];
-    const float4 c2 = pBatch->vertColor[i2];
-
-    rasterizeLine(&frameBuff, float2(v1.x, v1.y), float2(v2.x, v2.y), c1, c2);
-  }
-}
-
-void swglDrawBatchPoints(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff) // pre (a_pContext != nullptr && pBatch != nullptr)
-{
-  for (int i = 0; i < int(pBatch->indicesPoints.size()); i += 2)
-  {
-    const float psz = pBatch->pointSize[(i / 2)];
-
-    for (int j = pBatch->indicesPoints[i + 0]; j < pBatch->indicesPoints[i + 1]; j++)
-    {
-      const float4 v1 = pBatch->vertPos[j];
-      const float4 c1 = pBatch->vertColor[j];
-
-      rasterizePoint(&frameBuff, float2(v1.x, v1.y), c1, psz);
-    }
-  }
 }
 

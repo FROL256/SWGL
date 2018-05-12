@@ -103,7 +103,6 @@ struct TriangleDataNoSSE
   float2 t2;
   float2 t3;
 
-  float3 k1;
   float  triAreaInv;
 
   int bb_iminX;
