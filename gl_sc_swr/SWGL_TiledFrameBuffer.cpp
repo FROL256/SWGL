@@ -76,3 +76,12 @@ void SWGL_FrameBuffer::TestClearChessBoard()
   for (int tileId = 0; tileId < tiles.size(); tileId++)
     tiles[tileId].ClearColor(table[tileId%tableSize]);
 }
+
+void SWGL_FrameBuffer::TestFillNonEmptyTiles()
+{
+  for (int tileId = 0; tileId < tiles.size(); tileId++)
+  {
+    if(tiles[tileId].begOffs != tiles[tileId].endOffs)
+      tiles[tileId].ClearColor(0xFFFFFFFF);
+  }
+}

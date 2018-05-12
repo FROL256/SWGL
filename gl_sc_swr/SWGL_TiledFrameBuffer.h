@@ -35,6 +35,7 @@ struct SWGL_FrameBuffer
   void CopyToRowPitch(int32_t* a_data);  //#TODO: consider pipelined copy to video mem, tile by tile.
 
   void TestClearChessBoard();
+  void TestFillNonEmptyTiles();
 
   int sizeX;
   int sizeY;

@@ -243,22 +243,12 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
   if (g_pContext->logMode <= LOG_ALL)
     *(g_pContext->m_pLog) << "glClear(" << mask << ")" << std::endl;
 
-
 #ifdef MEASURE_STATS
   Timer timer(true);
 #endif
 
-#ifdef ENABLE_SSE
-  swglFastClear(g_pContext, mask);
-#else
-
-  #ifdef LINUX_PPC
-  swglFastClearPPC(g_pContext, mask);
-  #else
-  swglSlowClear(g_pContext, mask);
-  #endif
-#endif
-
+  if(mask & GL_COLOR_BUFFER_BIT)
+    g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
 
 #ifdef MEASURE_STATS
   g_pContext->m_timeStats.msClear += timer.getElapsed()*1000.0f;
@@ -704,6 +694,8 @@ GLAPI void APIENTRY glFlush(void)
   frameBuff.vh = frameBuff.h;
 
   auto* pDrawList = &g_pContext->m_drawList;
+
+  g_pContext->m_tiledFrameBuffer.TestFillNonEmptyTiles();
 
   // if (pDrawList->m_triTop != 0)
   //   swglDrawListInParallel(g_pContext, pDrawList, frameBuff);
