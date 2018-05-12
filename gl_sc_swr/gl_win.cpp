@@ -62,15 +62,15 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
       int w = m_width - x;
       if (w > TILE_SIZE) w = TILE_SIZE;
 
-      ScreenTile tile;
-
-      tile.minX = x;
-      tile.minY = y;
-      tile.maxX = x + TILE_SIZE;
-      tile.maxY = y + TILE_SIZE;
-      tile.beginOffs = tile.endOffs = 0;
-
-      m_drawList.tiles[tx][ty] = tile;
+      //ScreenTile tile;
+      //
+      //tile.minX = x;
+      //tile.minY = y;
+      //tile.maxX = x + TILE_SIZE;
+      //tile.maxY = y + TILE_SIZE;
+      //tile.beginOffs = tile.endOffs = 0;
+      //
+      //m_drawList.tiles[tx][ty] = tile;
       m_drawList.tilesIds.push_back(int2(tx, ty));
 
       tx++;

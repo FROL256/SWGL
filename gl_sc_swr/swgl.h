@@ -318,7 +318,7 @@ struct SWGL_DrawList
 
   // screen tiles data for parallel rasterizer
   //
-  ScreenTile        tiles[MAX_TILESX][MAX_TILESY];
+  //ScreenTile        tiles[MAX_TILESX][MAX_TILESY];
   std::vector<int2> tilesIds;
   int m_tilesNumX;
   int m_tilesNumY;
@@ -463,7 +463,7 @@ void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pT
 void swglDrawListLines(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
 void swglDrawListPoints(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
 void swglDrawListInParallel(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
-int  swglGetDrawListFreeSpace(SWGL_DrawList* a_pDrawList);
+//int  swglGetDrawListFreeSpace(SWGL_DrawList* a_pDrawList);
 
 void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch);
 void swglDrawBatchPoints(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
@@ -548,11 +548,15 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
   FrameBuffer fb           = swglBatchFb(a_pContext, pBatch->state);
   
   const int  triNum        = int(pBatch->indices.size() / 3);
-  const int  freeSpace     = int(swglGetDrawListFreeSpace(pDrawList));
+  //const int  freeSpace     = int(swglGetDrawListFreeSpace(pDrawList));
+  //
+  //if (triNum >= freeSpace)
+  //  glFlush();
   
-  if (triNum >= freeSpace)
-    glFlush();
-  
+  #ifdef MEASURE_NOLOAD_PERF
+    return;
+  #endif
+
   if(pBatch->indices.size() != 0)
     swglPushBatchTrianglesToList(a_pContext, pBatch, pDrawList, fb);
   

@@ -235,7 +235,7 @@ void swglFastClearPPC(SWGL_Context* a_pContext, GLbitfield mask)
 
 }
 
-GLAPI void APIENTRY glClear(GLbitfield mask)
+GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used tiled
 {
   if (g_pContext == nullptr)
     return;
