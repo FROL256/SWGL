@@ -45,9 +45,6 @@
     <ClInclude Include="swgl.h">
       <Filter>gl_common</Filter>
     </ClInclude>
-    <ClInclude Include="ITriangleRasterizer.h">
-      <Filter>Rasterizers</Filter>
-    </ClInclude>
     <ClInclude Include="RasterAlgorithms.h">
       <Filter>Rasterizers</Filter>
     </ClInclude>

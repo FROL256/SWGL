@@ -82,6 +82,8 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
 
   m_drawList.m_tilesNumY = ty;
 
+  // new tiled frame buffer
+  //
   m_tiledFrameBuffer.Resize(m_width, m_height);
   m_tiledFrameBuffer.TestClearChessBoard();
 }

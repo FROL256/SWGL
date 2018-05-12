@@ -8,7 +8,6 @@
   #include "glx_sc.h"
 #endif
 
-#include "ITriangleRasterizer.h"
 #include "SWGL_TiledFrameBuffer.h"
 
 #include "LiteMath.h"
@@ -32,9 +31,8 @@
 #define DEG_TO_RAD (PI/(float)180.0)
 #define RAD_TO_DEG ((float)180.0/PI)
 
-#define MAX_NUM_VERTICES_IN_BATCH 262144                    // just a reccomendation, not a strict reqirenment
+#define MAX_NUM_VERTICES_IN_BATCH 1024                      // just a reccomendation, not a strict reqirenment // 262144
 #define MAX_NUM_TRIANGLES_TOTAL (MAX_NUM_VERTICES_IN_BATCH) // strict rule ???
-#define MAX_INPUT_BATCHES_TOTAL   63356
 
 #define MAX_INPUT_LINES   63356
 #define MAX_INPUT_POINTS  63356
@@ -361,7 +359,6 @@ struct SWGL_Context
 
   SWGL_Context() : hbmp(NULL), hdcMem(NULL), hbmOld(NULL), m_width(0), m_height(0), m_zbuffer(0), m_sbuffer(0) //, m_pTaskPool(nullptr)
   {
-    m_pRasterImpl = nullptr;
     InitCommon();
   }
 
@@ -445,10 +442,8 @@ struct SWGL_Context
   clock_t       m_lastNFramesT;
   static std::ofstream* m_pLog;
 
-  SWGL_DrawList m_drawList;
-  SWGL_Timings m_timeStats;
-
-  ITriangleRasterizer* m_pRasterImpl;
+  SWGL_DrawList        m_drawList;
+  SWGL_Timings         m_timeStats;
   SWGL_FrameBuffer     m_tiledFrameBuffer;
   
 };
@@ -464,7 +459,7 @@ void swglPushBatchTrianglesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWG
 void swglPushBatchLinesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
 void swglPushBatchPointsToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
 
-void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, const int triNum);
+void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum);
 void swglDrawListLines(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
 void swglDrawListPoints(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
 void swglDrawListInParallel(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
@@ -548,53 +543,19 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
   if (a_pContext->input.getCurrBatch()->vertPos.size() == 0) // if curr batch is empty, no need to change it.
     return;
 
-  //if (a_pContext->m_pRasterImpl == nullptr)
-  //{
-  //  //log_error
-  //  return;
-  //}
-
-  // ITriangleRasterizer* pRasterImpl = a_pContext->m_pRasterImpl;
-  // 
-  // Batch* pBatch = a_pContext->input.getCurrBatch();
-  // 
-  // pRasterImpl->DrawBatch(a_pContext, pBatch);
-  // 
-  // pBatch->clear();
+  Batch* pBatch            = a_pContext->input.getCurrBatch();
+  SWGL_DrawList* pDrawList = &a_pContext->m_drawList;
+  FrameBuffer fb           = swglBatchFb(a_pContext, pBatch->state);
   
-
-#ifdef MEASURE_NOLOAD_PERF
-  return;
-#endif
-
-  if (ENABLE_MT)
-  {
-    Batch* pBatch            = a_pContext->input.getCurrBatch();
-    SWGL_DrawList* pDrawList = &a_pContext->m_drawList;
-    FrameBuffer fb           = swglBatchFb(a_pContext, pBatch->state);
-
-    const int  triNum        = int(pBatch->indices.size() / 3);
-    const int  freeSpace     = int(swglGetDrawListFreeSpace(pDrawList));
-
-    if (triNum >= freeSpace)
-      glFlush();
-
-    if(pBatch->indices.size() != 0)
-      swglPushBatchTrianglesToList(a_pContext, pBatch, pDrawList, fb);
-    else if (pBatch->indicesLines.size() != 0)
-      swglPushBatchLinesToList(a_pContext, pBatch, pDrawList, fb);
-    else if(pBatch->indicesPoints.size() != 0)
-      swglPushBatchPointsToList(a_pContext, pBatch, pDrawList, fb);
-
-    pBatch->clear();
-  }
-  else
-  {
-    Batch* pBatch = a_pContext->input.getCurrBatch();
-    swglDrawBatch(a_pContext, pBatch);
-    pBatch->clear();
-  }
-
+  const int  triNum        = int(pBatch->indices.size() / 3);
+  const int  freeSpace     = int(swglGetDrawListFreeSpace(pDrawList));
   
+  if (triNum >= freeSpace)
+    glFlush();
+  
+  if(pBatch->indices.size() != 0)
+    swglPushBatchTrianglesToList(a_pContext, pBatch, pDrawList, fb);
+  
+  pBatch->clear();
 
 }

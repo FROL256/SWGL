@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+
 #include <cstdint>
 #include <vector>
 
@@ -15,6 +16,9 @@ struct SWGL_ScreenTile
   int minY;
   int maxX;
   int maxY;
+
+  int begOffs; // triangle indices
+  int endOffs; // triangle indices
 
   // tile data
   //

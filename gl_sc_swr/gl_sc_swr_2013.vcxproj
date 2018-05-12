@@ -291,7 +291,6 @@
     <ClInclude Include="DrawSpan.h" />
     <ClInclude Include="gl_sc.h" />
     <ClInclude Include="gl_std.h" />
-    <ClInclude Include="ITriangleRasterizer.h" />
     <ClInclude Include="LiteMath.h" />
     <ClInclude Include="pugiconfig.hpp" />
     <ClInclude Include="pugixml.hpp" />

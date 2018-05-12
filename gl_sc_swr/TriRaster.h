@@ -200,8 +200,7 @@ void rasterizeLine(FrameBuffer* frameBuf, float2 p1, float2 p2, float4 c1, float
 void rasterizePoint(FrameBuffer* frameBuf, float2 p1, float4 c1, float size);
 
 
-inline bool AABBTriangleOverlap(const Triangle& a_tri, 
-                                const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY)
+inline bool AABBTriangleOverlap(const Triangle& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY)
 {
   const bool overlapBoxBox = IntersectBoxBox(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
                                              int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));

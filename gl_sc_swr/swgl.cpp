@@ -93,11 +93,7 @@ void SWGL_Context::InitCommon()
   m_textures.resize(1024); // max 1024 tex
   m_texTop = 0;
 
-  if (ENABLE_MT)
-    swglInitDrawListAndTiles(&m_drawList, MAX_NUM_TRIANGLES_TOTAL);
-
-  m_pRasterImpl = nullptr; // CreateRasterizer("ScanLinePreciseNoSSE");
-
+  swglInitDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
 
 
@@ -840,7 +836,7 @@ void swglTileRaster_ForSeg(void* customData, int begin, int end)
 }
 
 
-void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, const int triNum)
+void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum)
 {
   a_pDrawList->m_triTop = 0;
   a_pDrawList->m_linTop = 0;
@@ -850,7 +846,6 @@ void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, const int triNum)
 
   if (triNum == 0 || tilesNum == 0)
     return;
-
 
   if (a_pDrawList->m_triMemory.size() < (size_t)triNum)
   {
@@ -874,10 +869,14 @@ void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, const int triNum)
 
     tile.beginOffs = (tileCoord.y*a_pDrawList->m_tilesNumX + tileCoord.x)*triNum;
     tile.endOffs   = tile.beginOffs;
+
+    auto& tile2   = a_pTiledFB->tiles[i];
+    tile2.begOffs = (tileCoord.y*a_pDrawList->m_tilesNumX + tileCoord.x)*triNum;
+    tile2.endOffs = tile2.begOffs;
   }
 
-  if (a_pDrawList->m_psoArray.capacity() < MAX_INPUT_BATCHES_TOTAL)
-    a_pDrawList->m_psoArray.reserve(MAX_INPUT_BATCHES_TOTAL);
+  if (a_pDrawList->m_psoArray.capacity() < 100)
+    a_pDrawList->m_psoArray.reserve(100);
 
   a_pDrawList->m_psoArray.resize(0);
 
@@ -896,28 +895,37 @@ struct TriSetUpData
   int                psoId;
 };
 
-void swglPushTriToTiles_forSeg(void* customData, int begin, int end)
+
+
+void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch, 
+                                   const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB)
 {
-  TriSetUpData* pData = (TriSetUpData*)customData;
+  if (a_pDrawList->m_tilesTriIndicesMemory.size() == 0)
+    return;
 
-  SWGL_DrawList* a_pDrawList = pData->pDrawList;
-  const Batch* pBatch        = pData->pBatch;
-  const FillFuncPtr pFill    = pData->pFill;
-  SWGL_Context* a_pContext   = pData->pContext;
-  const FrameBuffer* pFB     = pData->pFrameBuff;
-  const int top              = pData->top;
-  const int psoId            = pData->psoId;
+#ifdef MEASURE_STATS
+  Timer timer(true);
+#endif
 
-  int* triIndicesMem = &(a_pDrawList->m_tilesTriIndicesMemory[0]);
+  const int  triNum = int(pBatch->indices.size() / 3);
+  const FillFuncPtr pFill = swglSelectFillFunc(a_pContext, pBatch, &frameBuff);   // set function pointer here
+
+  const int top = atomic_add(&a_pDrawList->m_triTop, triNum);
+
+  a_pDrawList->m_psoArray.push_back(pBatch->state);
+  int psoId = a_pDrawList->m_psoArray.size() - 1;
+
+  int* triIndicesMem              = &(a_pDrawList->m_tilesTriIndicesMemory[0]);
   const std::vector<int>& indices = pBatch->indices;
 
   const bool trianglesAreTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 
-  for (int triId = begin; triId < end; triId++)
+  //#pragma omp parallel for if (triNum >= 1000)
+  for (int triId = 0; triId < triNum; triId++)
   {
-     const int    i1 = indices[triId * 3 + 0];
-     const int    i2 = indices[triId * 3 + 1];
-     const int    i3 = indices[triId * 3 + 2];
+    const int i1 = indices[triId * 3 + 0];
+    const int i2 = indices[triId * 3 + 1];
+    const int i3 = indices[triId * 3 + 2];
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -952,18 +960,18 @@ void swglPushTriToTiles_forSeg(void* customData, int begin, int end)
     pTri->curr_smask = pBatch->state.stencilMask;
 
   #ifdef ENABLE_SSE
-    swglTriangleSetUpSSE(a_pContext, pBatch, (*pFB), i1, i2, i3, pTri, trianglesAreTextured);
+    swglTriangleSetUpSSE(a_pContext, pBatch, frameBuff, i1, i2, i3, pTri, trianglesAreTextured);
   #else
-    swglTriangleSetUp(a_pContext, pBatch, (*pFB), i1, i2, i3, pTri, trianglesAreTextured);
+    swglTriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, pTri, trianglesAreTextured);
   #endif
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    unsigned int tMinX = divTileSize(pTri->bb_iminX);
-    unsigned int tMinY = divTileSize(pTri->bb_iminY);
-
-    unsigned int tMaxX = divTileSize(pTri->bb_imaxX);
-    unsigned int tMaxY = divTileSize(pTri->bb_imaxY);
+    const unsigned int tMinX = divTileSize(pTri->bb_iminX);
+    const unsigned int tMinY = divTileSize(pTri->bb_iminY);
+ 
+    const unsigned int tMaxX = divTileSize(pTri->bb_imaxX);
+    const unsigned int tMaxY = divTileSize(pTri->bb_imaxY);
 
     for (unsigned int ty = tMinY; ty <= tMaxY; ty++)
     {
@@ -975,7 +983,8 @@ void swglPushTriToTiles_forSeg(void* customData, int begin, int end)
         const int tileMaxX = tx*TILE_SIZE + TILE_SIZE;
         const int tileMaxY = ty*TILE_SIZE + TILE_SIZE;
 
-        auto& tile = a_pDrawList->tiles[tx][ty];
+        //auto& tile = a_pDrawList->tiles[tx][ty];
+        auto& tile = a_pTiledFB->tiles[ty*a_pTiledFB->sizeX + tx];
 
         if (AABBTriangleOverlap(*pTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
         {
@@ -984,43 +993,7 @@ void swglPushTriToTiles_forSeg(void* customData, int begin, int end)
         }
       }
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   }
-
-
-}
-
-
-void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff)
-{
-  if (a_pDrawList->m_tilesTriIndicesMemory.size() == 0)
-    return;
-
-#ifdef MEASURE_STATS
-  Timer timer(true);
-#endif
-
-  const int  triNum = int(pBatch->indices.size() / 3);
-  const FillFuncPtr pFill = swglSelectFillFunc(a_pContext, pBatch, &frameBuff);   // set function pointer here
-
-  const int top = atomic_add(&a_pDrawList->m_triTop, triNum);
-
-  a_pDrawList->m_psoArray.push_back(pBatch->state);
-  int psoId = a_pDrawList->m_psoArray.size() - 1;
-
-  TriSetUpData data;
-  data.pBatch     = pBatch;
-  data.pContext   = a_pContext;
-  data.pDrawList  = a_pDrawList;
-  data.pFill      = pFill;
-  data.pFrameBuff = &frameBuff;
-  data.psoId      = psoId;
-  data.top        = top;
-
-  #pragma omp parallel for if (triNum >= 1000)
-  for (int triId = 0; triId < triNum; triId++)
-    swglPushTriToTiles_forSeg((void*)&data, triId, triId + 1);
 
 #ifdef MEASURE_STATS
   a_pContext->m_timeStats.msTriSetUp += timer.getElapsed()*1000.0f;
@@ -1172,7 +1145,7 @@ int swglGetDrawListFreeSpace(SWGL_DrawList* a_pDrawList) // pre (a_pDrawList != 
 void swglPushBatchTrianglesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb) // pre (a_pBatch != nullptr) && (a_pDrawList != nullptr) && (a_pContext != nullptr)
 {
   swglRunBatchVertexShader(a_pContext, a_pBatch);
-  swglAppendTrianglesToDrawList(a_pDrawList, a_pContext, a_pBatch, a_fb);
+  swglAppendTrianglesToDrawList(a_pDrawList, a_pContext, a_pBatch, a_fb, &a_pContext->m_tiledFrameBuffer);
 }
 
 

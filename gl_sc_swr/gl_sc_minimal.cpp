@@ -703,23 +703,13 @@ GLAPI void APIENTRY glFlush(void)
   frameBuff.vw = frameBuff.w;
   frameBuff.vh = frameBuff.h;
 
-  if (ENABLE_MT)
-  {
-    auto* pDrawList = &g_pContext->m_drawList;
+  auto* pDrawList = &g_pContext->m_drawList;
 
-    if (pDrawList->m_triTop != 0)
-      swglDrawListInParallel(g_pContext, pDrawList, frameBuff);
+  // if (pDrawList->m_triTop != 0)
+  //   swglDrawListInParallel(g_pContext, pDrawList, frameBuff);
 
-    if (pDrawList->m_linTop != 0)
-      swglDrawListLines(g_pContext, pDrawList, frameBuff);
-
-    if (pDrawList->m_ptsTop != 0)
-      swglDrawListPoints(g_pContext, pDrawList, frameBuff);
-
-    if (pDrawList->m_triTop != 0 || pDrawList->m_linTop != 0 || pDrawList->m_ptsTop != 0)
-      swglInitDrawListAndTiles(pDrawList, MAX_NUM_TRIANGLES_TOTAL);
-
-  }
+  if (pDrawList->m_triTop != 0 || pDrawList->m_linTop != 0 || pDrawList->m_ptsTop != 0)
+    swglInitDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 
 }
 
@@ -1193,7 +1183,7 @@ GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     HDC currHDC = g_pContext->m_hdc;
     g_pContext->Destroy();
     g_pContext->Create(currHDC, width, height);
-    swglInitDrawListAndTiles(&g_pContext->m_drawList, MAX_NUM_TRIANGLES_TOTAL);
+    swglInitDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
 
   #else
