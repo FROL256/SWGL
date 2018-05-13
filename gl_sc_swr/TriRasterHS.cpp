@@ -518,7 +518,6 @@ void rasterizeTriHalfSpaceNaive(FrameBuffer* frameBuf, const Triangle& tri)
 
 }
 
-
 void rasterizeTriHalf_WithRespectToTile(FrameBuffer* frameBuf, const Triangle& tri, int tileMinX, int tileMinY)
 {
   const float tileMinX_f = float(tileMinX);

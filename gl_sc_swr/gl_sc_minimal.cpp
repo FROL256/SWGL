@@ -690,7 +690,7 @@ GLAPI void APIENTRY glFlush(void)
   //
   FrameBuffer frameBuff;
 
-  frameBuff.cbuffer    = g_pContext->m_pixels2;
+  frameBuff.cbuffer = g_pContext->m_pixels2;
   frameBuff.zbuffer = g_pContext->m_zbuffer;
   frameBuff.sbuffer = g_pContext->m_sbuffer;
   frameBuff.w       = g_pContext->m_width;
