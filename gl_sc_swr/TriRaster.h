@@ -176,24 +176,14 @@ struct ALIGNED16 TriangleDataYesSSE
 #endif
 
 #ifdef ENABLE_SSE
-
   typedef TriangleDataYesSSE Triangle;
-  typedef void(*FillFuncPtr)(FrameBuffer* frameBuff, const int x1c, const int x2c, const int offset, const Triangle& t, const __m128 k2v);
-
 #else
-
   typedef TriangleDataNoSSE Triangle;
-  typedef void(*FillFuncPtr)(FrameBuffer* frameBuff, const int x1c, const int x2c, const int offset, const Triangle& t, const float3 k2);
-
 #endif
 
 
-void rasterizeTri(FillFuncPtr pf, FrameBuffer* frameBuf, const Triangle& tri);           // scan line, ours
-void rasterizeTri2(FrameBuffer* frameBuf, const Triangle& tri);                          // scan line, from http://joshbeam.com/articles/triangle_rasterization/
-
-
-void rasterizeTriHalfSpace(const FillFuncPtr pf, FrameBuffer* frameBuf, const Triangle& tri); // half space rasterizer
-void rasterizeTriHalfSpaceTwoLevel(const FillFuncPtr pf, FrameBuffer* frameBuf, const Triangle& tri); // Two level vectorized half space rasterizer
+void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri); // half space rasterizer
+void rasterizeTriHalfSpaceTwoLevel(FrameBuffer* frameBuf, const Triangle& tri); // Two level vectorized half space rasterizer
 
 void rasterizeLine(FrameBuffer* frameBuf, float2 p1, float2 p2, float4 c1, float4 c2);
 void rasterizePoint(FrameBuffer* frameBuf, float2 p1, float4 c1, float size);

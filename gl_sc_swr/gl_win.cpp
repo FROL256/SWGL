@@ -44,43 +44,6 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   m_zbuffer = (float*)  _aligned_malloc(width*height*sizeof(float),   16);
   m_sbuffer = (uint8_t*)_aligned_malloc(width*height*sizeof(uint8_t), 16);
 
-  // fill tiles data
-  //
-
-  m_drawList.tilesIds.clear();
-
-  int ty = 0;
-
-  for (int y = 0; y < m_height; y += TILE_SIZE)
-  {
-    int h = m_height - y;
-    if (h > TILE_SIZE) h = TILE_SIZE;
-
-    int tx = 0;
-    for (int x = 0; x < m_width; x += TILE_SIZE)
-    {
-      int w = m_width - x;
-      if (w > TILE_SIZE) w = TILE_SIZE;
-
-      //ScreenTile tile;
-      //
-      //tile.minX = x;
-      //tile.minY = y;
-      //tile.maxX = x + TILE_SIZE;
-      //tile.maxY = y + TILE_SIZE;
-      //tile.beginOffs = tile.endOffs = 0;
-      //
-      //m_drawList.tiles[tx][ty] = tile;
-      m_drawList.tilesIds.push_back(int2(tx, ty));
-
-      tx++;
-    }
-    m_drawList.m_tilesNumX = tx;
-
-    ty++;
-  }
-
-  m_drawList.m_tilesNumY = ty;
 
   // new tiled frame buffer
   //

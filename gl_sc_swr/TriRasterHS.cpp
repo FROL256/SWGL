@@ -512,22 +512,22 @@ void rasterizeTriHalfSpaceNaive(FrameBuffer* frameBuf, const Triangle& tri)
 }
 
 
-void rasterizeTriHalfSpace(const FillFuncPtr pFill, FrameBuffer* frameBuf, const Triangle& tri)
+void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri)
 {
 #ifdef ENABLE_SSE
 
-  if(pFill == DrawSpan_Colored3D_SSE)
-  {
-    rasterizeTriHalfSpaceSimple3D<Colored3DSSE>(frameBuf, tri);
-  }
-  else if (pFill == DrawSpan_TexLinear3D_SSE)
-  {
-    rasterizeTriHalfSpaceSimple3D<ColoredTexured3DSSE>(frameBuf, tri);
-  }
-  else
-  {
+  //if(pFill == DrawSpan_Colored3D_SSE)
+  //{
+  //  rasterizeTriHalfSpaceSimple3D<Colored3DSSE>(frameBuf, tri);
+  //}
+  //else if (pFill == DrawSpan_TexLinear3D_SSE)
+  //{
+  //  rasterizeTriHalfSpaceSimple3D<ColoredTexured3DSSE>(frameBuf, tri);
+  //}
+  //else
+  //{
     rasterizeTriHalfSpaceSimple2D<Colored3DSSE>(frameBuf, tri);
-  }
+  //}
 
 #else // don't implement different versions without SSE for a while ...
 

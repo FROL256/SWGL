@@ -159,8 +159,6 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
   // const int vertNum = int(pBatch->vertPos.size());
   const int triNum = int(indices.size() / 3);
 
-  const FillFuncPtr pFill = nullptr;
-
   for (int triId = 0; triId < triNum; triId++)
   {
     const int    i1 = indices[triId * 3 + 0];
@@ -196,7 +194,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     swglTriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, &localTri, trianglesAreTextured);
     #endif // ENABLE_SSE
 
-    swglRasterizeTriangle(pFill, &frameBuff, localTri);
+    swglRasterizeTriangle(&frameBuff, localTri);
   }
 
 #ifdef MEASURE_STATS

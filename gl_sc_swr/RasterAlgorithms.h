@@ -14,7 +14,7 @@ void swglTriangleSetUpSSE(const SWGL_Context* a_pContext, const Batch* pBatch, c
 void swglTriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff, const int i1, const int i2, const int i3, Triangle* t1, bool triangleIsTextured);
 #endif
 
-static inline void swglRasterizeTriangle(const FillFuncPtr pFill, FrameBuffer* frameBuff, const Triangle& localTri)
+static inline void swglRasterizeTriangle(FrameBuffer* frameBuff, const Triangle& localTri)
 {
-  rasterizeTriHalfSpace(pFill, frameBuff, localTri);
+  rasterizeTriHalfSpace(frameBuff, localTri);
 }

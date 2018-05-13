@@ -265,18 +265,11 @@ struct ScreenTile
   int endOffs;
 };
 
-const int MAX_TILESX = 32;
-const int MAX_TILESY = 32;
-const int TILE_SIZE  = 64;
 
 static inline unsigned int divTileSize(unsigned int x)
 {
-  unsigned int res = (x >> 6);
-
-  if (res > MAX_TILESX)
-    return 0;
-  else
-    return res;
+  unsigned int res = x / BIN_SIZE;
+  return res;
 }
 
 struct Line
@@ -307,25 +300,12 @@ struct SWGL_DrawList
   std::vector<Line>                           m_linMemory; /// <M
   std::vector<Point>                          m_ptsMemory; /// <M
 
-  std::vector<FillFuncPtr>                    m_stateFuncs;
-
   std::vector<int>     m_tilesTriIndicesMemory; ///< N*M; M = m_tilesNumX*m_tilesNumY;
   int                  m_triTop;
   int                  m_linTop;
   int                  m_ptsTop;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // screen tiles data for parallel rasterizer
-  //
-  //ScreenTile        tiles[MAX_TILESX][MAX_TILESY];
-  std::vector<int2> tilesIds;
-  int m_tilesNumX;
-  int m_tilesNumY;
-
   mutable std::vector<Pipeline_State_Object> m_psoArray;
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };
 
 struct SWGL_Timings
@@ -536,6 +516,10 @@ static inline float4 swglClipSpaceToScreenSpaceTransform(float4 a_pos, const flo
   return float4(x*fw - 0.5f + viewportf.x, y*fh - 0.5f + viewportf.y, a_pos.z, a_pos.w);
 }
 
+void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch,
+                                   const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB);
+
+
 static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext != nullptr)
 {
   if (a_pContext->input.getCurrBatch()->vertPos.size() == 0) // if curr batch is empty, no need to change it.
@@ -545,9 +529,8 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
   SWGL_DrawList* pDrawList = &a_pContext->m_drawList;
   FrameBuffer fb           = swglBatchFb(a_pContext, pBatch->state);
   
-  const int  triNum        = int(pBatch->indices.size() / 3);
+  //const int  triNum        = int(pBatch->indices.size() / 3);
   //const int  freeSpace     = int(swglGetDrawListFreeSpace(pDrawList));
-  //
   //if (triNum >= freeSpace)
   //  glFlush();
   
@@ -555,16 +538,15 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
     return;
   #endif
 
+  if (pBatch->indices.size() == 0)
+    return;
+
+  swglRunBatchVertexShader(a_pContext, pBatch);
+
   if (a_pContext->m_useTiledFB)
-  {
-    if (pBatch->indices.size() != 0)
-      swglPushBatchTrianglesToList(a_pContext, pBatch, pDrawList, fb);
-  }
+    swglAppendTrianglesToDrawList(pDrawList, a_pContext, pBatch, fb, &a_pContext->m_tiledFrameBuffer);
   else
-  {
-    swglRunBatchVertexShader(a_pContext, pBatch);
     swglDrawBatchTriangles(a_pContext, pBatch, fb);
-  }
 
   pBatch->clear();
 

@@ -92,7 +92,7 @@ void SWGL_Context::InitCommon()
   m_texTop       = 0;
   m_textures.resize(1024); // max 1024 tex
 
-  m_useTiledFB = false;
+  m_useTiledFB = true;
   if(m_useTiledFB)
     swglInitDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
@@ -766,14 +766,6 @@ void swglTriangleSetUpSSE(const SWGL_Context* a_pContext, const Batch* pBatch, c
 #endif
 
 
-struct TileRasterData
-{
-  TileRasterData(SWGL_DrawList*  a_pDrawList, const FrameBuffer& a_fb) : pDrawList(a_pDrawList), pFrameBuff(&a_fb) {}
-  SWGL_DrawList*     pDrawList;
-  const FrameBuffer* pFrameBuff;
-};
-
-
 // void swglTileRaster_ForSeg(void* customData, int begin, int end)
 // {
 //   TileRasterData* pData = (TileRasterData*)customData;
@@ -843,7 +835,7 @@ void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pT
   a_pDrawList->m_linTop = 0;
   a_pDrawList->m_ptsTop = 0;
 
-  const size_t tilesNum = a_pDrawList->tilesIds.size();
+  const size_t tilesNum = a_pTiledFB->tiles.size();
 
   if (triNum == 0 || tilesNum == 0)
     return;
@@ -851,7 +843,6 @@ void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pT
   if (a_pDrawList->m_triMemory.size() < (size_t)triNum)
   {
     a_pDrawList->m_triMemory.resize(triNum);
-    a_pDrawList->m_stateFuncs.resize(triNum);
 
     if (a_pDrawList->m_linMemory.size() != MAX_INPUT_LINES)
     {
@@ -865,10 +856,8 @@ void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pT
 
   for (size_t i = 0; i < tilesNum; i++)
   {
-    int2 tileCoord = a_pDrawList->tilesIds[i];
-
     auto& tile2   = a_pTiledFB->tiles[i];
-    tile2.begOffs = (tileCoord.y*a_pDrawList->m_tilesNumX + tileCoord.x)*triNum;
+    tile2.begOffs = i*triNum;
     tile2.endOffs = tile2.begOffs;
   }
 
@@ -891,8 +880,6 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 #endif
 
   const int  triNum = int(pBatch->indices.size() / 3);
-  const FillFuncPtr pFill = nullptr;
-
   const int top = atomic_add(&a_pDrawList->m_triTop, triNum);
 
   a_pDrawList->m_psoArray.push_back(pBatch->state);
@@ -926,15 +913,10 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
                             ((pBatch->state.cullFaceMode == GL_BACK)  && (nz < 0.0f));
 
       if (cullFace)
-      {
-        a_pDrawList->m_stateFuncs[top + triId] = nullptr;
         continue;
-      }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    a_pDrawList->m_stateFuncs[top + triId] = pFill;
 
     Triangle* pTri   = &(a_pDrawList->m_triMemory[top + triId]);
 
@@ -960,11 +942,11 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
     {
       for (unsigned int tx = tMinX; tx <= tMaxX; tx++)
       {
-        const int tileMinX = tx*TILE_SIZE;
-        const int tileMinY = ty*TILE_SIZE;
+        const int tileMinX = tx*BIN_SIZE;
+        const int tileMinY = ty*BIN_SIZE;
         
-        const int tileMaxX = tx*TILE_SIZE + TILE_SIZE;
-        const int tileMaxY = ty*TILE_SIZE + TILE_SIZE;
+        const int tileMaxX = tx*BIN_SIZE + BIN_SIZE;
+        const int tileMaxY = ty*BIN_SIZE + BIN_SIZE;
 
         //auto& tile = a_pDrawList->tiles[tx][ty];
         auto& tile = a_pTiledFB->tiles[ty*a_pTiledFB->sizeX + tx];
@@ -991,9 +973,7 @@ void swglDrawListInParallel(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList
   Timer timer(true);
 #endif
 
-  const int tilesNum = int(a_pContext->m_drawList.tilesIds.size());
-
-  TileRasterData tdata(&a_pContext->m_drawList, frameBuff);
+  const int tilesNum = a_pContext->m_tiledFrameBuffer.tiles.size();
 
   // #pragma omp parallel for
   // for (int i = 0; i < tilesNum; i++)
@@ -1057,13 +1037,6 @@ void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext !
 //   else
 //     return res.y;
 // }
-
-
-void swglPushBatchTrianglesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb) // pre (a_pBatch != nullptr) && (a_pDrawList != nullptr) && (a_pContext != nullptr)
-{
-  swglRunBatchVertexShader(a_pContext, a_pBatch);
-  swglAppendTrianglesToDrawList(a_pDrawList, a_pContext, a_pBatch, a_fb, &a_pContext->m_tiledFrameBuffer);
-}
 
 
 void swglAppendLinesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff)

@@ -609,7 +609,7 @@ void rasterizeTriHalfSpaceBlockOrientedFixp(FrameBuffer* frameBuf, const Triangl
 
 
 
-void rasterizeTriHalfSpaceTwoLevel(const FillFuncPtr pf, FrameBuffer* frameBuf, const Triangle& tri)
+void rasterizeTriHalfSpaceTwoLevel(FrameBuffer* frameBuf, const Triangle& tri)
 {
 
 #ifdef ENABLE_SSE 
