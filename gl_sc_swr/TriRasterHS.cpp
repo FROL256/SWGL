@@ -4,6 +4,13 @@
 #include <cstdint>
 #include <memory.h>
 
+#ifdef WIN32
+#undef min
+#undef max
+#endif
+
+#include <algorithm>
+
 #ifdef ENABLE_SSE
 
 inline __m128 barycentricCoordFromHalfSpaceDist(const __m128& Cx123)
@@ -339,7 +346,7 @@ void rasterizeTriHalfSpaceSimple2D(FrameBuffer* frameBuf, const Triangle& tri)
   const int miny = tri.bb_iminY;
   const int maxy = tri.bb_imaxY;
 
-  int* colorBuffer = frameBuf->data;
+  int* colorBuffer = frameBuf->cbuffer;
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
@@ -405,7 +412,7 @@ void rasterizeTriHalfSpaceSimple3D(FrameBuffer* frameBuf, const Triangle& tri)
   const int miny = tri.bb_iminY;
   const int maxy = tri.bb_imaxY;
 
-  int* colorBuffer = frameBuf->data;
+  int* colorBuffer = frameBuf->cbuffer;
   //uint8_t* sbuff   = frameBuf->getSBuffer();
   float* zbuff     = frameBuf->getZBuffer();
 
@@ -487,7 +494,7 @@ void rasterizeTriHalfSpaceNaive(FrameBuffer* frameBuf, const Triangle& tri)
   const int miny = tri.bb_iminY;
   const int maxy = tri.bb_imaxY;
 
-  int* colorBuffer = frameBuf->data;
+  int* colorBuffer = frameBuf->cbuffer;
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
@@ -512,50 +519,83 @@ void rasterizeTriHalfSpaceNaive(FrameBuffer* frameBuf, const Triangle& tri)
 }
 
 
-void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri)
+void rasterizeTriHalf_WithRespectToTile(FrameBuffer* frameBuf, const Triangle& tri, int tileMinX, int tileMinY)
 {
-#ifdef ENABLE_SSE
+  const float tileMinX_f = float(tileMinX);
+  const float tileMinY_f = float(tileMinY);
 
-  //if(pFill == DrawSpan_Colored3D_SSE)
-  //{
-  //  rasterizeTriHalfSpaceSimple3D<Colored3DSSE>(frameBuf, tri);
-  //}
-  //else if (pFill == DrawSpan_TexLinear3D_SSE)
-  //{
-  //  rasterizeTriHalfSpaceSimple3D<ColoredTexured3DSSE>(frameBuf, tri);
-  //}
-  //else
-  //{
-    rasterizeTriHalfSpaceSimple2D<Colored3DSSE>(frameBuf, tri);
-  //}
+  const float y1 = tri.v3.y - tileMinY_f;
+  const float y2 = tri.v2.y - tileMinY_f;
+  const float y3 = tri.v1.y - tileMinY_f;
 
-#else // don't implement different versions without SSE for a while ...
+  const float x1 = tri.v3.x - tileMinX_f;
+  const float x2 = tri.v2.x - tileMinX_f;
+  const float x3 = tri.v1.x - tileMinX_f;
 
-  //rasterizeTriHalfSpaceNaive(frameBuf, tri);
-  //return;
+  // Deltas
+  const float Dx12 = x1 - x2;
+  const float Dx23 = x2 - x3;
+  const float Dx31 = x3 - x1;
 
-  //if (pFill == DrawSpan_Colored3D)
-  //{
-    rasterizeTriHalfSpaceSimple3D<Colored3D>(frameBuf, tri);
-  //}
-  //else if (pFill == DrawSpan_TexLinear3D)
-  //{
-  //  rasterizeTriHalfSpaceSimple3D<ColoredTextured3D>(frameBuf, tri);
-  //}
-  //else
-  //{
-  //  rasterizeTriHalfSpaceSimple2D<Colored2D>(frameBuf, tri);
-  //}
+  const float Dy12 = y1 - y2;
+  const float Dy23 = y2 - y3;
+  const float Dy31 = y3 - y1;
 
-#endif
+  // Bounding rectangle
+  const int minx = std::max(tri.bb_iminX - tileMinX, 0);
+  const int miny = std::max(tri.bb_iminY - tileMinY, 0);
+  const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
+  const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
+
+  int* colorBuffer = frameBuf->cbuffer;
+  //uint8_t* sbuff   = frameBuf->getSBuffer();
+  //float* zbuff     = frameBuf->getZBuffer();
+
+  // Constant part of half-edge functions
+  const float C1 = Dy12 * x1 - Dx12 * y1;
+  const float C2 = Dy23 * x2 - Dx23 * y2;
+  const float C3 = Dy31 * x3 - Dx31 * y3;
+
+  float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
+  float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
+  float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
+
+  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+
+  // Scan through bounding rectangle
+  for (int y = miny; y <= maxy; y++)
+  {
+    // Start value for horizontal scan
+    float Cx1 = Cy1;
+    float Cx2 = Cy2;
+    float Cx3 = Cy3;
+
+    for (int x = minx; x <= maxx; x++)
+    {
+      if (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON)
+      {
+        colorBuffer[offset + x] = 0xFFFFFFFF;
+      }
+
+      Cx1 -= Dy12;
+      Cx2 -= Dy23;
+      Cx3 -= Dy31;
+    }
+
+    Cy1 += Dx12;
+    Cy2 += Dx23;
+    Cy3 += Dx31;
+
+    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+  }
 
 }
 
 
 
-void rasterizeTriHalfSpaceSimple(FrameBuffer* frameBuf, const Triangle& tri)
+void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri, int a_tileX, int a_tileY)
 {
-#ifndef ENABLE_SSE
-  rasterizeTriHalfSpaceSimple2D<Colored2D>(frameBuf, tri);
-#endif
+  //rasterizeTriHalfSpaceSimple3D<Colored3D>(frameBuf, tri);
+  rasterizeTriHalf_WithRespectToTile(frameBuf, tri, a_tileX, a_tileY);
 }
+

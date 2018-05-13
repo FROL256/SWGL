@@ -42,7 +42,7 @@ static inline int nextLine(int y, int w, int h)   { return y + w; }
 struct FrameBuffer
 {
   FrameBuffer() : w(0), h(0), vx(0), vy(0), vw(0), vh(0),
-                  data(nullptr), zbuffer(nullptr), sbuffer(nullptr) {}
+                  cbuffer(nullptr), zbuffer(nullptr), sbuffer(nullptr) {}
 
   int w;
   int h;
@@ -52,7 +52,7 @@ struct FrameBuffer
   int vw; // viewport width
   int vh; // viewport height
 
-  int*     data;
+  int*     cbuffer;
   float*   zbuffer;
   uint8_t* sbuffer;
 
@@ -182,7 +182,7 @@ struct ALIGNED16 TriangleDataYesSSE
 #endif
 
 
-void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri); // half space rasterizer
+void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri, int a_tileX = 0, int a_tileY = 0); // half space rasterizer
 void rasterizeTriHalfSpaceTwoLevel(FrameBuffer* frameBuf, const Triangle& tri); // Two level vectorized half space rasterizer
 
 void rasterizeLine(FrameBuffer* frameBuf, float2 p1, float2 p2, float4 c1, float4 c2);

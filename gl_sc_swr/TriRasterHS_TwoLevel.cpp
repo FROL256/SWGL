@@ -331,7 +331,7 @@ void rasterizeTriHalfSpaceTiledSimple(FrameBuffer* frameBuf, const Triangle& tri
   const int miny = tri.bb_iminY;
   const int maxy = tri.bb_imaxY;
 
-  int* colorBuffer = frameBuf->data + miny * frameBuf->w;
+  int* colorBuffer = frameBuf->cbuffer + miny * frameBuf->w;
 
   // Constant part of half-edge functions
   const float C1 = Dy12 * x1 - Dx12 * y1;
@@ -507,7 +507,7 @@ void rasterizeTriHalfSpaceBlockOrientedFixp(FrameBuffer* frameBuf, const Triangl
 
   const int w = frameBuf->w;
 
-  int* colorBuffer = frameBuf->data + miny * w;
+  int* colorBuffer = frameBuf->cbuffer + miny * w;
 
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;

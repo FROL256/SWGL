@@ -689,7 +689,7 @@ GLAPI void APIENTRY glFlush(void)
   //
   FrameBuffer frameBuff;
 
-  frameBuff.data    = g_pContext->m_pixels2;
+  frameBuff.cbuffer    = g_pContext->m_pixels2;
   frameBuff.zbuffer = g_pContext->m_zbuffer;
   frameBuff.sbuffer = g_pContext->m_sbuffer;
   frameBuff.w       = g_pContext->m_width;
@@ -704,7 +704,47 @@ GLAPI void APIENTRY glFlush(void)
 
   if (g_pContext->m_useTiledFB)
   {
-    g_pContext->m_tiledFrameBuffer.TestFillNonEmptyTiles();
+    //g_pContext->m_tiledFrameBuffer.TestFillNonEmptyTiles();
+    
+    const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
+    
+    //#pragma omp parallel for
+    for(int i=0; i<tilesNum; i++)
+    {
+      auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
+      
+      FrameBuffer fb;
+      fb.w  = BIN_SIZE;
+      fb.h  = BIN_SIZE;
+      fb.vx = 0;
+      fb.vy = 0;
+      fb.vw = BIN_SIZE;
+      fb.vh = BIN_SIZE;
+    
+      fb.sbuffer = nullptr;
+      fb.zbuffer = nullptr;
+      fb.cbuffer = tile.m_color;
+    
+      for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
+      {
+        const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
+        const auto& tri  = pDrawList->m_triMemory[triId2];
+        
+        // const auto* pso = &(pDrawList->m_psoArray[tri.psoId]);     
+        // if (pso->depthTestEnabled)
+        //   fb.zbuffer = zbuff;
+        // else
+        //   fb.zbuffer = nullptr;
+        // if (pso->stencilTestEnabled)
+        //   fb.sbuffer = sbuff;
+        // else
+        //   fb.sbuffer = nullptr;
+       
+        rasterizeTriHalfSpace(&fb, tri, tile.minX, tile.minY);
+      }
+    
+    }
+
     if (pDrawList->m_triTop != 0 || pDrawList->m_linTop != 0 || pDrawList->m_ptsTop != 0)
       swglInitDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }

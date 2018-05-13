@@ -437,7 +437,6 @@ inline float4x4* swglGetCurrMatrix(SWGL_Context* a_pContext) // pre (a_pContext 
 }
 
 void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch);
-void swglPushBatchTrianglesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
 void swglPushBatchLinesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
 void swglPushBatchPointsToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
 
@@ -466,7 +465,7 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
 {
   FrameBuffer frameBuff;
 
-  frameBuff.data    = a_pContext->m_pixels2;
+  frameBuff.cbuffer    = a_pContext->m_pixels2;
   frameBuff.zbuffer = a_pContext->m_zbuffer;
   frameBuff.sbuffer = a_pContext->m_sbuffer;
   frameBuff.w       = a_pContext->m_width;

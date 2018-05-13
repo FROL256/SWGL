@@ -185,7 +185,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Triangle localTri;
-    localTri.curr_sval = pBatch->state.stencilValue;
+    localTri.curr_sval  = pBatch->state.stencilValue;
     localTri.curr_smask = pBatch->state.stencilMask;
 
     #ifdef ENABLE_SSE
