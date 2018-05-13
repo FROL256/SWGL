@@ -89,8 +89,6 @@ struct TriangleDataNoSSE
     psoId = -1;
   }
 
-  TexSampler texS;
-
   float4 v1;
   float4 v2;
   float4 v3;
@@ -111,9 +109,11 @@ struct TriangleDataNoSSE
   int bb_iminY;
   int bb_imaxY;
 
+  int     psoId;
   uint8_t curr_sval;
   uint8_t curr_smask;
-  int psoId;
+
+  TexSampler texS;
 };
 
 
