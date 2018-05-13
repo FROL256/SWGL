@@ -54,6 +54,7 @@ void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
 {
   const int pitchX = sizeX*BIN_SIZE;
 
+  //#pragma omp parallel for num_threads(2)
   for (int tileId = 0; tileId < tiles.size(); tileId++)
   {
     int32_t* output = a_data + tiles[tileId].minY*pitchX + tiles[tileId].minX;

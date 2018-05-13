@@ -297,9 +297,6 @@ struct SWGL_DrawList
   std::vector<Triangle>                       m_triMemory; ///< N
 #endif
 
-  std::vector<Line>                           m_linMemory; /// <M
-  std::vector<Point>                          m_ptsMemory; /// <M
-
   std::vector<int>     m_tilesTriIndicesMemory; ///< N*M; M = m_tilesNumX*m_tilesNumY;
   int                  m_triTop;
   int                  m_linTop;
@@ -437,10 +434,7 @@ inline float4x4* swglGetCurrMatrix(SWGL_Context* a_pContext) // pre (a_pContext 
 }
 
 void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch);
-void swglPushBatchLinesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
-void swglPushBatchPointsToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb);
-
-void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum);
+void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum);
 void swglDrawListInParallel(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff);
 void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 //int  swglGetDrawListFreeSpace(SWGL_DrawList* a_pDrawList);

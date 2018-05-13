@@ -251,6 +251,7 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
   {
     if (mask & GL_COLOR_BUFFER_BIT)
       g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
+    swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
   else
   {
@@ -707,8 +708,9 @@ GLAPI void APIENTRY glFlush(void)
     //g_pContext->m_tiledFrameBuffer.TestFillNonEmptyTiles();
     
     const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
-    
-    #pragma omp parallel for num_threads(2)
+   
+
+    //#pragma omp parallel for num_threads(2)
     for(int i=0; i<tilesNum; i++)
     {
       auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
@@ -746,7 +748,7 @@ GLAPI void APIENTRY glFlush(void)
     }
 
     if (pDrawList->m_triTop != 0 || pDrawList->m_linTop != 0 || pDrawList->m_ptsTop != 0)
-      swglInitDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
+      swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
   else
   {
@@ -1225,7 +1227,7 @@ GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     HDC currHDC = g_pContext->m_hdc;
     g_pContext->Destroy();
     g_pContext->Create(currHDC, width, height);
-    swglInitDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
+    swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
 
   #else

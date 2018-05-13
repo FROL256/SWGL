@@ -70,18 +70,10 @@ void swglTriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, cons
   t1->t2 = tx2;
   t1->t3 = tx3;
 
-  t1->triAreaInv = 1.0f / edgeFunction(to_float2(v1), to_float2(v2), to_float2(v3));
-
-
-  const float2 edge0 = to_float2(v3 - v2);
-  const float2 edge1 = to_float2(v1 - v3);
-  const float2 edge2 = to_float2(v2 - v1);
-
-  t1->edgeTest0 = ((edge0.y == 0.0f && edge0.x > 0.0f) || edge0.y > 0.0f);
-  t1->edgeTest1 = ((edge1.y == 0.0f && edge1.x > 0.0f) || edge1.y > 0.0f);
-  t1->edgeTest2 = ((edge2.y == 0.0f && edge2.x > 0.0f) || edge2.y > 0.0f);
-
-
+  const float triArea = edgeFunction(to_float2(v1), to_float2(v2), to_float2(v3));
+  t1->triArea    = triArea;
+  t1->triAreaInv = 1.0f / triArea;
+  
   t1->bb_iminX = (int)(fmin(v1.x, fmin(v2.x, v3.x)) - 1.0f);
   t1->bb_imaxX = (int)(fmax(v1.x, fmax(v2.x, v3.x)) + 1.0f);
 
@@ -90,7 +82,6 @@ void swglTriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, cons
 
   clampTriBBox(t1, frameBuff);  // need this for scan line to prevent out of border
                                 //
-
   if (triangleIsTextured)
   {
     const SWGL_TextureStorage& tex = a_pContext->m_textures[pBatch->state.slot_GL_TEXTURE_2D];

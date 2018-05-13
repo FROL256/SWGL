@@ -94,7 +94,7 @@ void SWGL_Context::InitCommon()
 
   m_useTiledFB = true;
   if(m_useTiledFB)
-    swglInitDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
+    swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
 
 
@@ -829,7 +829,7 @@ void swglTriangleSetUpSSE(const SWGL_Context* a_pContext, const Batch* pBatch, c
 // }
 
 
-void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum)
+void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum)
 {
   a_pDrawList->m_triTop = 0;
   a_pDrawList->m_linTop = 0;
@@ -841,15 +841,7 @@ void swglInitDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pT
     return;
 
   if (a_pDrawList->m_triMemory.size() < (size_t)triNum)
-  {
     a_pDrawList->m_triMemory.resize(triNum);
-
-    if (a_pDrawList->m_linMemory.size() != MAX_INPUT_LINES)
-    {
-      a_pDrawList->m_linMemory.resize(MAX_INPUT_LINES);
-      a_pDrawList->m_ptsMemory.resize(MAX_INPUT_POINTS);
-    }
-  }
 
   if (a_pDrawList->m_tilesTriIndicesMemory.size() < triNum*tilesNum)
     a_pDrawList->m_tilesTriIndicesMemory.resize(triNum*tilesNum);
@@ -1037,73 +1029,3 @@ void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext !
 //   else
 //     return res.y;
 // }
-
-
-void swglAppendLinesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff)
-{
-  a_pDrawList->m_psoArray.push_back(pBatch->state);
-  int psoId = a_pDrawList->m_psoArray.size() - 1;
-
-  for (int i = 0; i < int(pBatch->indicesLines.size()); i += 2)
-  {
-    const int    i1 = pBatch->indicesLines[i + 0];
-    const int    i2 = pBatch->indicesLines[i + 1];
-
-    const float4 v1 = pBatch->vertPos[i1];
-    const float4 v2 = pBatch->vertPos[i2];
-
-    const float4 c1 = pBatch->vertColor[i1];
-    const float4 c2 = pBatch->vertColor[i2];
-
-    Line line;
-    line.v1 = float2(v1.x, v1.y);
-    line.v2 = float2(v2.x, v2.y);
-    line.c1 = c1;
-    line.c2 = c2;
-    line.psoId = psoId;
-
-    a_pDrawList->m_linMemory[a_pDrawList->m_linTop] = line;
-    a_pDrawList->m_linTop++;
-  }
-}
-
-void swglAppendPointsToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff)
-{
-  a_pDrawList->m_psoArray.push_back(pBatch->state);
-  int psoId = a_pDrawList->m_psoArray.size() - 1;
-
-  for (int i = 0; i < int(pBatch->indicesPoints.size()); i += 2)
-  {
-    const float psz = pBatch->pointSize[(i / 2)];
-
-    for (int j = pBatch->indicesPoints[i + 0]; j < pBatch->indicesPoints[i + 1]; j++)
-    {
-      const float4 v1 = pBatch->vertPos[j];
-      const float4 c1 = pBatch->vertColor[j];
-
-      Point point;
-      point.v1  = float2(v1.x, v1.y);
-      point.c1  = c1;
-      point.psz = psz;
-      point.psz = psz;
-      point.psoId = psoId;
-
-      a_pDrawList->m_ptsMemory[a_pDrawList->m_ptsTop] = point;
-      a_pDrawList->m_ptsTop++;
-    }
-  }
-}
-
-
-void swglPushBatchLinesToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb)
-{
-  swglRunBatchVertexShader(a_pContext, a_pBatch);
-  swglAppendLinesToDrawList(a_pDrawList, a_pContext, a_pBatch, a_fb);
-}
-
-void swglPushBatchPointsToList(SWGL_Context* a_pContext, Batch* a_pBatch, SWGL_DrawList* a_pDrawList, const FrameBuffer& a_fb)
-{
-  swglRunBatchVertexShader(a_pContext, a_pBatch);
-  swglAppendPointsToDrawList(a_pDrawList, a_pContext, a_pBatch, a_fb);
-}
-

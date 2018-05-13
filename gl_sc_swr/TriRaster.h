@@ -104,15 +104,12 @@ struct TriangleDataNoSSE
   float2 t3;
 
   float  triAreaInv;
+  float  triArea;
 
   int bb_iminX;
   int bb_imaxX;
   int bb_iminY;
   int bb_imaxY;
-
-  bool edgeTest0;
-  bool edgeTest1;
-  bool edgeTest2;
 
   uint8_t curr_sval;
   uint8_t curr_smask;
@@ -162,10 +159,6 @@ struct ALIGNED16 TriangleDataYesSSE
   int bb_imaxX;
   int bb_iminY;
   int bb_imaxY;
-
-  bool   edgeTest0;
-  bool   edgeTest1;
-  bool   edgeTest2;
 
   uint8_t curr_sval;
   uint8_t curr_smask;
