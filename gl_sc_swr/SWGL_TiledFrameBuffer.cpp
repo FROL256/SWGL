@@ -46,6 +46,7 @@ void SWGL_FrameBuffer::Resize(int a_w, int a_h)
 
 void SWGL_FrameBuffer::ClearColor(int32_t a_color)
 {
+  #pragma omp parallel for num_threads(NUM_THREADS)
   for (int tileId = 0; tileId < tiles.size(); tileId++)
     tiles[tileId].ClearColor(a_color);
 }
@@ -54,7 +55,7 @@ void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
 {
   const int pitchX = sizeX*BIN_SIZE;
 
-  //#pragma omp parallel for num_threads(2)
+  #pragma omp parallel for num_threads(NUM_THREADS)
   for (int tileId = 0; tileId < tiles.size(); tileId++)
   {
     int32_t* output = a_data + tiles[tileId].minY*pitchX + tiles[tileId].minX;

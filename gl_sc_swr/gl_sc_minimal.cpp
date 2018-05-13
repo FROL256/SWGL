@@ -705,12 +705,10 @@ GLAPI void APIENTRY glFlush(void)
 
   if (g_pContext->m_useTiledFB)
   {
-    //g_pContext->m_tiledFrameBuffer.TestFillNonEmptyTiles();
     
     const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
-   
 
-    //#pragma omp parallel for num_threads(2)
+    #pragma omp parallel for num_threads(NUM_THREADS)
     for(int i=0; i<tilesNum; i++)
     {
       auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
