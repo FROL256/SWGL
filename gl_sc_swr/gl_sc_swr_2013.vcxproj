@@ -306,6 +306,7 @@
     <ClCompile Include="gl_sc_standart.cpp" />
     <ClCompile Include="gl_standart.cpp" />
     <ClCompile Include="gl_win.cpp" />
+    <ClCompile Include="HWImplementationPureCpp.cpp" />
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="RasterAlgorithms.cpp" />
     <ClCompile Include="swgl.cpp" />

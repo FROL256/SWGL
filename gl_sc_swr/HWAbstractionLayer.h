@@ -23,18 +23,26 @@ enum ROP_TYPE { ROP_FillColor = 1,
                 ROP_TexLinear3D_Blend,
 };         
 
-struct HWImplementationExample
+struct HWImplementationPureCpp
 {
-  typedef int TriangleType;
-  typedef float4 f4;
+  typedef TriangleDataNoSSE TriangleType;
 
-  void memset32(int32_t* a_data, int32_t val, int32_t numElements);
+  static void memset32(int32_t* a_data, int32_t val, int32_t numElements);
 
-  static inline f4 VertexTransform(const f4& v_in, const f4& viewportData);
+  static void VertexShader(const float* v_in4f, float* v_out4f, int a_numVert, 
+                           const float viewportData[4], const float worldViewMatrix[16], const float projMatrix[16]);
 
-  static inline void TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff, 
-                                   const int i1, const int i2, const int i3, bool triangleIsTextured,
-                                   TriangleType* t1);
+  static void TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff, 
+                            const int i1, const int i2, const int i3, bool triangleIsTextured,
+                            TriangleType* t1);
 
-  static inline void RasterizeTriangle(ROP_TYPE a_ropT, FrameBuffer* frameBuf, const TriangleType& tri, int tileMinX, int tileMinY);
+  static void RasterizeTriangle(ROP_TYPE a_ropT, FrameBuffer* frameBuf, const TriangleType& tri, int tileMinX, int tileMinY);
 };
+
+
+//@select current implementation here via typedef assigment :)
+typedef HWImplementationPureCpp HWImpl;
+
+
+
+using Triangle = HWImplementationPureCpp::TriangleType;

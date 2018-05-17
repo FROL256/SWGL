@@ -1,23 +1,9 @@
 #include "SWGL_TiledFrameBuffer.h"
+#include "HWAbstractionLayer.h"
 
 void SWGL_ScreenTile::ClearColor(int32_t a_color)
 {
-  const uint64_t val = (((uint64_t)a_color) << 32) | (uint64_t)a_color;
-
-  uint64_t* color64  = (uint64_t*)(m_color);
-  constexpr int size = (BIN_SIZE*BIN_SIZE/2);
-
-  for (int i = 0; i < size; i += 8)
-  {
-    color64[i + 0] = val;
-    color64[i + 1] = val;
-    color64[i + 2] = val;
-    color64[i + 3] = val;
-    color64[i + 4] = val;
-    color64[i + 5] = val;
-    color64[i + 6] = val;
-    color64[i + 7] = val;
-  }
+  HWImpl::memset32(m_color, a_color, BIN_SIZE*BIN_SIZE);
 }
 
 void SWGL_FrameBuffer::Resize(int a_w, int a_h) 

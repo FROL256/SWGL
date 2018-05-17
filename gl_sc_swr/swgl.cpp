@@ -1,5 +1,6 @@
 #include "swgl.h"
 #include "RasterAlgorithms.h"
+#include "HWAbstractionLayer.h"
 
 #ifdef FULL_GL
   #include "gl_std.h"
@@ -512,66 +513,17 @@ void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch) // pre (a
   Timer timer(true);
 #endif
 
-  float4 viewportf((float)pBatch->state.viewport[0], (float)pBatch->state.viewport[1], (float)pBatch->state.viewport[2], (float)pBatch->state.viewport[3]);
+  const float viewportf[4] = { (float)pBatch->state.viewport[0], 
+                               (float)pBatch->state.viewport[1], 
+                               (float)pBatch->state.viewport[2], 
+                               (float)pBatch->state.viewport[3] };
 
-  pBatch->state.worldViewProjMatrix = mul(pBatch->state.projMatrix, pBatch->state.worldViewMatrix);
-
-#ifdef ENABLE_SSE_VS
-
-  const auto& m = pBatch->state.worldViewProjMatrix;
-
-  for (int col = 0; col < 4; col++)
-    pBatch->state.worlViewProjCols[col] = _mm_set_ps(m.M(col, 3), m.M(col, 2), m.M(col, 1), m.M(col, 0));
-
-#endif
-
-  if (isIdentityMatrix(pBatch->state.projMatrix))
-  {
-    for (int i = 0; i < int(pBatch->vertPos.size()); i++)
-    {
-      const float4 vClipSpace   = swglVertexShaderTransform2D(pBatch, pBatch->vertPos[i]);
-      const float4 vScreenSpace = swglClipSpaceToScreenSpaceTransform(vClipSpace, viewportf);
-
-      pBatch->vertPos[i] = vScreenSpace;
-    }
-  }
-  else
-  {
-
-#ifdef ENABLE_SSE_VS
-
-    float* vpos = (float*)&pBatch->vertPos[0];
-
-    const __m128 viewportv = _mm_set_ps(viewportf.w, viewportf.z, viewportf.y, viewportf.x);
-
-    for (int i = 0; i < int(pBatch->vertPos.size()); i++)
-    {
-      const __m128 oldVal = _mm_load_ps(vpos + i * 4);
-
-      const __m128 vClipSpace   = swglVertexShaderTransformSSE(pBatch, oldVal);
-      const __m128 vScreenSpace = swglClipSpaceToScreenSpaceTransformSSE(vClipSpace, viewportv);
-
-      _mm_store_ps(vpos + i * 4, vScreenSpace);
-    }
-
-#else
-
-    for (int i = 0; i < int(pBatch->vertPos.size()); i++)
-    {
-      const float4 vClipSpace   = swglVertexShaderTransform(pBatch, pBatch->vertPos[i]);
-      const float4 vScreenSpace = swglClipSpaceToScreenSpaceTransform(vClipSpace, viewportf);
-
-      pBatch->vertPos[i] = vScreenSpace;
-    }
-
-#endif
-
-  }
+  HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPos.data(), int(pBatch->vertPos.size()),
+                        viewportf, pBatch->state.worldViewMatrix.L(), pBatch->state.projMatrix.L());
 
 #ifdef MEASURE_STATS
   a_pContext->m_timeStats.msVertexShader += timer.getElapsed()*1000.0f;
 #endif
-
 }
 
 void clampTriBBox(Triangle* t1, const FrameBuffer& frameBuff)
@@ -911,16 +863,11 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Triangle* pTri   = &(a_pDrawList->m_triMemory[top + triId]);
-
     pTri->psoId      = psoId;
     pTri->curr_sval  = pBatch->state.stencilValue;
     pTri->curr_smask = pBatch->state.stencilMask;
 
-  #ifdef ENABLE_SSE
-    swglTriangleSetUpSSE(a_pContext, pBatch, frameBuff, i1, i2, i3, pTri, trianglesAreTextured);
-  #else
-    swglTriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, pTri, trianglesAreTextured);
-  #endif
+    HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, trianglesAreTextured, pTri);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

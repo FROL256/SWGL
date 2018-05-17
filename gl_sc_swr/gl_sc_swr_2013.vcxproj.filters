@@ -25,6 +25,9 @@
     <ClCompile Include="BatchExport.cpp" />
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
+    <ClCompile Include="HWImplementationPureCpp.cpp">
+      <Filter>Rasterizers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -47,7 +50,9 @@
     <ClInclude Include="pugiconfig.hpp" />
     <ClInclude Include="pugixml.hpp" />
     <ClInclude Include="SWGL_TiledFrameBuffer.h" />
-    <ClInclude Include="HWAbstractionLayer.h" />
+    <ClInclude Include="HWAbstractionLayer.h">
+      <Filter>Rasterizers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl32.def" />

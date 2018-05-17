@@ -10,6 +10,8 @@
   #include "Timer.h"
 #endif
 
+#include "HWAbstractionLayer.h"
+
 SWGL_Context* g_pContext = nullptr;
 
 
@@ -739,8 +741,8 @@ GLAPI void APIENTRY glFlush(void)
         //   fb.sbuffer = sbuff;
         // else
         //   fb.sbuffer = nullptr;
-       
-        rasterizeTriHalfSpace(&fb, tri, tile.minX, tile.minY);
+
+        HWImpl::RasterizeTriangle(ROP_FillColor, &fb, tri, tile.minX, tile.minY);
       }
     
     }

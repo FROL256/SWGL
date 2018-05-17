@@ -178,10 +178,6 @@ struct ALIGNED16 TriangleDataYesSSE
 void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri, int a_tileX = 0, int a_tileY = 0); // half space rasterizer
 void rasterizeTriHalfSpaceTwoLevel(FrameBuffer* frameBuf, const Triangle& tri); // Two level vectorized half space rasterizer
 
-void rasterizeLine(FrameBuffer* frameBuf, float2 p1, float2 p2, float4 c1, float4 c2);
-void rasterizePoint(FrameBuffer* frameBuf, float2 p1, float4 c1, float size);
-
-
 
 static inline bool AABBTriangleOverlap(const Triangle& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY)
 {
