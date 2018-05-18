@@ -742,7 +742,8 @@ GLAPI void APIENTRY glFlush(void)
         // else
         //   fb.sbuffer = nullptr;
 
-        HWImpl::RasterizeTriangle(ROP_FillColor, &fb, tri, tile.minX, tile.minY);
+        HWImpl::RasterizeTriangle(ROP_FillColor, tri, tile.minX, tile.minY,
+                                  &fb);
       }
     
     }

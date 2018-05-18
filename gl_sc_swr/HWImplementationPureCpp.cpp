@@ -70,8 +70,7 @@ void HWImplementationPureCpp::VertexShader(const float* v_in4f, float* v_out4f, 
 }
 
 void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff,
-                                            const int i1, const int i2, const int i3, bool triangleIsTextured,
-                                            TriangleType* t1)
+                                            const int i1, const int i2, const int i3, TriangleType* t1)
 {
   const float4 v1 = pBatch->vertPos[i1];
   const float4 v2 = pBatch->vertPos[i2];
@@ -108,8 +107,11 @@ void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, cons
   t1->bb_iminY = (int)(fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f);
   t1->bb_imaxY = (int)(fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f);
 
-  clampTriBBox(t1, frameBuff);  // need this for scan line to prevent out of border
+  clampTriBBox(t1, frameBuff);  // need this to prevent out of border
                                 //
+
+  const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
+
   if (triangleIsTextured)
   {
     const SWGL_TextureStorage& tex = a_pContext->m_textures[pBatch->state.slot_GL_TEXTURE_2D];
@@ -232,7 +234,8 @@ static void rasterizeTriHalf_WithRespectToTile(const Triangle& tri, int tileMinX
 
 
 
-void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, FrameBuffer* frameBuf, const TriangleType& tri, int tileMinX, int tileMinY)
+void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleType& tri, int tileMinX, int tileMinY,
+                                                FrameBuffer* frameBuf)
 {
   rasterizeTriHalf_WithRespectToTile(tri, tileMinX, tileMinY, frameBuf);
 }

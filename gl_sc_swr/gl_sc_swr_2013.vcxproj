@@ -294,7 +294,6 @@
     <ClInclude Include="LiteMath.h" />
     <ClInclude Include="pugiconfig.hpp" />
     <ClInclude Include="pugixml.hpp" />
-    <ClInclude Include="RasterAlgorithms.h" />
     <ClInclude Include="swgl.h" />
     <ClInclude Include="TexSampler.h" />
     <ClInclude Include="Timer.h" />
@@ -308,7 +307,6 @@
     <ClCompile Include="gl_win.cpp" />
     <ClCompile Include="HWImplementationPureCpp.cpp" />
     <ClCompile Include="pugixml.cpp" />
-    <ClCompile Include="RasterAlgorithms.cpp" />
     <ClCompile Include="swgl.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
     <ClCompile Include="Timer.cpp" />

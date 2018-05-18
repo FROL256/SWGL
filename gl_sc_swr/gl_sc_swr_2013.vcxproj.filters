@@ -19,9 +19,6 @@
     <ClCompile Include="swgl.cpp">
       <Filter>gl_common</Filter>
     </ClCompile>
-    <ClCompile Include="RasterAlgorithms.cpp">
-      <Filter>Rasterizers</Filter>
-    </ClCompile>
     <ClCompile Include="BatchExport.cpp" />
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
@@ -43,9 +40,6 @@
     </ClInclude>
     <ClInclude Include="swgl.h">
       <Filter>gl_common</Filter>
-    </ClInclude>
-    <ClInclude Include="RasterAlgorithms.h">
-      <Filter>Rasterizers</Filter>
     </ClInclude>
     <ClInclude Include="pugiconfig.hpp" />
     <ClInclude Include="pugixml.hpp" />

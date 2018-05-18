@@ -33,10 +33,11 @@ struct HWImplementationPureCpp
                            const float viewportData[4], const float worldViewMatrix[16], const float projMatrix[16]);
 
   static void TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff, 
-                            const int i1, const int i2, const int i3, bool triangleIsTextured,
+                            const int i1, const int i2, const int i3,
                             TriangleType* t1);
 
-  static void RasterizeTriangle(ROP_TYPE a_ropT, FrameBuffer* frameBuf, const TriangleType& tri, int tileMinX, int tileMinY);
+  static void RasterizeTriangle(ROP_TYPE a_ropT, const TriangleType& tri, int tileMinX, int tileMinY, 
+                                FrameBuffer* frameBuf);
 };
 
 

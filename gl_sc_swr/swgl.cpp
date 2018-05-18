@@ -1,5 +1,4 @@
 #include "swgl.h"
-#include "RasterAlgorithms.h"
 #include "HWAbstractionLayer.h"
 
 #ifdef FULL_GL
@@ -712,73 +711,7 @@ void swglTriangleSetUpSSE(const SWGL_Context* a_pContext, const Batch* pBatch, c
 
 #else
 
-
-
-
 #endif
-
-
-// void swglTileRaster_ForSeg(void* customData, int begin, int end)
-// {
-//   TileRasterData* pData = (TileRasterData*)customData;
-// 
-//   SWGL_DrawList* a_pDrawList    = pData->pDrawList;
-//   const FrameBuffer* pFrameBuff = pData->pFrameBuff;
-// 
-// 
-// #ifdef ENABLE_SSE
-//   _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);
-// #endif
-// 
-//   if (a_pDrawList == nullptr || pFrameBuff == nullptr)
-//     return;
-// 
-//   if (a_pDrawList->tilesIds.size() < size_t(end))
-//     return;
-// 
-//   for (int i = begin; i < end; i++)
-//   {
-//     const int2 tileCoord = a_pDrawList->tilesIds[i];
-//     const auto& tile     = a_pDrawList->tiles[tileCoord.x][tileCoord.y];
-// 
-//     FrameBuffer fb = (*pFrameBuff);
-// 
-//     fb.vx = tile.minX;
-//     fb.vy = tile.minY;
-//     fb.vw = tile.maxX - tile.minX;
-//     fb.vh = tile.maxY - tile.minY;
-// 
-//     // clamp to screen size
-//     if (fb.vx + fb.vw >= fb.w) fb.vw = fb.w - fb.vx;
-//     if (fb.vy + fb.vh >= fb.h) fb.vh = fb.h - fb.vy;
-// 
-//     auto zbuff = fb.zbuffer;
-//     auto sbuff = fb.sbuffer;
-// 
-//     for (int tri = tile.beginOffs; tri < tile.endOffs; tri++)
-//     {
-//       const int triId2 = a_pDrawList->m_tilesTriIndicesMemory[tri];
-//       Triangle triCopy = a_pDrawList->m_triMemory[triId2];
-// 
-//       const auto* pso = &(a_pDrawList->m_psoArray[triCopy.psoId]);
-// 
-//       if (pso->depthTestEnabled)
-//         fb.zbuffer = zbuff;
-//       else
-//         fb.zbuffer = nullptr;
-// 
-//       if (pso->stencilTestEnabled)
-//         fb.sbuffer = sbuff;
-//       else
-//         fb.sbuffer = nullptr;
-// 
-//       clampTriBBox(&triCopy, fb); // frameBuff
-// 
-//       swglRasterizeTriangle(a_pDrawList->m_stateFuncs[triId2], &fb, triCopy);
-//     }
-//   }
-// 
-// }
 
 
 void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum)
@@ -832,8 +765,6 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
   int* triIndicesMem              = &(a_pDrawList->m_tilesTriIndicesMemory[0]);
   const std::vector<int>& indices = pBatch->indices;
 
-  const bool trianglesAreTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
-
   //#pragma omp parallel for if (triNum >= 1000)
   for (int triId = 0; triId < triNum; triId++)
   {
@@ -867,7 +798,8 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
     pTri->curr_sval  = pBatch->state.stencilValue;
     pTri->curr_smask = pBatch->state.stencilMask;
 
-    HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, trianglesAreTextured, pTri);
+    HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, 
+                          pTri);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -905,24 +837,69 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 
 }
 
-void swglDrawListInParallel(SWGL_Context* a_pContext, SWGL_DrawList* a_pDrawList, const FrameBuffer& frameBuff)
+void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff) // pre (a_pContext != nullptr && pBatch != nullptr)
 {
+  const std::vector<int>& indices = pBatch->indices;
+
+  if (indices.size() == 0)
+    return;
 
 #ifdef MEASURE_STATS
   Timer timer(true);
+  //Timer timerLocal(false);
 #endif
 
-  const int tilesNum = a_pContext->m_tiledFrameBuffer.tiles.size();
+  float timeAccumTriSetUp = 0.0f;
+  float timeAccumTriRaster = 0.0f;
 
-  // #pragma omp parallel for
-  // for (int i = 0; i < tilesNum; i++)
-  //   swglTileRaster_ForSeg((void*)&tdata, i, i + 1);
+  const bool trianglesAreTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
+
+  // const int vertNum = int(pBatch->vertPos.size());
+  const int triNum = int(indices.size() / 3);
+
+  for (int triId = 0; triId < triNum; triId++)
+  {
+    const int    i1 = indices[triId * 3 + 0];
+    const int    i2 = indices[triId * 3 + 1];
+    const int    i3 = indices[triId * 3 + 2];
+
+    const float4 v1 = pBatch->vertPos[i1];
+    const float4 v2 = pBatch->vertPos[i2];
+    const float4 v3 = pBatch->vertPos[i3];
+
+    if (pBatch->state.cullFaceEnabled && pBatch->state.cullFaceMode != 0)
+    {
+      const float4 u = v2 - v1;
+      const float4 v = v3 - v1;
+      const float nz = u.x*v.y - u.y*v.x;
+
+      const bool cullFace = ((pBatch->state.cullFaceMode == GL_FRONT) && (nz > 0.0f)) ||
+                            ((pBatch->state.cullFaceMode == GL_BACK) && (nz < 0.0f));
+
+      if (cullFace)
+        continue;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Triangle localTri;
+    localTri.curr_sval  = pBatch->state.stencilValue;
+    localTri.curr_smask = pBatch->state.stencilMask;
+
+    HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3,
+                          &localTri);
+
+    HWImpl::RasterizeTriangle(ROP_FillColor, localTri, 0, 0,
+                              &frameBuff);
+  }
 
 #ifdef MEASURE_STATS
   a_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
 #endif
 
 }
+
+
 
 
 void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext != nullptr && pBatch != nullptr)
