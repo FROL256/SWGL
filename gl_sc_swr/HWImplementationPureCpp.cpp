@@ -34,6 +34,56 @@ void HWImplementationPureCpp::memset32(int32_t* a_data, int32_t a_val, int32_t n
   }
 }
 
+bool HWImplementationPureCpp::AABBTriangleOverlap(const TriangleType& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY)
+{
+   const bool overlapBoxBox = IntersectBoxBox(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
+                                              int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));
+
+  if (!overlapBoxBox)
+    return false;
+
+  const float xx0 = float(tileMinX);
+  const float xx1 = float(tileMaxX);
+  const float yy0 = float(tileMinY);
+  const float yy1 = float(tileMaxY);
+
+  const float y1 = a_tri.v3.y;
+  const float y2 = a_tri.v2.y;
+  const float y3 = a_tri.v1.y;
+                   
+  const float x1 = a_tri.v3.x;
+  const float x2 = a_tri.v2.x;
+  const float x3 = a_tri.v1.x;
+
+  // Deltas
+  const float Dx12 = x1 - x2;
+  const float Dx23 = x2 - x3;
+  const float Dx31 = x3 - x1;
+
+  const float Dy12 = y1 - y2;
+  const float Dy23 = y2 - y3;
+  const float Dy31 = y3 - y1;
+
+  const bool s10 = ( Dx12 * (yy0 - y1) - Dy12 * (xx0 - x1) ) < 0.0f; 
+  const bool s11 = ( Dx12 * (yy0 - y1) - Dy12 * (xx1 - x1) ) < 0.0f;
+  const bool s12 = ( Dx12 * (yy1 - y1) - Dy12 * (xx0 - x1) ) < 0.0f;
+  const bool s13 = ( Dx12 * (yy1 - y1) - Dy12 * (xx1 - x1) ) < 0.0f;
+             
+  const bool s20 = ( Dx12 * (yy0 - y2) - Dy12 * (xx0 - x2) ) < 0.0f;
+  const bool s21 = ( Dx12 * (yy0 - y2) - Dy12 * (xx1 - x2) ) < 0.0f;
+  const bool s22 = ( Dx12 * (yy1 - y2) - Dy12 * (xx0 - x2) ) < 0.0f;
+  const bool s23 = ( Dx12 * (yy1 - y2) - Dy12 * (xx1 - x2) ) < 0.0f;
+             
+  const bool s30 = ( Dx12 * (yy0 - y3) - Dy12 * (xx0 - x3) ) < 0.0f;
+  const bool s31 = ( Dx12 * (yy0 - y3) - Dy12 * (xx1 - x3) ) < 0.0f;
+  const bool s32 = ( Dx12 * (yy1 - y3) - Dy12 * (xx0 - x3) ) < 0.0f;
+  const bool s33 = ( Dx12 * (yy1 - y3) - Dy12 * (xx1 - x3) ) < 0.0f;
+
+  return (s10 || s11 || s12 || s13 ||
+          s20 || s21 || s22 || s23 ||
+          s30 || s31 || s32 || s33 );
+}
+
 
 void HWImplementationPureCpp::VertexShader(const float* v_in4f, float* v_out4f, int a_numVert,
                                            const float viewportData[4], const float a_worldViewMatrix[16], const float a_projMatrix[16])

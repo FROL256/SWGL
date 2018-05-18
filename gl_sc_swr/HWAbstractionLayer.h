@@ -29,6 +29,8 @@ struct HWImplementationPureCpp
 
   static void memset32(int32_t* a_data, int32_t val, int32_t numElements);
 
+  static bool AABBTriangleOverlap(const TriangleType& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY);
+
   static void VertexShader(const float* v_in4f, float* v_out4f, int a_numVert, 
                            const float viewportData[4], const float worldViewMatrix[16], const float projMatrix[16]);
 

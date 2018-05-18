@@ -822,7 +822,7 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
         //auto& tile = a_pDrawList->tiles[tx][ty];
         auto& tile = a_pTiledFB->tiles[ty*a_pTiledFB->sizeX + tx];
 
-        if (AABBTriangleOverlap(*pTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
+        if (HWImpl::AABBTriangleOverlap(*pTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
         {
           int oldOffset = atomic_add((int*)&tile.endOffs, 1); // tile.endOffs; tile.endOffs++;
           triIndicesMem[oldOffset] = top + triId;
