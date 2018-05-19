@@ -59,6 +59,15 @@ struct HWImplementationPureCpp
 
   static bool AABBTriangleOverlap(const TriangleType& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY);
 
+  static inline bool TriVertsAreOfSameColor(const TriangleType& a_tri) 
+  {
+    const float4 diff1 = a_tri.c1 - a_tri.c2;
+    const float4 diff2 = a_tri.c1 - a_tri.c3;
+
+    return (diff1.x < 1e-5f) && (diff1.y < 1e-5f) && (diff1.z < 1e-5f) && (diff1.w < 1e-5f) && 
+           (diff2.x < 1e-5f) && (diff2.y < 1e-5f) && (diff2.z < 1e-5f) && (diff2.w < 1e-5f);
+  }
+
   static void VertexShader(const float* v_in4f, float* v_out4f, int a_numVert, 
                            const float viewportData[4], const float worldViewMatrix[16], const float projMatrix[16]);
 

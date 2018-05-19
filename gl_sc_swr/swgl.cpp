@@ -886,7 +886,9 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3,
                           &localTri);
 
-    auto stateId = swglStateIdFromPSO(&pBatch->state);
+    const bool sameColor = HWImpl::TriVertsAreOfSameColor(localTri);
+
+    auto stateId = swglStateIdFromPSO(&pBatch->state, sameColor);
 
     HWImpl::RasterizeTriangle(stateId, localTri, 0, 0,
                               &frameBuff);
@@ -916,8 +918,9 @@ void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext !
   swglDrawBatchTriangles(a_pContext, pBatch, frameBuff);
 }
 
-ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso)
+ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso, bool a_vertsAreOfSameColor)
 {
+  //a_pso->texure2DEnabled
   return ROP_FillColor;
 }
 

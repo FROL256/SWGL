@@ -37,8 +37,8 @@ void HWImplementationPureCpp::memset32(int32_t* a_data, int32_t a_val, int32_t n
 
 bool HWImplementationPureCpp::AABBTriangleOverlap(const TriangleType& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY)
 {
-   const bool overlapBoxBox = IntersectBoxBox(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
-                                              int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));
+  const bool overlapBoxBox = IntersectBoxBox(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
+                                             int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));
 
   if (!overlapBoxBox)
     return false;

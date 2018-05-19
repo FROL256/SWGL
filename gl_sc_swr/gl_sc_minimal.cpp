@@ -742,7 +742,9 @@ GLAPI void APIENTRY glFlush(void)
         // else
         //   fb.sbuffer = nullptr;
 
-        auto stateId = swglStateIdFromPSO(pso);
+        const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
+
+        auto stateId = swglStateIdFromPSO(pso, sameColor);
 
         HWImpl::RasterizeTriangle(stateId, tri, tile.minX, tile.minY,
                                   &fb);
