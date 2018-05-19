@@ -4,6 +4,24 @@
 #include "LiteMath.h"
 #include <cstdint>
 
+
+enum ROP_TYPE { ROP_FillColor = 1,
+
+                ROP_Colored2D,
+                ROP_Colored3D,
+                ROP_TexNearest2D,
+                ROP_TexNearest3D,
+                ROP_TexLinear2D,
+                ROP_TexLinear3D,
+
+                ROP_Colored2D_Blend,
+                ROP_Colored3D_Blend,
+                ROP_TexNearest2D_Blend,
+                ROP_TexNearest3D_Blend,
+                ROP_TexLinear2D_Blend,
+                ROP_TexLinear3D_Blend,
+};
+
 #define HALF_SPACE_EPSILON -1e-3f
 
 static inline float edgeFunction(float2 a, float2 b, float2 c) // actuattly just a mixed product ... :)
@@ -56,9 +74,6 @@ struct FrameBuffer
   float*   zbuffer;
   uint8_t* sbuffer;
 
-  float*   getZBuffer() { return zbuffer; }
-  uint8_t* getSBuffer() { return sbuffer; }
-
   //uint8_t curr_sval;
   //uint8_t curr_smask;
 };
@@ -74,109 +89,6 @@ struct ALIGNED16 TexSampler
   int pitch;
   const int* data;
 };
-
-
-struct TriangleDataNoSSE
-{
-  TriangleDataNoSSE()
-  {
-    texS.data = nullptr;
-    texS.w = 0;
-    texS.h = 0;
-
-    curr_sval  = 0;
-    curr_smask = 0;
-    psoId = -1;
-  }
-
-  float4 v1;
-  float4 v2;
-  float4 v3;
-
-  float4 c1;
-  float4 c2;
-  float4 c3;
-
-  float2 t1;
-  float2 t2;
-  float2 t3;
-
-  float  triAreaInv;
-  float  triArea;
-
-  int bb_iminX;
-  int bb_imaxX;
-  int bb_iminY;
-  int bb_imaxY;
-
-  int     psoId;
-  uint8_t curr_sval;
-  uint8_t curr_smask;
-
-  TexSampler texS;
-};
-
-
-#ifdef ENABLE_SSE
-
-struct ALIGNED16 TriangleDataYesSSE
-{
-  TriangleDataYesSSE()
-  {
-    texS.data = nullptr;
-    texS.w = 0;
-    texS.h = 0;
-
-    curr_sval  = 0;
-    curr_smask = 0;
-    psoId      = -1;
-  }
-
-  __m128 edgeTest;
-  __m128 v1v3v2X;
-  __m128 v3v2v1Z;
-
-  __m128 kv1;
-
-  __m128 cv1;
-  __m128 cv2;
-  __m128 cv3;
-
-  __m128 tv1;
-  __m128 tv2;
-  __m128 tv3;
-
-  TexSampler texS;
-
-  float4 v1;
-  float4 v2;
-  float4 v3;
-
-  float3 k1;
-  float  triAreaInv;
-
-  int bb_iminX;
-  int bb_imaxX;
-  int bb_iminY;
-  int bb_imaxY;
-
-  uint8_t curr_sval;
-  uint8_t curr_smask;
-
-  int psoId;
-};
-
-#endif
-
-#ifdef ENABLE_SSE
-  typedef TriangleDataYesSSE Triangle;
-#else
-  typedef TriangleDataNoSSE Triangle;
-#endif
-
-
-void rasterizeTriHalfSpace(FrameBuffer* frameBuf, const Triangle& tri, int a_tileX = 0, int a_tileY = 0); // half space rasterizer
-void rasterizeTriHalfSpaceTwoLevel(FrameBuffer* frameBuf, const Triangle& tri); // Two level vectorized half space rasterizer
 
 
 #endif

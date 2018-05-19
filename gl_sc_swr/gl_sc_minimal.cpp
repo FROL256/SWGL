@@ -731,8 +731,8 @@ GLAPI void APIENTRY glFlush(void)
       {
         const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
         const auto& tri  = pDrawList->m_triMemory[triId2];
-        
-        // const auto* pso = &(pDrawList->m_psoArray[tri.psoId]);     
+        const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);    
+
         // if (pso->depthTestEnabled)
         //   fb.zbuffer = zbuff;
         // else
@@ -742,7 +742,9 @@ GLAPI void APIENTRY glFlush(void)
         // else
         //   fb.sbuffer = nullptr;
 
-        HWImpl::RasterizeTriangle(ROP_FillColor, tri, tile.minX, tile.minY,
+        auto stateId = swglStateIdFromPSO(pso);
+
+        HWImpl::RasterizeTriangle(stateId, tri, tile.minX, tile.minY,
                                   &fb);
       }
     

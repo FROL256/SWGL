@@ -1,4 +1,5 @@
 #include "HWAbstractionLayer.h"
+#include "swgl.h"
 
 #ifdef WIN32
 #undef min

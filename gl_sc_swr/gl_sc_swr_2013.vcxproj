@@ -310,8 +310,6 @@
     <ClCompile Include="swgl.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="TriRasterHS.cpp" />
-    <ClCompile Include="TriRasterHS_TwoLevel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl32.def" />

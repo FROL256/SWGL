@@ -849,12 +849,9 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
   //Timer timerLocal(false);
 #endif
 
-  float timeAccumTriSetUp = 0.0f;
+  float timeAccumTriSetUp  = 0.0f;
   float timeAccumTriRaster = 0.0f;
 
-  const bool trianglesAreTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
-
-  // const int vertNum = int(pBatch->vertPos.size());
   const int triNum = int(indices.size() / 3);
 
   for (int triId = 0; triId < triNum; triId++)
@@ -889,7 +886,9 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3,
                           &localTri);
 
-    HWImpl::RasterizeTriangle(ROP_FillColor, localTri, 0, 0,
+    auto stateId = swglStateIdFromPSO(&pBatch->state);
+
+    HWImpl::RasterizeTriangle(stateId, localTri, 0, 0,
                               &frameBuff);
   }
 
@@ -898,8 +897,6 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 #endif
 
 }
-
-
 
 
 void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext != nullptr && pBatch != nullptr)
@@ -919,6 +916,10 @@ void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext !
   swglDrawBatchTriangles(a_pContext, pBatch, frameBuff);
 }
 
+ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso)
+{
+  return ROP_FillColor;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

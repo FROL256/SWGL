@@ -26,6 +26,8 @@
 #include <memory.h>
 
 #include "TriRaster.h"
+#include "HWAbstractionLayer.h"
+
 
 #define PI  ((float)3.1415926535)
 #define DEG_TO_RAD (PI/(float)180.0)
@@ -177,16 +179,16 @@ struct SWGL_Input
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  float4   clearColor4f;          ///< current clear color value
-  uint32_t clearColor1u;          ///< INTERNAL
-  float    clearDepth;            ///< current clear depth value
-  GLint    clearStencil;          ///< current clear stencil value
-
-  float4   currInputColor;        ///< current input color (see glColor3f)
-  float4   currInputNormal;       ///< current input normal (see glNormal3f)
-  float2   currInputTexCoord[32]; ///< GL_TEXTURE31 - GL_TEXTURE0 (probably we won't use it in SC profile)
-
-  float    currPointSize;         ///< current point size for drawing points
+  float4   clearColor4f;            ///< current clear color value
+  uint32_t clearColor1u;            ///< INTERNAL
+  float    clearDepth;              ///< current clear depth value
+  GLint    clearStencil;            ///< current clear stencil value
+                                    
+  float4   currInputColor;          ///< current input color (see glColor3f)
+  float4   currInputNormal;         ///< current input normal (see glNormal3f)
+  float2   currInputTexCoord[32];   ///< GL_TEXTURE31 - GL_TEXTURE0 (probably we won't use them all)
+                                    
+  float    currPointSize;           ///< current point size for drawing points
 
   Pipeline_State_Object batchState; ///< This state SHOULD NOT BE HERE! PSO MUST BE SEPARATE FROM ISO IN FUTURE !!!
   uint32_t inputMatrixMode;         ///< current matrix mode set with glMatrixMode. GL_MODELVIEW or GL_PROJECTION
@@ -265,37 +267,11 @@ struct ScreenTile
   int endOffs;
 };
 
-
-static inline unsigned int divTileSize(unsigned int x)
-{
-  unsigned int res = x / BIN_SIZE;
-  return res;
-}
-
-struct Line
-{
-  float2 v1, v2;
-  float4 c1, c2;
-  int psoId;
-};
-
-struct Point
-{
-  float2 v1;
-  float4 c1;
-  float  psz;
-  int psoId;
-};
+static inline unsigned int divTileSize(unsigned int x) {return x / BIN_SIZE;}
 
 struct SWGL_DrawList
 {
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef ENABLE_SSE
-  std::vector<Triangle, aligned16<Triangle> > m_triMemory; ///< N
-#else
-  std::vector<Triangle>                       m_triMemory; ///< N
-#endif
+  std::vector<HWImpl::TriangleType, aligned16<HWImpl::TriangleType> >  m_triMemory; ///< N
 
   std::vector<int>     m_tilesTriIndicesMemory; ///< N*M; M = m_tilesNumX*m_tilesNumY;
   int                  m_triTop;
@@ -458,7 +434,7 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
 {
   FrameBuffer frameBuff;
 
-  frameBuff.cbuffer    = a_pContext->m_pixels2;
+  frameBuff.cbuffer = a_pContext->m_pixels2;
   frameBuff.zbuffer = a_pContext->m_zbuffer;
   frameBuff.sbuffer = a_pContext->m_sbuffer;
   frameBuff.w       = a_pContext->m_width;
@@ -507,6 +483,8 @@ static inline float4 swglClipSpaceToScreenSpaceTransform(float4 a_pos, const flo
 
   return float4(x*fw - 0.5f + viewportf.x, y*fh - 0.5f + viewportf.y, a_pos.z, a_pos.w);
 }
+
+ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso);
 
 void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch,
                                    const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB);

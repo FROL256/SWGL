@@ -2,8 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="TriRasterHS.cpp" />
-    <ClCompile Include="TriRasterHS_TwoLevel.cpp" />
     <ClCompile Include="gl_sc_minimal.cpp">
       <Filter>gl_common</Filter>
     </ClCompile>
