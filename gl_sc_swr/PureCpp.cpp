@@ -584,8 +584,8 @@ static void RasterizeTriHalfSpace3DBlend(const Triangle& tri, int tileMinX, int 
     {
       if (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON)
       {
-        const float3 w = areaInv * float3(Cx1, Cx3, Cx2);
-        const float zInv = tri.v1.z*w.x + tri.v2.z*w.y + tri.v3.z*w.z;
+        const float3 w       = areaInv * float3(Cx1, Cx3, Cx2);
+        const float zInv     = tri.v1.z*w.x + tri.v2.z*w.y + tri.v3.z*w.z;
         const float zBuffVal = zbuff[offset + x];
 
         if (zInv > zBuffVal)
