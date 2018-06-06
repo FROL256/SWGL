@@ -96,9 +96,9 @@ int DrawGLScene(GLvoid)
 
   //demo05_texture_3D(g_width, g_height, rtri, rquad);
   //demo07_triangle_fan(g_width, g_height, rtri, rquad);
-  //demo14_transparent_cube(g_width, g_height, rtri, rquad);
+  demo14_transparent_cube(g_width, g_height, rtri, rquad);
   //demo24_draw_elements_terrain(g_width, g_height, rtri, rquad);
-  demo19_cubes(g_width, g_height, rtri, rquad);
+  //demo19_cubes(g_width, g_height, rtri, rquad);
 
   //demo25_teapot(g_width, g_height, rtri, rquad);
   //demo26_teapots9(g_width, g_height, rtri, rquad);

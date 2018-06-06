@@ -209,23 +209,6 @@ void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, cons
 
 }
 
-
-inline static int RealColorToUint32_BGRA_NoSSE(float4 real_color)
-{
-  const float r = real_color.x*255.0f;
-  const float g = real_color.y*255.0f;
-  const float b = real_color.z*255.0f;
-  const float a = real_color.w*255.0f;
-
-  const unsigned char red   = (unsigned char)r;
-  const unsigned char green = (unsigned char)g;
-  const unsigned char blue  = (unsigned char)b;
-  const unsigned char alpha = (unsigned char)a;
-
-  return blue | (green << 8) | (red << 16) | (alpha << 24);
-}
-
-
 inline float4 read_imagef(const int* pData, const int w, const int h, int pitch, const float2 a_texCoord) // look ak LaMote's integer interpolation
 {
   struct uchar4
@@ -310,7 +293,7 @@ struct Colored2D
   inline static int DrawPixel(const Triangle& tri, const float3& w) 
   { 
     const float4 color = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
-    return RealColorToUint32_BGRA_NoSSE(color);
+    return RealColorToUint32_BGRA(color);
   }
 };
 
@@ -325,7 +308,7 @@ struct Colored3D
     color *= z;
 #endif
 
-    return RealColorToUint32_BGRA_NoSSE(color);
+    return RealColorToUint32_BGRA(color);
   }
 };
 
@@ -337,7 +320,7 @@ struct Textured2D
     const float4 color    = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
     const float2 texCoord = tri.t1*w.x + tri.t2*w.y + tri.t3*w.z;
     const float4 texColor = tex2D(tri.texS, texCoord);
-    return RealColorToUint32_BGRA_NoSSE(texColor*color);
+    return RealColorToUint32_BGRA(texColor*color);
   }
 };
 
@@ -356,13 +339,37 @@ struct Textured3D
 
     const float4 texColor = tex2D(tri.texS, texCoord);
 
-    return RealColorToUint32_BGRA_NoSSE(texColor*color);
+    return RealColorToUint32_BGRA(texColor*color);
   }
 };
 
 
+struct Textured3D_Blend_Alpha_OneMinusAlapha
+{
+  inline static int DrawPixel(const Triangle& tri, const float3& w, const float zInv, const int a_colorBefore)
+  {
+    float4 color    = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
+    float2 texCoord = tri.t1*w.x + tri.t2*w.y + tri.t3*w.z;
+
+#ifdef PERSP_CORRECT
+    const float z = 1.0f / zInv;
+    color *= z;
+    texCoord *= z;
+#endif
+
+    const float4 texColor = tex2D(tri.texS, texCoord);
+    const float4 newColor = texColor*color;
+    const float4 oldColor = Uint32_BGRAToRealColor(a_colorBefore);
+    const float alpha     = newColor.w;
+
+    return RealColorToUint32_BGRA(oldColor*(1.0f - alpha) + alpha*newColor);
+  }
+};
+
+
+
 template<typename ROP>
-static void rasterizeTriHalf_2D_No_Blend(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+static void RasterizeTriHalfSpace2D(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
@@ -437,7 +444,7 @@ static void rasterizeTriHalf_2D_No_Blend(const Triangle& tri, int tileMinX, int 
 }
 
 template<typename ROP>
-static void rasterizeTriHalf_3D_No_Blend(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+static void RasterizeTriHalfSpace3D(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
@@ -519,6 +526,89 @@ static void rasterizeTriHalf_3D_No_Blend(const Triangle& tri, int tileMinX, int 
 
 }
 
+template<typename ROP>
+static void RasterizeTriHalfSpace3DBlend(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+{
+  const float tileMinX_f = float(tileMinX);
+  const float tileMinY_f = float(tileMinY);
+
+  const float y1 = tri.v3.y - tileMinY_f;
+  const float y2 = tri.v2.y - tileMinY_f;
+  const float y3 = tri.v1.y - tileMinY_f;
+
+  const float x1 = tri.v3.x - tileMinX_f;
+  const float x2 = tri.v2.x - tileMinX_f;
+  const float x3 = tri.v1.x - tileMinX_f;
+
+  // Deltas
+  const float Dx12 = x1 - x2;
+  const float Dx23 = x2 - x3;
+  const float Dx31 = x3 - x1;
+
+  const float Dy12 = y1 - y2;
+  const float Dy23 = y2 - y3;
+  const float Dy31 = y3 - y1;
+
+  // Bounding rectangle
+  const int minx = std::max(tri.bb_iminX - tileMinX, 0);
+  const int miny = std::max(tri.bb_iminY - tileMinY, 0);
+  const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
+  const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
+
+  int*   cbuff = frameBuf->cbuffer;
+  float* zbuff = frameBuf->zbuffer;
+  //uint8_t* sbuff = frameBuf->getSBuffer();
+
+  // Constant part of half-edge functions
+  const float C1 = Dy12 * x1 - Dx12 * y1;
+  const float C2 = Dy23 * x2 - Dx23 * y2;
+  const float C3 = Dy31 * x3 - Dx31 * y3;
+
+  const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31 * Dy12); // edgeFunction(v0, v1, v2);
+
+  float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
+  float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
+  float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
+
+  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+
+  // Scan through bounding rectangle
+  for (int y = miny; y <= maxy; y++)
+  {
+    // Start value for horizontal scan
+    float Cx1 = Cy1;
+    float Cx2 = Cy2;
+    float Cx3 = Cy3;
+
+    for (int x = minx; x <= maxx; x++)
+    {
+      if (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON)
+      {
+        const float3 w = areaInv * float3(Cx1, Cx3, Cx2);
+        const float zInv = tri.v1.z*w.x + tri.v2.z*w.y + tri.v3.z*w.z;
+        const float zBuffVal = zbuff[offset + x];
+
+        if (zInv > zBuffVal)
+        {
+          cbuff[offset + x] = ROP::DrawPixel(tri, areaInv*float3(Cx1, Cx3, Cx2), zInv, cbuff[offset + x]);
+          zbuff[offset + x] = zInv;
+        }
+      }
+
+      Cx1 -= Dy12;
+      Cx2 -= Dy23;
+      Cx3 -= Dy31;
+    }
+
+    Cy1 += Dx12;
+    Cy2 += Dx23;
+    Cy3 += Dx31;
+
+    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+  }
+
+}
+
 
 void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleType& tri, int tileMinX, int tileMinY,
                                                 FrameBuffer* frameBuf)
@@ -526,25 +616,36 @@ void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleT
   switch (a_ropT)
   {
   case ROP_Colored2D:
-    rasterizeTriHalf_2D_No_Blend<Colored2D>(tri, tileMinX, tileMinY, frameBuf);
+    RasterizeTriHalfSpace2D<Colored2D>(tri, tileMinX, tileMinY, 
+                                       frameBuf);
     break;
 
   case ROP_Colored3D:
-    rasterizeTriHalf_3D_No_Blend<Colored3D>(tri, tileMinX, tileMinY, frameBuf);
+    RasterizeTriHalfSpace3D<Colored3D>(tri, tileMinX, tileMinY, 
+                                       frameBuf);
     break;
 
   case ROP_TexNearest2D:
   case ROP_TexLinear2D:
-    rasterizeTriHalf_2D_No_Blend<Textured2D>(tri, tileMinX, tileMinY, frameBuf);
+    RasterizeTriHalfSpace2D<Textured2D>(tri, tileMinX, tileMinY, 
+                                        frameBuf);
     break;
 
   case ROP_TexNearest3D:
   case ROP_TexLinear3D:
-    rasterizeTriHalf_3D_No_Blend<Textured3D>(tri, tileMinX, tileMinY, frameBuf);
+    RasterizeTriHalfSpace3D<Textured3D>(tri, tileMinX, tileMinY, 
+                                        frameBuf);
+    break;
+
+  case ROP_TexNearest3D_Blend:
+  case ROP_TexLinear3D_Blend:
+    RasterizeTriHalfSpace3DBlend<Textured3D_Blend_Alpha_OneMinusAlapha>(tri, tileMinX, tileMinY,
+                                                                        frameBuf);
     break;
 
   default :
-    rasterizeTriHalf_2D_No_Blend<FillColor>(tri, tileMinX, tileMinY, frameBuf);
+    RasterizeTriHalfSpace2D<FillColor>(tri, tileMinX, tileMinY, 
+                                       frameBuf);
     break;
   };
 

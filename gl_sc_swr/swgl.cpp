@@ -768,9 +768,9 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
   //#pragma omp parallel for if (triNum >= 1000)
   for (int triId = 0; triId < triNum; triId++)
   {
-    const int i1 = indices[triId * 3 + 0];
-    const int i2 = indices[triId * 3 + 1];
-    const int i3 = indices[triId * 3 + 2];
+    int i1 = indices[triId * 3 + 0];
+    int i2 = indices[triId * 3 + 1];
+    int i3 = indices[triId * 3 + 2];
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -789,6 +789,8 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 
       if (cullFace)
         continue;
+      else if (nz < 0.0f)
+        std::swap(i2, i3);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -922,21 +924,40 @@ ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Conte
 {
   const bool trianglesAreTextured = a_pso->texure2DEnabled && (a_pso->slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 
-  if (trianglesAreTextured)
+  if (a_pso->alphaBlendEnabled)
   {
-    if (a_pso->depthTestEnabled)
-      return ROP_TexLinear3D;
+    if (trianglesAreTextured)
+    {
+      if (a_pso->depthTestEnabled)
+        return ROP_TexLinear3D_Blend;
+      else
+        return ROP_TexLinear2D_Blend;
+    }
     else
-      return ROP_TexLinear2D;
+    {
+      if (a_pso->depthTestEnabled)
+        return ROP_Colored3D_Blend;
+      else
+        return ROP_Colored2D_Blend;
+    }
   }
   else
   {
-    if (a_pso->depthTestEnabled)
-      return ROP_Colored3D;
+    if (trianglesAreTextured)
+    {
+      if (a_pso->depthTestEnabled)
+        return ROP_TexLinear3D;
+      else
+        return ROP_TexLinear2D;
+    }
     else
-      return ROP_Colored2D;
+    {
+      if (a_pso->depthTestEnabled)
+        return ROP_Colored3D;
+      else
+        return ROP_Colored2D;
+    }
   }
-
   return ROP_FillColor;
 }
 
