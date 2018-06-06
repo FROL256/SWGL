@@ -484,7 +484,7 @@ static inline float4 swglClipSpaceToScreenSpaceTransform(float4 a_pos, const flo
   return float4(x*fw - 0.5f + viewportf.x, y*fh - 0.5f + viewportf.y, a_pos.z, a_pos.w);
 }
 
-ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const bool a_sameColor);
+ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Context* a_pContext, const bool a_sameColor);
 
 void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch,
                                    const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB);

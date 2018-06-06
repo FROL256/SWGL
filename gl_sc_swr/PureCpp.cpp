@@ -210,8 +210,161 @@ void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, cons
 }
 
 
+inline static int RealColorToUint32_BGRA_NoSSE(float4 real_color)
+{
+  const float r = real_color.x*255.0f;
+  const float g = real_color.y*255.0f;
+  const float b = real_color.z*255.0f;
+  const float a = real_color.w*255.0f;
 
-static void rasterizeTriHalf_WithRespectToTile(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+  const unsigned char red   = (unsigned char)r;
+  const unsigned char green = (unsigned char)g;
+  const unsigned char blue  = (unsigned char)b;
+  const unsigned char alpha = (unsigned char)a;
+
+  return blue | (green << 8) | (red << 16) | (alpha << 24);
+}
+
+
+inline float4 read_imagef(const int* pData, const int w, const int h, int pitch, const float2 a_texCoord) // look ak LaMote's integer interpolation
+{
+  struct uchar4
+  {
+    unsigned char x, y, z, w;
+  };
+
+  const float fw = (float)(w);
+  const float fh = (float)(h);
+
+  //const float ffx = a_texCoord.x*fw - 0.5f; 
+  //const float ffy = a_texCoord.y*fh - 0.5f; 
+
+  const float ffx = clamp(a_texCoord.x*fw - 0.5f, 0.0f, fw - 1.0f);
+  const float ffy = clamp(a_texCoord.y*fh - 0.5f, 0.0f, fh - 1.0f);
+
+  const int px = (int)(ffx);
+  const int py = (int)(ffy);
+
+  // Calculate the weights for each pixel
+  //
+  const float fx = ffx - (float)px;
+  const float fy = ffy - (float)py;
+  const float fx1 = 1.0f - fx;
+  const float fy1 = 1.0f - fy;
+
+  const float w1 = fx1 * fy1;
+  const float w2 = fx * fy1;
+  const float w3 = fx1 * fy;
+  const float w4 = fx * fy;
+
+  const uchar4* a_data = (const uchar4*)pData;
+  const uchar4* p0 = a_data + (py*pitch) + px;
+
+  const uchar4 p1 = p0[0 + 0 * pitch];
+  const uchar4 p2 = p0[1 + 0 * pitch];
+  const uchar4 p3 = p0[0 + 1 * pitch];
+  const uchar4 p4 = p0[1 + 1 * pitch];
+
+  const float mult = 0.003921568f; // (1.0f/255.0f);
+
+  const float4 f1 = mult * make_float4((float)p1.x, (float)p1.y, (float)p1.z, (float)p1.w);
+  const float4 f2 = mult * make_float4((float)p2.x, (float)p2.y, (float)p2.z, (float)p2.w);
+  const float4 f3 = mult * make_float4((float)p3.x, (float)p3.y, (float)p3.z, (float)p3.w);
+  const float4 f4 = mult * make_float4((float)p4.x, (float)p4.y, (float)p4.z, (float)p4.w);
+
+  // Calculate the weighted sum of pixels (for each color channel)
+  //
+  float outr = f1.x * w1 + f2.x * w2 + f3.x * w3 + f4.x * w4;
+  float outg = f1.y * w1 + f2.y * w2 + f3.y * w3 + f4.y * w4;
+  float outb = f1.z * w1 + f2.z * w2 + f3.z * w3 + f4.z * w4;
+  float outa = f1.w * w1 + f2.w * w2 + f3.w * w3 + f4.w * w4;
+
+  return make_float4(outr, outg, outb, outa);
+}
+
+
+inline static float2 wrapTexCoord(float2 a_texCoord)
+{
+  a_texCoord = a_texCoord - make_float2((float)((int)(a_texCoord.x)), (float)((int)(a_texCoord.y)));
+
+  float x = a_texCoord.x < 0.0f ? a_texCoord.x + 1.0f : a_texCoord.x;
+  float y = a_texCoord.y < 0.0f ? a_texCoord.y + 1.0f : a_texCoord.y;
+
+  return make_float2(x, y);
+}
+
+
+inline float4 tex2D(const TexSampler& sampler, float2 texCoord)
+{
+  return read_imagef(sampler.data, sampler.w, sampler.h, sampler.pitch, wrapTexCoord(texCoord));
+}
+
+
+struct FillColor
+{
+  inline static int DrawPixel(const Triangle& tri, const float3& w) { return 0xFFFFFFFF; }
+};
+
+struct Colored2D
+{
+  inline static int DrawPixel(const Triangle& tri, const float3& w) 
+  { 
+    const float4 color = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
+    return RealColorToUint32_BGRA_NoSSE(color);
+  }
+};
+
+struct Colored3D
+{
+  inline static int DrawPixel(const Triangle& tri, const float3& w)
+  {
+    float4 color = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
+
+#ifdef PERSP_CORRECT
+    const float zInv = tri.v1.z*w.x + tri.v2.z*w.y + tri.v3.z*w.z;
+    const float z = 1.0f / zInv;
+    color *= z;
+#endif
+
+    return RealColorToUint32_BGRA_NoSSE(color);
+  }
+};
+
+
+struct Textured2D
+{
+  inline static int DrawPixel(const Triangle& tri, const float3& w)
+  {
+    const float4 color    = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
+    const float2 texCoord = tri.t1*w.x + tri.t2*w.y + tri.t3*w.z;
+    const float4 texColor = tex2D(tri.texS, texCoord);
+    return RealColorToUint32_BGRA_NoSSE(texColor*color);
+  }
+};
+
+struct Textured3D
+{
+  inline static int DrawPixel(const Triangle& tri, const float3& w)
+  {
+    float4 color    = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
+    float2 texCoord = tri.t1*w.x + tri.t2*w.y + tri.t3*w.z;
+
+#ifdef PERSP_CORRECT
+    const float zInv = tri.v1.z*w.x + tri.v2.z*w.y + tri.v3.z*w.z;
+    const float z = 1.0f / zInv;
+    color    *= z;
+    texCoord *= z;
+#endif
+
+    const float4 texColor = tex2D(tri.texS, texCoord);
+
+    return RealColorToUint32_BGRA_NoSSE(texColor*color);
+  }
+};
+
+
+template<typename ROP>
+static void rasterizeTriHalf(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
@@ -239,14 +392,16 @@ static void rasterizeTriHalf_WithRespectToTile(const Triangle& tri, int tileMinX
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
-  int* colorBuffer = frameBuf->cbuffer;
-  //uint8_t* sbuff   = frameBuf->getSBuffer();
-  //float* zbuff     = frameBuf->getZBuffer();
+  int* cbuff     = frameBuf->cbuffer;
+  //uint8_t* sbuff = frameBuf->getSBuffer();
+  //float*   zbuff = frameBuf->getZBuffer();
 
   // Constant part of half-edge functions
   const float C1 = Dy12 * x1 - Dx12 * y1;
   const float C2 = Dy23 * x2 - Dx23 * y2;
   const float C3 = Dy31 * x3 - Dx31 * y3;
+
+  const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12); // edgeFunction(v0, v1, v2);
 
   float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
   float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
@@ -266,7 +421,7 @@ static void rasterizeTriHalf_WithRespectToTile(const Triangle& tri, int tileMinX
     {
       if (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON)
       {
-        colorBuffer[offset + x] = 0xFFFFFFFF;
+        cbuff[offset + x] = ROP::DrawPixel(tri, areaInv*float3(Cx1, Cx3, Cx2));
       }
 
       Cx1 -= Dy12;
@@ -288,5 +443,29 @@ static void rasterizeTriHalf_WithRespectToTile(const Triangle& tri, int tileMinX
 void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleType& tri, int tileMinX, int tileMinY,
                                                 FrameBuffer* frameBuf)
 {
-  rasterizeTriHalf_WithRespectToTile(tri, tileMinX, tileMinY, frameBuf);
+  switch (a_ropT)
+  {
+  case ROP_Colored2D:
+    rasterizeTriHalf<Colored2D>(tri, tileMinX, tileMinY, frameBuf);
+    break;
+
+  case ROP_Colored3D:
+    rasterizeTriHalf<Colored3D>(tri, tileMinX, tileMinY, frameBuf);
+    break;
+
+  case ROP_TexNearest2D:
+  case ROP_TexLinear2D:
+    rasterizeTriHalf<Textured2D>(tri, tileMinX, tileMinY, frameBuf);
+    break;
+
+  case ROP_TexNearest3D:
+  case ROP_TexLinear3D:
+    rasterizeTriHalf<Textured3D>(tri, tileMinX, tileMinY, frameBuf);
+    break;
+
+  default :
+    rasterizeTriHalf<FillColor>(tri, tileMinX, tileMinY, frameBuf);
+    break;
+  };
+
 }

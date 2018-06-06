@@ -888,7 +888,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
     const bool sameColor = HWImpl::TriVertsAreOfSameColor(localTri);
 
-    auto stateId = swglStateIdFromPSO(&pBatch->state, sameColor);
+    auto stateId = swglStateIdFromPSO(&pBatch->state, a_pContext, sameColor);
 
     HWImpl::RasterizeTriangle(stateId, localTri, 0, 0,
                               &frameBuff);
@@ -918,9 +918,25 @@ void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext !
   swglDrawBatchTriangles(a_pContext, pBatch, frameBuff);
 }
 
-ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso, bool a_vertsAreOfSameColor)
+ROP_TYPE swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Context* a_pContext, bool a_vertsAreOfSameColor)
 {
-  //a_pso->texure2DEnabled
+  const bool trianglesAreTextured = a_pso->texure2DEnabled && (a_pso->slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
+
+  if (trianglesAreTextured)
+  {
+    if (a_pso->depthTestEnabled)
+      return ROP_TexLinear3D;
+    else
+      return ROP_TexLinear2D;
+  }
+  else
+  {
+    if (a_pso->depthTestEnabled)
+      return ROP_Colored3D;
+    else
+      return ROP_Colored2D;
+  }
+
   return ROP_FillColor;
 }
 

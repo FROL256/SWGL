@@ -287,6 +287,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="HWAbstractionLayer.h" />
+    <ClInclude Include="PureCpp.h" />
     <ClInclude Include="SWGL_TiledFrameBuffer.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="gl_sc.h" />
@@ -305,7 +306,7 @@
     <ClCompile Include="gl_sc_standart.cpp" />
     <ClCompile Include="gl_standart.cpp" />
     <ClCompile Include="gl_win.cpp" />
-    <ClCompile Include="HWImplementationPureCpp.cpp" />
+    <ClCompile Include="PureCpp.cpp" />
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="swgl.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
