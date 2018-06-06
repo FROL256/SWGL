@@ -253,6 +253,10 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
   {
     if (mask & GL_COLOR_BUFFER_BIT)
       g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
+
+    if(mask & GL_DEPTH_BUFFER_BIT)
+      g_pContext->m_tiledFrameBuffer.ClearDepth(1.0f - g_pContext->input.clearDepth);
+
     swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
   else
@@ -724,7 +728,7 @@ GLAPI void APIENTRY glFlush(void)
       fb.vh = BIN_SIZE;
     
       fb.sbuffer = nullptr;
-      fb.zbuffer = nullptr;
+      fb.zbuffer = tile.m_depth;
       fb.cbuffer = tile.m_color;
     
       for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
@@ -732,15 +736,6 @@ GLAPI void APIENTRY glFlush(void)
         const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
         const auto& tri  = pDrawList->m_triMemory[triId2];
         const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);    
-
-        // if (pso->depthTestEnabled)
-        //   fb.zbuffer = zbuff;
-        // else
-        //   fb.zbuffer = nullptr;
-        // if (pso->stencilTestEnabled)
-        //   fb.sbuffer = sbuff;
-        // else
-        //   fb.sbuffer = nullptr;
 
         const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
 

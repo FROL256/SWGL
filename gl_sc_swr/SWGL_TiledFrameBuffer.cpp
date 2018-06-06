@@ -6,6 +6,12 @@ void SWGL_ScreenTile::ClearColor(int32_t a_color)
   HWImpl::memset32(m_color, a_color, BIN_SIZE*BIN_SIZE);
 }
 
+void SWGL_ScreenTile::ClearDepth(float a_val)
+{
+  int32_t idata = *((int32_t*)(&a_val));
+  HWImpl::memset32((int32_t*)m_depth, idata, BIN_SIZE*BIN_SIZE);
+}
+
 void SWGL_FrameBuffer::Resize(int a_w, int a_h) 
 {
   const int tilesX = a_w / BIN_SIZE;
@@ -35,6 +41,13 @@ void SWGL_FrameBuffer::ClearColor(int32_t a_color)
   #pragma omp parallel for num_threads(NUM_THREADS)
   for (int tileId = 0; tileId < tiles.size(); tileId++)
     tiles[tileId].ClearColor(a_color);
+}
+
+void SWGL_FrameBuffer::ClearDepth(float a_val)
+{
+#pragma omp parallel for num_threads(NUM_THREADS)
+  for (int tileId = 0; tileId < tiles.size(); tileId++)
+    tiles[tileId].ClearDepth(a_val);
 }
 
 void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
