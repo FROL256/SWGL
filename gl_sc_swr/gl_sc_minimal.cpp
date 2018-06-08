@@ -507,7 +507,6 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
   if (g_pContext->input.getCurrBatch() == nullptr)
     return;
 
-
   const int* inIndices = (const int*)indices;
 
   auto& input = g_pContext->input;
@@ -515,7 +514,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
 
   int lastVertSize = (int)currBatch->vertPos.size();
 
-  int maxVertexId = 0;
+  int maxVertexId = 0;                 //#TODO: remove this crap !!!
   for (int i = 0; i < count; i++)
   {
     if (inIndices[i] > maxVertexId)
@@ -530,12 +529,12 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
     *(g_pContext->m_pLog) << "maxVertexId  = " << maxVertexId << std::endl;
   }
 
-  swglAppendVertices(g_pContext, mode, lastVertSize, 0, maxVertexId+1);
+  swglAppendVertices(g_pContext, mode, lastVertSize, 0, maxVertexId+1);                //#TODO: remove this, append directly to the triagle list
 
   if (g_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
     *(g_pContext->m_pLog) << "glDrawElements, after Append (1) " << std::endl;
 
-  swglAppendTriIndices2(g_pContext, currBatch, mode, lastVertSize, inIndices, count);
+  swglAppendTriIndices2(g_pContext, currBatch, mode, lastVertSize, inIndices, count);  //#TODO: remove this, append directly to the triagle list
 
   currBatch->state = g_pContext->input.batchState; // ok
   swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately

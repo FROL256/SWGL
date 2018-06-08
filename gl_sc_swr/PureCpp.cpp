@@ -395,7 +395,7 @@ static void RasterizeTriHalfSpace2D_Fill(const Triangle& tri, int tileMinX, int 
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
-  const int fillColorI = RealColorToUint32_BGRA(tri.c1); // #TODO: need opt for color fill mode
+  const int fillColorI = RealColorToUint32_BGRA(tri.c1*(1.0f/tri.v1.z)); // #TODO: need opt for color fill mode
 
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
@@ -672,6 +672,7 @@ static void RasterizeTriHalfSpace3DBlend(const Triangle& tri, int tileMinX, int 
 void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleType& tri, int tileMinX, int tileMinY,
                                                 FrameBuffer* frameBuf)
 {
+
   switch (a_ropT)
   {
   case ROP_Colored2D:

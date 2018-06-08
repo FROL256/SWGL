@@ -28,16 +28,12 @@
 #include "TriRaster.h"
 #include "HWAbstractionLayer.h"
 
-
 #define PI  ((float)3.1415926535)
 #define DEG_TO_RAD (PI/(float)180.0)
 #define RAD_TO_DEG ((float)180.0/PI)
 
-#define MAX_NUM_VERTICES_IN_BATCH 1024                      // just a reccomendation, not a strict reqirenment // 262144
+#define MAX_NUM_VERTICES_IN_BATCH 65536*4                   // just a reccomendation, not a strict reqirenment // 262144
 #define MAX_NUM_TRIANGLES_TOTAL (MAX_NUM_VERTICES_IN_BATCH) // strict rule ???
-
-#define MAX_INPUT_LINES   63356
-#define MAX_INPUT_POINTS  63356
 
 const int MMPSTACKSIZE = 4;  ///< Projection Matrix stack size
 const int MMWSTACKSIZE = 32; ///< WolrdView  Matrix stack size
