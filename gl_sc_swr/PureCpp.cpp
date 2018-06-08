@@ -341,7 +341,6 @@ struct Textured3D
   }
 };
 
-
 struct Blend_Alpha_OneMinusAlapha
 {
   inline static int BlendPixel(const int a_colorBefore, const float4 newColor)
@@ -352,6 +351,78 @@ struct Blend_Alpha_OneMinusAlapha
   }
 };
 
+
+static void RasterizeTriHalfSpace2D_Fill(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+{
+  const float tileMinX_f = float(tileMinX);
+  const float tileMinY_f = float(tileMinY);
+
+  const float y1 = tri.v3.y - tileMinY_f;
+  const float y2 = tri.v2.y - tileMinY_f;
+  const float y3 = tri.v1.y - tileMinY_f;
+
+  const float x1 = tri.v3.x - tileMinX_f;
+  const float x2 = tri.v2.x - tileMinX_f;
+  const float x3 = tri.v1.x - tileMinX_f;
+
+  // Deltas
+  const float Dx12 = x1 - x2;
+  const float Dx23 = x2 - x3;
+  const float Dx31 = x3 - x1;
+
+  const float Dy12 = y1 - y2;
+  const float Dy23 = y2 - y3;
+  const float Dy31 = y3 - y1;
+
+  // Bounding rectangle
+  const int minx = std::max(tri.bb_iminX - tileMinX, 0);
+  const int miny = std::max(tri.bb_iminY - tileMinY, 0);
+  const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
+  const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
+
+  int* cbuff     = frameBuf->cbuffer;
+
+  // Constant part of half-edge functions
+  const float C1 = Dy12 * x1 - Dx12 * y1;
+  const float C2 = Dy23 * x2 - Dx23 * y2;
+  const float C3 = Dy31 * x3 - Dx31 * y3;
+
+  const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12); // edgeFunction(v0, v1, v2);
+
+  float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
+  float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
+  float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
+
+  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+
+  const int fillColorI = RealColorToUint32_BGRA(tri.c1); // #TODO: need opt for color fill mode
+
+  // Scan through bounding rectangle
+  for (int y = miny; y <= maxy; y++)
+  {
+    // Start value for horizontal scan
+    float Cx1 = Cy1;
+    float Cx2 = Cy2;
+    float Cx3 = Cy3;
+
+    for (int x = minx; x <= maxx; x++)
+    {
+      if (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON)
+        cbuff[offset + x]  = fillColorI;
+
+      Cx1 -= Dy12;
+      Cx2 -= Dy23;
+      Cx3 -= Dy31;
+    }
+
+    Cy1 += Dx12;
+    Cy2 += Dx23;
+    Cy3 += Dx31;
+
+    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+  }
+
+}
 
 template<typename ROP>
 static void RasterizeTriHalfSpace2D(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
@@ -383,8 +454,6 @@ static void RasterizeTriHalfSpace2D(const Triangle& tri, int tileMinX, int tileM
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
   int* cbuff     = frameBuf->cbuffer;
-  //uint8_t* sbuff = frameBuf->getSBuffer();
-  //float*   zbuff = frameBuf->getZBuffer();
 
   // Constant part of half-edge functions
   const float C1 = Dy12 * x1 - Dx12 * y1;
@@ -460,9 +529,9 @@ static void RasterizeTriHalfSpace3D(const Triangle& tri, int tileMinX, int tileM
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
-  int*   cbuff = frameBuf->cbuffer;
-  float* zbuff = frameBuf->zbuffer;
-  //uint8_t* sbuff = frameBuf->getSBuffer();
+  int*     cbuff = frameBuf->cbuffer;
+  float*   zbuff = frameBuf->zbuffer;
+  //uint8_t* sbuff = frameBuf->sbuffer;
 
   // Constant part of half-edge functions
   const float C1 = Dy12 * x1 - Dx12 * y1;
@@ -514,7 +583,6 @@ static void RasterizeTriHalfSpace3D(const Triangle& tri, int tileMinX, int tileM
   }
 
 }
-
 
 template<typename ROP, typename BOP>
 static void RasterizeTriHalfSpace3DBlend(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
@@ -635,8 +703,8 @@ void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleT
     break;
 
   default :
-    RasterizeTriHalfSpace2D<FillColor>(tri, tileMinX, tileMinY, 
-                                       frameBuf);
+    RasterizeTriHalfSpace2D_Fill(tri, tileMinX, tileMinY, 
+                                 frameBuf);
     break;
   };
 
