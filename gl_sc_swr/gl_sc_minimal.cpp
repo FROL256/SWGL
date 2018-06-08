@@ -509,10 +509,110 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
 
   const int* inIndices = (const int*)indices;
 
-  auto& input = g_pContext->input;
+  auto& input     = g_pContext->input;
   auto* currBatch = input.getCurrBatch();
 
-  int lastVertSize = (int)currBatch->vertPos.size();
+  //old size ... #TODO: old size ...
+  /*
+  currBatch->vertPos.resize(currBatch->vertPos.size()           + count);
+  currBatch->vertTexCoord.resize(currBatch->vertTexCoord.size() + count);
+  currBatch->vertColor.resize(currBatch->vertColor.size()       + count);
+  currBatch->indices.resize(currBatch->indices.size()           + count);
+  
+  currBatch->state = g_pContext->input.batchState; 
+
+  const float viewportf[4] = { (float)currBatch->state.viewport[0], 
+                               (float)currBatch->state.viewport[1], 
+                               (float)currBatch->state.viewport[2], 
+                               (float)currBatch->state.viewport[3] };
+
+  switch (mode)
+  {
+     case GL_TRIANGLES:
+     {
+       switch (input.vertPosComponents)
+       {
+       case 2:
+         for (int i = 0; i < count; i++) //#TODO: unroll it
+         {
+           const int id = inIndices[i];
+
+           float4 vPos(0, 0, 0, 1);      //#TODO: (0,0,1,1) ???
+           vPos.x = input.vertexPosPointer[id*2 + 0];
+           vPos.y = input.vertexPosPointer[id*2 + 1];
+
+           HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
+                                viewportf, currBatch->state.worldViewMatrix.L(), currBatch->state.projMatrix.L());
+
+           const float tx = input.vertexTexCoordPointer[id * 2 + 0];
+           const float ty = input.vertexTexCoordPointer[id * 2 + 1];
+           currBatch->vertTexCoord[i] = float2(tx, ty);
+           currBatch->vertColor   [i] = input.currInputColor;
+           currBatch->indices     [i] = i;
+         }
+         break;
+
+       case 3:
+         for (int i = 0; i < count; i++)
+         {
+           const int id = inIndices[i];
+
+           float4 vPos(0, 0, 0, 1);  
+           vPos.x = input.vertexPosPointer[id*3 + 0];
+           vPos.y = input.vertexPosPointer[id*3 + 1];
+           vPos.z = input.vertexPosPointer[id*3 + 3];
+
+           HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
+                                viewportf, currBatch->state.worldViewMatrix.L(), currBatch->state.projMatrix.L());
+
+           const float tx = input.vertexTexCoordPointer[id * 2 + 0];
+           const float ty = input.vertexTexCoordPointer[id * 2 + 1];
+           currBatch->vertTexCoord[i] = float2(tx, ty);
+           currBatch->vertColor   [i] = input.currInputColor;
+           currBatch->indices     [i] = i;
+         }
+         break;
+
+       case 4:
+         for (int i = 0; i < count; i++)
+         {
+           const int id = inIndices[i];
+           float4 vPos(0, 0, 0, 1);
+           vPos.x = input.vertexPosPointer[id * 4 + 0];
+           vPos.y = input.vertexPosPointer[id * 4 + 1];
+           vPos.z = input.vertexPosPointer[id * 4 + 2];
+           vPos.w = input.vertexPosPointer[id * 4 + 3];
+
+           HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
+                                viewportf, currBatch->state.worldViewMatrix.L(), currBatch->state.projMatrix.L());
+
+           const float tx = input.vertexTexCoordPointer[id * 2 + 0];
+           const float ty = input.vertexTexCoordPointer[id * 2 + 1];
+
+           currBatch->vertTexCoord[i] = float2(tx, ty);
+           currBatch->vertColor   [i] = input.currInputColor;
+           currBatch->indices     [i] = i;
+         }
+         break;
+
+       default:
+         break;
+       };
+
+       //for (int i = 0; i < count; i++)
+       //  currBatch.indices.push_back(lastSizeVert + inIndices[i]);
+     }
+     break;
+
+   default:
+     break;
+
+  };
+
+  swglProcessBatch(g_pContext);
+  */
+
+  const int lastVertSize = currBatch->vertPos.size();
 
   int maxVertexId = 0;                 //#TODO: remove this crap !!!
   for (int i = 0; i < count; i++)
@@ -538,7 +638,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
 
   currBatch->state = g_pContext->input.batchState; // ok
   swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately
-
+  
 }
 
 GLAPI void APIENTRY glEnable(GLenum cap)
