@@ -106,8 +106,8 @@ void HWImplementationPureCpp::VertexShader(const float* v_in4f, float* v_out4f, 
 
 }
 
-void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, const FrameBuffer& frameBuff,
-                                            const int i1, const int i2, const int i3, TriangleType* t1)
+void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, int i1, int i2, int i3, 
+                                            TriangleType* t1)
 {
   const float4 v1 = pBatch->vertPos[i1];
   const float4 v2 = pBatch->vertPos[i2];
@@ -139,9 +139,6 @@ void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, cons
 
   t1->bb_iminY = (int)(fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f);
   t1->bb_imaxY = (int)(fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f);
-
-  clampTriBBox(t1, frameBuff);  // need this to prevent out of border
-                                //
 
   const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 
@@ -176,7 +173,7 @@ void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, cons
 
 #ifdef PERSP_CORRECT
 
-  if (frameBuff.zbuffer != nullptr)
+  if (pBatch->state.depthTestEnabled)
   {
     t1->c1 *= v1.z; // div by z, not mult!
     t1->c2 *= v2.z; // div by z, not mult!

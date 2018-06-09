@@ -850,8 +850,8 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
     pTri->curr_sval  = pBatch->state.stencilValue;
     pTri->curr_smask = pBatch->state.stencilMask;
 
-    HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3, 
-                          pTri);
+    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, pTri);
+    clampTriBBox(pTri, frameBuff);  // need this to prevent out of border
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -935,8 +935,8 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     localTri.curr_sval  = pBatch->state.stencilValue;
     localTri.curr_smask = pBatch->state.stencilMask;
 
-    HWImpl::TriangleSetUp(a_pContext, pBatch, frameBuff, i1, i2, i3,
-                          &localTri);
+    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, &localTri);
+    clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border
 
     const bool sameColor = HWImpl::TriVertsAreOfSameColor(localTri);
 

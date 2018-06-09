@@ -50,7 +50,7 @@ struct float2
 
 struct float3
 {
-  float3() :x(0), y(0), z(0){}
+  float3() :x(0), y(0), z(0) {}
   float3(float a, float b, float c) : x(a), y(b), z(c) {}
   float3(const float* ptr) : x(ptr[0]), y(ptr[1]), z(ptr[0]) {}
 
@@ -59,7 +59,7 @@ struct float3
 
 struct float4
 {
-  float4() :x(0), y(0), z(0){}
+  float4() :x(0), y(0), z(0), w(0) {}
   float4(float a, float b, float c, float d) : x(a), y(b), z(c), w(d) {}
 
   float x, y, z, w;
