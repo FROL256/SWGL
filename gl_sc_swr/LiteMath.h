@@ -20,15 +20,9 @@
 #endif
 
 #ifdef WIN32
-  #define ALIGNED16 __declspec(align(16))
+  #define ALIGNED(x) __declspec(align(x))
 #else
-
-  #ifdef ENABLE_SSE
-    #define ALIGNED16 __attribute__ ((aligned (16)))
-  #else
-    #define ALIGNED16
-  #endif
-
+  #define ALIGNED(x) __attribute__ ((aligned (x)))
 #endif
 
 struct int2

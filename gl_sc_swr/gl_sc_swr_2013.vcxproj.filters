@@ -23,6 +23,9 @@
     <ClCompile Include="PureCpp.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
+    <ClCompile Include="SSE1Impl.cpp">
+      <Filter>Rasterizers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -46,6 +49,9 @@
       <Filter>Rasterizers</Filter>
     </ClInclude>
     <ClInclude Include="PureCpp.h">
+      <Filter>Rasterizers</Filter>
+    </ClInclude>
+    <ClInclude Include="SSE1Impl.h">
       <Filter>Rasterizers</Filter>
     </ClInclude>
   </ItemGroup>

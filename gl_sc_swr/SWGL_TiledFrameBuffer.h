@@ -1,9 +1,10 @@
 #pragma once
 
 #include "config.h"
-
 #include <cstdint>
 #include <vector>
+
+#include "LiteMath.h"
 
 struct SWGL_ScreenTile
 {
@@ -23,8 +24,8 @@ struct SWGL_ScreenTile
 
   // tile data
   //
-  int32_t m_color[BIN_SIZE*BIN_SIZE]; 
-  float   m_depth[BIN_SIZE*BIN_SIZE];
+  ALIGNED(16) int32_t m_color[BIN_SIZE*BIN_SIZE]; 
+  ALIGNED(16) float   m_depth[BIN_SIZE*BIN_SIZE];
   //uint8_t m_sbuffer[BIN_SIZE*BIN_SIZE];
 };
 

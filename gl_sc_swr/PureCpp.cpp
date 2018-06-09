@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+using TriangleLocal = HWImplementationPureCpp::TriangleType;
+
 void HWImplementationPureCpp::memset32(int32_t* a_data, int32_t a_val, int32_t numElements)
 {
   if (numElements % 16 == 0)
@@ -34,6 +36,7 @@ void HWImplementationPureCpp::memset32(int32_t* a_data, int32_t a_val, int32_t n
       a_data[i] = a_val;
   }
 }
+
 
 bool HWImplementationPureCpp::AABBTriangleOverlap(const TriangleType& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY)
 {
@@ -209,8 +212,8 @@ inline float4 read_imagef(const int* pData, const int w, const int h, int pitch,
 
   // Calculate the weights for each pixel
   //
-  const float fx = ffx - (float)px;
-  const float fy = ffy - (float)py;
+  const float fx  = ffx - (float)px;
+  const float fy  = ffy - (float)py;
   const float fx1 = 1.0f - fx;
   const float fy1 = 1.0f - fy;
 
@@ -264,12 +267,12 @@ inline float4 tex2D(const TexSampler& sampler, float2 texCoord)
 
 struct FillColor
 {
-  inline static float4 DrawPixel(const Triangle& tri, const float3& w) { return tri.c1; }
+  inline static float4 DrawPixel(const TriangleLocal& tri, const float3& w) { return tri.c1; }
 };
 
 struct Colored2D
 {
-  inline static float4 DrawPixel(const Triangle& tri, const float3& w) 
+  inline static float4 DrawPixel(const TriangleLocal& tri, const float3& w)
   { 
     return tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
   }
@@ -277,7 +280,7 @@ struct Colored2D
 
 struct Colored3D
 {
-  inline static float4 DrawPixel(const Triangle& tri, const float3& w, const float zInv)
+  inline static float4 DrawPixel(const TriangleLocal& tri, const float3& w, const float zInv)
   {
     float4 color = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
 
@@ -293,7 +296,7 @@ struct Colored3D
 
 struct Textured2D
 {
-  inline static float4 DrawPixel(const Triangle& tri, const float3& w)
+  inline static float4 DrawPixel(const TriangleLocal& tri, const float3& w)
   {
     const float4 color    = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
     const float2 texCoord = tri.t1*w.x + tri.t2*w.y + tri.t3*w.z;
@@ -304,7 +307,7 @@ struct Textured2D
 
 struct Textured3D
 {
-  inline static float4 DrawPixel(const Triangle& tri, const float3& w, const float zInv)
+  inline static float4 DrawPixel(const TriangleLocal& tri, const float3& w, const float zInv)
   {
     float4 color    = tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
     float2 texCoord = tri.t1*w.x + tri.t2*w.y + tri.t3*w.z;
@@ -331,7 +334,7 @@ struct Blend_Alpha_OneMinusAlapha
 };
 
 
-static void RasterizeTriHalfSpace2D_Fill(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+static void RasterizeTriHalfSpace2D_Fill(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
@@ -404,7 +407,7 @@ static void RasterizeTriHalfSpace2D_Fill(const Triangle& tri, int tileMinX, int 
 }
 
 template<typename ROP>
-static void RasterizeTriHalfSpace2D(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+static void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
@@ -480,7 +483,7 @@ static void RasterizeTriHalfSpace2D(const Triangle& tri, int tileMinX, int tileM
 }
 
 template<typename ROP>
-static void RasterizeTriHalfSpace3D(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+static void RasterizeTriHalfSpace3D(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
@@ -564,7 +567,7 @@ static void RasterizeTriHalfSpace3D(const Triangle& tri, int tileMinX, int tileM
 }
 
 template<typename ROP, typename BOP>
-static void RasterizeTriHalfSpace3DBlend(const Triangle& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
+static void RasterizeTriHalfSpace3DBlend(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);

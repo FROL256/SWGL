@@ -78,7 +78,7 @@ struct FrameBuffer
   //uint8_t curr_smask;
 };
 
-struct ALIGNED16 TexSampler
+struct ALIGNED(16) TexSampler
 {
 #ifdef ENABLE_SSE
   __m128 txwh;

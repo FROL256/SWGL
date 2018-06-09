@@ -222,7 +222,7 @@ struct SWGL_Input
 
 };
 
-struct ALIGNED16 SWGL_TextureStorage
+struct ALIGNED(16) SWGL_TextureStorage
 {
   SWGL_TextureStorage()
   {
