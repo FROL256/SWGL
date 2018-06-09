@@ -129,8 +129,6 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
   swglCheckInputPointers(a_pContext);
 #endif
 
-  // int lastVertSize = (int)currBatch->vertPos.size();
-
   if (a_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
   {
     *(a_pContext->m_pLog) << "swglAppendVertices: (first,count) = (" << first << "," << count << ")" << std::endl;
@@ -141,6 +139,14 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
     *(a_pContext->m_pLog) << "vertPosComponents     = " << input.vertPosComponents << std::endl;
   }
 
+  const int oldSize = int(currBatch->vertPos.size());
+
+  currBatch->vertPos.resize(currBatch->vertPos.size() + count);
+  currBatch->vertColor.resize(currBatch->vertColor.size() + count);
+  //currBatch->vertNorm.resize(currBatch->vertNorm.size() + count);
+  currBatch->vertTexCoord.resize(currBatch->vertTexCoord.size() + count);
+
+  #pragma omp parallel for if (count - first > 4000) 
   for (int i = first; i < count; i++)
   {
     if (a_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
@@ -156,9 +162,6 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
     if (input.vertPosComponents >= 4)
       vPos.w = input.vertexPosPointer[i*input.vertPosComponents + 3];
 
-
-    //if (a_pContext->logMode <= LOG_FOR_DEBUG_ERROR) a_pContext->m_log << "appending vertex  (1)" << i << std::endl;
-
     float4 vColor = a_pContext->input.currInputColor;
 
     if (input.vertexColorPointer != nullptr && input.vertexColorPtrEnabled)
@@ -171,8 +174,6 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
         vColor.w = input.vertexColorPointer[i*input.vertColorComponents + 3];
     }
 
-    //if (a_pContext->logMode <= LOG_FOR_DEBUG_ERROR) a_pContext->m_log << "appending vertex  (2)" << i << std::endl;
-
     float4 vNorm = a_pContext->input.currInputNormal;
 
     if (input.vertexNormalPointer != nullptr && input.vertexNormalPtrEnabled)
@@ -182,8 +183,6 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
       vNorm.z = input.vertexNormalPointer[i*input.vertNormalComponents + 2];
     }
 
-    //if (a_pContext->logMode <= LOG_FOR_DEBUG_ERROR) a_pContext->m_log << "appending vertex  (3)" << i << std::endl;
-
     float2 vTexCoord = a_pContext->input.currInputTexCoord[0];
 
     if (input.vertexTexCoordPointer != nullptr && input.vertexTexCoordPtrEnabled)
@@ -192,12 +191,12 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
       vTexCoord.y = input.vertexTexCoordPointer[i*input.vertTexCoordComponents + 1];
     }
 
-    //if (a_pContext->logMode <= LOG_FOR_DEBUG_ERROR) a_pContext->m_log << "appending vertex  (4)" << i << std::endl;
+    const int index = oldSize + i - first;
 
-    currBatch->vertPos.push_back(vPos);
-    currBatch->vertColor.push_back(vColor);
-    //currBatch->vertNorm.push_back(vNorm);
-    currBatch->vertTexCoord.push_back(vTexCoord);
+    currBatch->vertPos  [index] = vPos;
+    currBatch->vertColor[index] = vColor;
+    //currBatch->vertNorm[index] = vNorm;
+    currBatch->vertTexCoord[index] = vTexCoord;
   }
 
 }
@@ -321,15 +320,24 @@ void swglAppendTriIndices(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPri
 }
 
 
-void swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPrimType, size_t lastSizeVert, const int* inIndices, int count) // pre (a_pContext != nullptr) && (pCurr != nullptr) && (inIndices != nullptr)
+int swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPrimType, size_t lastSizeVert, const int* inIndices, int count) // pre (a_pContext != nullptr) && (pCurr != nullptr) && (inIndices != nullptr)
 {
+  int maxId = 0;
 
   switch (currPrimType)
   {
   case GL_TRIANGLES:
   {
+    pCurr->indices.resize(pCurr->indices.size() + count);
+
     for (int i = 0; i < count; i++)
-      pCurr->indices.push_back(lastSizeVert + inIndices[i]);
+    {
+      const int index = lastSizeVert + inIndices[i];
+      if (index > maxId)
+        maxId = index;
+
+      pCurr->indices[i] = index;
+    }
   }
   break;
 
@@ -342,13 +350,27 @@ void swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPr
 
     for (int j = 0; j < qNum; j++)
     {
-      pCurr->indices.push_back(lastSizeVert + inIndices[j * 4 + 0]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[j * 4 + 1]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[j * 4 + 2]);
+      const int index0 = lastSizeVert + inIndices[j * 4 + 0];
+      const int index1 = lastSizeVert + inIndices[j * 4 + 1];
+      const int index2 = lastSizeVert + inIndices[j * 4 + 2];
+      const int index3 = lastSizeVert + inIndices[j * 4 + 3];
 
-      pCurr->indices.push_back(lastSizeVert + inIndices[j * 4 + 0]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[j * 4 + 2]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[j * 4 + 3]);
+      if (index0 > maxId)
+        maxId = index0;
+      if (index1 > maxId)
+        maxId = index1;
+      if (index2 > maxId)
+        maxId = index2;
+      if (index3 > maxId)
+        maxId = index3;
+
+      pCurr->indices.push_back(index0);
+      pCurr->indices.push_back(index1);
+      pCurr->indices.push_back(index2);
+
+      pCurr->indices.push_back(index0);
+      pCurr->indices.push_back(index2);
+      pCurr->indices.push_back(index3);
     }
   }
   break;
@@ -359,11 +381,23 @@ void swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPr
   {
     const int verts = pCurr->vertPos.size() - lastSizeVert;
 
+    const int index0 = lastSizeVert + inIndices[0];
+    if (index0 > maxId)
+      maxId = index0;
+
     for (int j = 0; j < verts - 2; j++)
     {
-      pCurr->indices.push_back(lastSizeVert + inIndices[0]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[j + 0 + 1]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[j + 1 + 1]);
+      const int index1 = lastSizeVert + inIndices[j + 0 + 1];
+      const int index2 = lastSizeVert + inIndices[j + 1 + 1];
+
+      if (index1 > maxId)
+        maxId = index1;
+      if (index2 > maxId)
+        maxId = index2;
+
+      pCurr->indices.push_back(index0);
+      pCurr->indices.push_back(index1);
+      pCurr->indices.push_back(index2);
     }
 
   }
@@ -381,15 +415,28 @@ void swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPr
 
     for (int j = 0; j < verts - 2; j++)
     {
-      pCurr->indices.push_back(lastSizeVert + inIndices[A]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[B]);
-      pCurr->indices.push_back(lastSizeVert + inIndices[C]);
+      const int index1 = lastSizeVert + inIndices[A];
+      const int index2 = lastSizeVert + inIndices[B];
+      const int index3 = lastSizeVert + inIndices[C];
+
+      if (index1 > maxId)
+        maxId = index1;
+      if (index2 > maxId)
+        maxId = index2;
+      if (index3 > maxId)
+        maxId = index3;
+
+      pCurr->indices.push_back(index1);
+      pCurr->indices.push_back(index2);
+      pCurr->indices.push_back(index3);
 
       A++; B++; C++;
     }
 
   }
   break;
+
+  //#TODO: implement maxId for lines and points !!!
 
   case GL_LINES:
   {
@@ -436,6 +483,7 @@ void swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPr
 
   };
 
+  return maxId;
 }
 
 
@@ -767,7 +815,7 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
   int* triIndicesMem              = &(a_pDrawList->m_tilesTriIndicesMemory[0]);
   const std::vector<int>& indices = pBatch->indices;
 
-  //#pragma omp parallel for if (triNum >= 1000)
+  #pragma omp parallel for if (triNum >= 1000)
   for (int triId = 0; triId < triNum; triId++)
   {
     int i1 = indices[triId * 3 + 0];

@@ -214,7 +214,7 @@ void swglFastClearPPC(SWGL_Context* a_pContext, GLbitfield mask)
     float*    dbuff = a_pContext->m_zbuffer;
     uint32_t* cbuff = (uint32_t*)&a_pContext->m_pixels2[0];
 
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(NUM_THREADS)
     for(int i=0;i<size;i+=4)
     {
        cbuff[i+0] = valCol;
@@ -493,7 +493,7 @@ GLAPI void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count)
   swglAppendTriIndices(g_pContext, currBatch, mode, lastVertSize);
 
   currBatch->state = g_pContext->input.batchState; // ok
-  swglProcessBatch(g_pContext);                       // run vertex shader and triangle setup immediately
+  swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately
 }
 
 GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) // (?)
@@ -509,151 +509,27 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
 
   const int* inIndices   = (const int*)indices;
 
-  auto& input     = g_pContext->input;
-  auto* currBatch = input.getCurrBatch();
+  auto& input            = g_pContext->input;
+  auto* currBatch        = input.getCurrBatch();
   const int lastVertSize = currBatch->vertPos.size();
-
-  //old size ... #TODO: old size ...
   
-  /*
-  
-  currBatch->vertPos.resize(currBatch->vertPos.size()           + count);
-  currBatch->vertTexCoord.resize(currBatch->vertTexCoord.size() + count);
-  currBatch->vertColor.resize(currBatch->vertColor.size()       + count);
-  currBatch->indices.resize(currBatch->indices.size()           + count);
-  
-  currBatch->state = g_pContext->input.batchState; 
-  currBatch->state.worldViewProjMatrix = mul(currBatch->state.projMatrix, currBatch->state.worldViewMatrix);
-
-  const float viewportf[4] = { (float)currBatch->state.viewport[0], 
-                               (float)currBatch->state.viewport[1], 
-                               (float)currBatch->state.viewport[2], 
-                               (float)currBatch->state.viewport[3] };
-
-  switch (mode)
-  {
-     case GL_TRIANGLES:
-     {
-       switch (input.vertPosComponents) 
-       {
-       case 2:
-         for (int i = 0; i < count; i++) //#TODO: unroll it
-         {
-           const int id = inIndices[i];
-
-           float4 vPos(0, 0, 0, 1);      //#TODO: (0,0,1,1) ???
-           vPos.x = input.vertexPosPointer[id*2 + 0];
-           vPos.y = input.vertexPosPointer[id*2 + 1];
-
-           HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
-                                viewportf, currBatch->state.worldViewProjMatrix.L());
-
-           const float tx = input.vertexTexCoordPointer[id * 2 + 0];
-           const float ty = input.vertexTexCoordPointer[id * 2 + 1];
-           currBatch->vertTexCoord[i] = float2(tx, ty);
-           currBatch->vertColor   [i] = input.currInputColor;
-           currBatch->indices     [i] = i;
-         }
-         break;
-
-       case 3:
-         for (int i = 0; i < count; i++)
-         {
-           const int id = inIndices[i];
-
-           float4 vPos(0, 0, 0, 1);  
-           vPos.x = input.vertexPosPointer[id*3 + 0];
-           vPos.y = input.vertexPosPointer[id*3 + 1];
-           vPos.z = input.vertexPosPointer[id*3 + 2];
-
-           HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
-                                viewportf, currBatch->state.worldViewProjMatrix.L());
-
-           const float tx = input.vertexTexCoordPointer[id * 2 + 0];
-           const float ty = input.vertexTexCoordPointer[id * 2 + 1];
-           currBatch->vertTexCoord[i] = float2(tx, ty);
-           currBatch->vertColor   [i] = input.currInputColor;
-           currBatch->indices     [i] = i;
-         }
-         break;
-
-       case 4:
-         for (int i = 0; i < count; i++)
-         {
-           const int id = inIndices[i];
-           float4 vPos(0, 0, 0, 1);
-           vPos.x = input.vertexPosPointer[id * 4 + 0];
-           vPos.y = input.vertexPosPointer[id * 4 + 1];
-           vPos.z = input.vertexPosPointer[id * 4 + 2];
-           vPos.w = input.vertexPosPointer[id * 4 + 3];
-
-           HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
-                                viewportf, currBatch->state.worldViewProjMatrix.L());
-
-           const float tx = input.vertexTexCoordPointer[id * 2 + 0];
-           const float ty = input.vertexTexCoordPointer[id * 2 + 1];
-
-           currBatch->vertTexCoord[i] = float2(tx, ty);
-           currBatch->vertColor   [i] = input.currInputColor;
-           currBatch->indices     [i] = i;
-         }
-         break;
-
-       default:
-         break;
-       };
-
-       //for (int i = 0; i < count; i++)
-       //  currBatch.indices.push_back(lastSizeVert + inIndices[i]);
-     }
-     break;
-
-   default:
-     break;
-
-  };
-
-  {
-    SWGL_DrawList* pDrawList = &g_pContext->m_drawList;
-    FrameBuffer fb           = swglBatchFb(g_pContext, currBatch->state);
-
-    if (g_pContext->m_useTiledFB)
-      swglAppendTrianglesToDrawList(pDrawList, g_pContext, currBatch, fb, &g_pContext->m_tiledFrameBuffer);
-    else
-      swglDrawBatchTriangles(g_pContext, currBatch, fb);
-
-    currBatch->clear();
-  }
-  */
-
-  
-  int maxVertexId = 0;                 //#TODO: remove this crap !!!
-  for (int i = 0; i < count; i++)
-  {
-    if (inIndices[i] > maxVertexId)
-      maxVertexId = inIndices[i];
-  }
-
   if (g_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
   {
     *(g_pContext->m_pLog) << "glDrawElements, before Append" << std::endl;
     *(g_pContext->m_pLog) << "lastVertSize = " << lastVertSize << std::endl;
     *(g_pContext->m_pLog) << "count        = " << count << std::endl;
-    *(g_pContext->m_pLog) << "maxVertexId  = " << maxVertexId << std::endl;
   }
+
+  const int maxVertexId = swglAppendTriIndices2(g_pContext, currBatch, mode, lastVertSize, inIndices, count);
 
   swglAppendVertices(g_pContext, mode, lastVertSize, 0, maxVertexId+1);                //#TODO: remove this, append directly to the triagle list
 
   if (g_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
     *(g_pContext->m_pLog) << "glDrawElements, after Append (1) " << std::endl;
 
-  swglAppendTriIndices2(g_pContext, currBatch, mode, lastVertSize, inIndices, count);  //#TODO: remove this, append directly to the triagle list
-
   currBatch->state = g_pContext->input.batchState; // ok
   swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately
   
-
-
 }
 
 GLAPI void APIENTRY glEnable(GLenum cap)
