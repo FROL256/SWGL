@@ -249,7 +249,7 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
   Timer timer(true);
 #endif
 
-  if (g_pContext->m_useTiledFB)
+  if (g_pContext->m_useTiledFB) // #TODO: implement opt clear both for depth and color in a single loop
   {
     if (mask & GL_COLOR_BUFFER_BIT)
       g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
@@ -507,19 +507,23 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
   if (g_pContext->input.getCurrBatch() == nullptr)
     return;
 
-  const int* inIndices = (const int*)indices;
+  const int* inIndices   = (const int*)indices;
 
   auto& input     = g_pContext->input;
   auto* currBatch = input.getCurrBatch();
+  const int lastVertSize = currBatch->vertPos.size();
 
   //old size ... #TODO: old size ...
+  
   /*
+  
   currBatch->vertPos.resize(currBatch->vertPos.size()           + count);
   currBatch->vertTexCoord.resize(currBatch->vertTexCoord.size() + count);
   currBatch->vertColor.resize(currBatch->vertColor.size()       + count);
   currBatch->indices.resize(currBatch->indices.size()           + count);
   
   currBatch->state = g_pContext->input.batchState; 
+  currBatch->state.worldViewProjMatrix = mul(currBatch->state.projMatrix, currBatch->state.worldViewMatrix);
 
   const float viewportf[4] = { (float)currBatch->state.viewport[0], 
                                (float)currBatch->state.viewport[1], 
@@ -530,7 +534,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
   {
      case GL_TRIANGLES:
      {
-       switch (input.vertPosComponents)
+       switch (input.vertPosComponents) 
        {
        case 2:
          for (int i = 0; i < count; i++) //#TODO: unroll it
@@ -542,7 +546,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
            vPos.y = input.vertexPosPointer[id*2 + 1];
 
            HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
-                                viewportf, currBatch->state.worldViewMatrix.L(), currBatch->state.projMatrix.L());
+                                viewportf, currBatch->state.worldViewProjMatrix.L());
 
            const float tx = input.vertexTexCoordPointer[id * 2 + 0];
            const float ty = input.vertexTexCoordPointer[id * 2 + 1];
@@ -560,10 +564,10 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
            float4 vPos(0, 0, 0, 1);  
            vPos.x = input.vertexPosPointer[id*3 + 0];
            vPos.y = input.vertexPosPointer[id*3 + 1];
-           vPos.z = input.vertexPosPointer[id*3 + 3];
+           vPos.z = input.vertexPosPointer[id*3 + 2];
 
            HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
-                                viewportf, currBatch->state.worldViewMatrix.L(), currBatch->state.projMatrix.L());
+                                viewportf, currBatch->state.worldViewProjMatrix.L());
 
            const float tx = input.vertexTexCoordPointer[id * 2 + 0];
            const float ty = input.vertexTexCoordPointer[id * 2 + 1];
@@ -584,7 +588,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
            vPos.w = input.vertexPosPointer[id * 4 + 3];
 
            HWImpl::VertexShader((const float*)&vPos, (float*)(currBatch->vertPos.data() + i), 1,
-                                viewportf, currBatch->state.worldViewMatrix.L(), currBatch->state.projMatrix.L());
+                                viewportf, currBatch->state.worldViewProjMatrix.L());
 
            const float tx = input.vertexTexCoordPointer[id * 2 + 0];
            const float ty = input.vertexTexCoordPointer[id * 2 + 1];
@@ -609,11 +613,20 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
 
   };
 
-  swglProcessBatch(g_pContext);
+  {
+    SWGL_DrawList* pDrawList = &g_pContext->m_drawList;
+    FrameBuffer fb           = swglBatchFb(g_pContext, currBatch->state);
+
+    if (g_pContext->m_useTiledFB)
+      swglAppendTrianglesToDrawList(pDrawList, g_pContext, currBatch, fb, &g_pContext->m_tiledFrameBuffer);
+    else
+      swglDrawBatchTriangles(g_pContext, currBatch, fb);
+
+    currBatch->clear();
+  }
   */
 
-  const int lastVertSize = currBatch->vertPos.size();
-
+  
   int maxVertexId = 0;                 //#TODO: remove this crap !!!
   for (int i = 0; i < count; i++)
   {
@@ -639,6 +652,8 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
   currBatch->state = g_pContext->input.batchState; // ok
   swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately
   
+
+
 }
 
 GLAPI void APIENTRY glEnable(GLenum cap)
@@ -1385,7 +1400,7 @@ inline void swglAppendVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 
   pCurr->vertPos.push_back(float4(x, y, z, w));
   pCurr->vertColor.push_back(g_pContext->input.currInputColor);
-  pCurr->vertNorm.push_back(g_pContext->input.currInputNormal);
+  //pCurr->vertNorm.push_back(g_pContext->input.currInputNormal);
   pCurr->vertTexCoord.push_back(g_pContext->input.currInputTexCoord[0]);
 }
 

@@ -87,35 +87,21 @@ bool HWImplementationPureCpp::AABBTriangleOverlap(const TriangleType& a_tri, con
 
 
 void HWImplementationPureCpp::VertexShader(const float* v_in4f, float* v_out4f, int a_numVert,
-                                           const float viewportData[4], const float a_worldViewMatrix[16], const float a_projMatrix[16])
+                                           const float viewportData[4], const float a_worldViewProjMatrix[16])
 {
   const float4   viewportf(viewportData[0], viewportData[1], viewportData[2], viewportData[3]);
-  const float4x4 worldViewMatrix(a_worldViewMatrix);
-  const float4x4 projMatrix(a_projMatrix);
-  const float4x4 worldViewProjMatrix = mul(projMatrix, worldViewMatrix);
+  const float4x4 worldViewProjMatrix(a_worldViewProjMatrix);
   
   const float4* inVert  = (const float4*)v_in4f;
   float4* outVert       = (float4*)v_out4f;
 
-  if (isIdentityMatrix(projMatrix))
+  for (int i = 0; i < a_numVert; i++)
   {
-    for (int i = 0; i < a_numVert; i++)
-    {
-      const float4 vClipSpace   = mul(worldViewMatrix, inVert[i]);
-      const float4 vScreenSpace = swglClipSpaceToScreenSpaceTransform(vClipSpace, viewportf);
-      outVert[i]                = vScreenSpace;
-    }
-  }
-  else
-  {
-    for (int i = 0; i < a_numVert; i++)
-    {
-      const float4 clipSpace    = mul(worldViewProjMatrix, inVert[i]);
-      const float invW          = (1.0f / fmax(clipSpace.w, 1e-20f));
-      const float4 vClipSpace   = float4(clipSpace.x*invW, clipSpace.y*invW, invW, 1.0f);
-      const float4 vScreenSpace = swglClipSpaceToScreenSpaceTransform(vClipSpace, viewportf);
-      outVert[i]                = vScreenSpace;
-    }
+    const float4 clipSpace    = mul(worldViewProjMatrix, inVert[i]);
+    const float invW          = (1.0f / fmax(clipSpace.w, 1e-20f));
+    const float4 vClipSpace   = float4(clipSpace.x*invW, clipSpace.y*invW, invW, 1.0f);
+    const float4 vScreenSpace = swglClipSpaceToScreenSpaceTransform(vClipSpace, viewportf);
+    outVert[i]                = vScreenSpace;
   }
 
 }
@@ -147,10 +133,6 @@ void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, cons
   t1->t1 = tx1;
   t1->t2 = tx2;
   t1->t3 = tx3;
-
-  const float triArea = edgeFunction(to_float2(v1), to_float2(v2), to_float2(v3));
-  t1->triArea    = triArea;
-  t1->triAreaInv = 1.0f / triArea;
   
   t1->bb_iminX = (int)(fmin(v1.x, fmin(v2.x, v3.x)) - 1.0f);
   t1->bb_imaxX = (int)(fmax(v1.x, fmax(v2.x, v3.x)) + 1.0f);

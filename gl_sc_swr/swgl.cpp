@@ -196,7 +196,7 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
 
     currBatch->vertPos.push_back(vPos);
     currBatch->vertColor.push_back(vColor);
-    currBatch->vertNorm.push_back(vNorm);
+    //currBatch->vertNorm.push_back(vNorm);
     currBatch->vertTexCoord.push_back(vTexCoord);
   }
 
@@ -517,8 +517,10 @@ void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch) // pre (a
                                (float)pBatch->state.viewport[2], 
                                (float)pBatch->state.viewport[3] };
 
+  pBatch->state.worldViewProjMatrix = mul(pBatch->state.projMatrix, pBatch->state.worldViewMatrix);
+
   HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPos.data(), int(pBatch->vertPos.size()),
-                        viewportf, pBatch->state.worldViewMatrix.L(), pBatch->state.projMatrix.L());
+                        viewportf, pBatch->state.worldViewProjMatrix.L());
 
 #ifdef MEASURE_STATS
   a_pContext->m_timeStats.msVertexShader += timer.getElapsed()*1000.0f;

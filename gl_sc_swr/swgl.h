@@ -107,7 +107,7 @@ struct Batch
   Batch()
   {
     vertPos.reserve(MAX_NUM_VERTICES_IN_BATCH);
-    vertNorm.reserve(vertPos.size());
+    //vertNorm.reserve(vertPos.size());
     vertColor.reserve(vertPos.size());
     vertTexCoord.reserve(vertPos.size());
     indices.reserve(vertPos.size()*3);
@@ -123,7 +123,7 @@ struct Batch
     indicesLines.clear();
     indices.clear();
     vertPos.clear();
-    vertNorm.clear();
+    //vertNorm.clear();
     vertColor.clear();
     vertTexCoord.clear();
   }
@@ -134,7 +134,7 @@ struct Batch
   std::vector<int>    indices;
 
   std::vector<float4, aligned16<float4> > vertPos;
-  std::vector<float4, aligned16<float4> > vertNorm;
+  //std::vector<float4, aligned16<float4> > vertNorm;
   std::vector<float4, aligned16<float4> > vertColor;
   std::vector<float2, aligned16<float2> > vertTexCoord;
 

@@ -117,7 +117,7 @@ void AppendBatchToFrame(const Batch* a_batch, pugi::xml_node a_frame,
   auto indNode  = a_frame.append_child("indices");
  
   PutArrayToNode(a_batch->vertPos,      posNode);
-  PutArrayToNode(a_batch->vertNorm,     normNode);
+  //PutArrayToNode(a_batch->vertNorm,     normNode);
   PutArrayToNode(a_batch->vertColor,    colrNode);
   PutArrayToNode(a_batch->vertTexCoord, texcNode);
   PutArrayToNode(a_batch->indices,      indNode);
