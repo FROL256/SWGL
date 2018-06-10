@@ -462,28 +462,9 @@ inline float4x4 lookAt(float3 eye, float3 center, float3 up)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef ENABLE_SSE
-
-static const __m128 const_255_inv  = _mm_set_ps(1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f);
-static const __m128 const_256      = _mm_set_ps(256.0f, 256.0f, 256.0f, 256.0f);
-static const __m128 const_255      = _mm_set_ps(255.0f, 255.0f, 255.0f, 255.0f);
-static const __m128 const_2222     = _mm_set_ps(2.0f, 2.0f, 2.0f, 2.0f);
-static const __m128 const_1111     = _mm_set_ps(1.0f, 1.0f, 1.0f, 1.0f);
-static const __m128 const_0000     = _mm_set_ps(0.0f, 0.0f, 0.0f, 0.0f);
-static const __m128 const_half_one = _mm_set_ps(0.5f, 0.5f, 0.5f, 0.5f);
-
-static const __m128i const_maskBGRA = _mm_set_epi32(0xFF000000, 0x000000FF, 0x0000FF00, 0x00FF0000);
-static const __m128i const_shftBGRA = _mm_set_epi32(24, 0, 8, 16);
-static const __m128i const_maskW    = _mm_set_epi32(0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000);
-static const __m128i const_maskXYZ  = _mm_set_epi32(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
-
-#endif
 
 inline static int RealColorToUint32_BGRA(float4 real_color)
 {
-
-#ifndef ENABLE_SSE
-
   const float r = real_color.x*255.0f;
   const float g = real_color.y*255.0f;
   const float b = real_color.z*255.0f;
@@ -495,20 +476,6 @@ inline static int RealColorToUint32_BGRA(float4 real_color)
   const unsigned char alpha = (unsigned char)a;
 
   return blue | (green << 8) | (red << 16) | (alpha << 24);
-
-#else
-
-  const __m128  const_255 = _mm_set_ps(255.0f, 255.0f, 255.0f, 255.0f);
-  const __m128  rel_col   = _mm_set_ps(real_color.w, real_color.x, real_color.y, real_color.z);
-  const __m128i rgba      = _mm_cvtps_epi32(_mm_mul_ps(rel_col, const_255));
-
-  const __m128i out       = _mm_packus_epi32(rgba, _mm_setzero_si128());
-  const __m128i out2      = _mm_packus_epi16(out,  _mm_setzero_si128());
-
-  return _mm_cvtsi128_si32(out2);
-
-#endif
-
 }
 
 
@@ -521,34 +488,6 @@ inline static float4 Uint32_BGRAToRealColor(int packedColor)
 
   return float4((float)red, (float)green, (float)blue, (float)alpha)*(1.0f / 255.0f);
 }
-
-
-#ifdef ENABLE_SSE
-
-inline static __m128 Uint32_BGRAToRealColor_SSE(int* ptr, int offset)
-{
-  //const __m128  data     = _mm_load_ss((const float*)(ptr + offset));
-  //const __m128i pixeliSS = _mm_castps_si128(_mm_shuffle_ps(data, data, _MM_SHUFFLE(0, 0, 0, 0)));
-
-  const int packedColor = ptr[offset];
-  const int red   = (packedColor & 0x00FF0000) >> 16;
-  const int green = (packedColor & 0x0000FF00) >> 8;
-  const int blue  = (packedColor & 0x000000FF) >> 0;
-  const int alpha = (packedColor & 0xFF000000) >> 24;
-
-  return _mm_mul_ps(_mm_cvtepi32_ps(_mm_set_epi32(alpha, red, green, blue)), const_255_inv);
-}
-
-inline static int RealColorToUint32_BGRA(const __m128 rel_col)
-{
-  const __m128i rgba = _mm_cvtps_epi32(_mm_mul_ps(rel_col, const_255));
-  const __m128i out  = _mm_packus_epi32(rgba, _mm_setzero_si128());
-  const __m128i out2 = _mm_packus_epi16(out,  _mm_setzero_si128());
-
-  return _mm_cvtsi128_si32(out2);
-}
-
-#endif
 
 
 #include <string>

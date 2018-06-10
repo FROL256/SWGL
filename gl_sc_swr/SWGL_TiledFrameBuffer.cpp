@@ -45,7 +45,7 @@ void SWGL_FrameBuffer::ClearColor(int32_t a_color)
 
 void SWGL_FrameBuffer::ClearDepth(float a_val)
 {
-#pragma omp parallel for
+  #pragma omp parallel for
   for (int tileId = 0; tileId < tiles.size(); tileId++)
     tiles[tileId].ClearDepth(a_val);
 }

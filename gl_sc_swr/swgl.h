@@ -19,10 +19,6 @@
 
 #include "alloc16.h"
 
-#ifdef ENABLE_SSE
-  #include <xmmintrin.h>
-#endif
-
 #include <memory.h>
 
 #include "TriRaster.h"
@@ -72,9 +68,6 @@ struct Pipeline_State_Object
   float4x4 worldViewMatrix;     ///< current WolrdView  Matrix
   float4x4 projMatrix;          ///< current WolrdView  Matrix
   float4x4 worldViewProjMatrix; ///< INTERNAL
-  #ifdef ENABLE_SSE
-  __m128   worlViewProjCols[4]; ///< INTERNAL
-  #endif
 
   bool depthTestEnabled;        ///< current depth test state
   bool depthWriteEnabled;       ///< current depth write state
@@ -243,10 +236,6 @@ struct ALIGNED(16) SWGL_TextureStorage
   int pitch;
   int* texdata;
 
-#ifdef ENABLE_SSE
-  __m128 xxwh;
-#endif
-
   GLint modulateMode;
   GLint format;
 };
@@ -376,12 +365,7 @@ struct SWGL_Context
   float    m_fwidth, m_fheight;
 
   SWGL_Input input;
-
-#ifdef ENABLE_SSE
-  std::vector<SWGL_TextureStorage, aligned16<SWGL_TextureStorage> > m_textures;
-#else
   std::vector<SWGL_TextureStorage> m_textures;
-#endif
 
   int m_texTop;
 

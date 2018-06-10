@@ -38,6 +38,8 @@ struct HWImpl_SSE1
     __m128 t1;
     __m128 t2;
     __m128 t3;
+
+    __m128 tex_txwh;
     
     int bb_iminX;
     int bb_imaxX;

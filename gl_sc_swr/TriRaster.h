@@ -29,21 +29,6 @@ static inline float edgeFunction(float2 a, float2 b, float2 c) // actuattly just
   return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
 }
 
-#ifdef ENABLE_SSE
-
-static inline __m128 edgeFunction2(__m128 a, __m128 b, __m128 c) // actuattly just a mixed product ... :)
-{
-  __m128 ay = _mm_shuffle_ps(a, a, _MM_SHUFFLE(1, 1, 1, 1));
-  __m128 by = _mm_shuffle_ps(b, b, _MM_SHUFFLE(1, 1, 1, 1));
-  __m128 cy = _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1));
-
-   return _mm_sub_ss(_mm_mul_ss(_mm_sub_ss(c,a),   _mm_sub_ss(by,ay)),
-                     _mm_mul_ss(_mm_sub_ss(cy,ay), _mm_sub_ss(b,a)));
-}
-
-
-#endif
-
 
 #ifdef LINUX_PPC_HS_INVERT_Y
 
@@ -80,10 +65,6 @@ struct FrameBuffer
 
 struct ALIGNED(16) TexSampler
 {
-#ifdef ENABLE_SSE
-  __m128 txwh;
-#endif
-
   int w;
   int h;
   int pitch;

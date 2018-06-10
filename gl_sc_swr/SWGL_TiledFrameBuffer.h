@@ -6,9 +6,8 @@
 
 #include "LiteMath.h"
 
-struct SWGL_ScreenTile
+struct ALIGNED(16) SWGL_ScreenTile
 {
-
   void ClearColor(int32_t a_color);
   void ClearDepth(float a_val);
 

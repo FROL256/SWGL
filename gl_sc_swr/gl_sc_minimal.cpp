@@ -207,8 +207,6 @@ void swglFastClearPPC(SWGL_Context* a_pContext, GLbitfield mask)
     return;
   }
 
-
-
   if (clearColor && clearDepth)
   {
     float*    dbuff = a_pContext->m_zbuffer;
@@ -1143,10 +1141,6 @@ GLAPI void APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalforma
   g_pContext->m_textures[slotId].h = height;
   g_pContext->m_textures[slotId].data.resize(width*height);
   g_pContext->m_textures[slotId].format = format;
-
-#ifdef ENABLE_SSE
-  g_pContext->m_textures[slotId].xxwh = _mm_set_ps(0, 0, (float)height, (float)width);
-#endif
 
   if (internalformat == GL_RGBA)
   {

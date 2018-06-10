@@ -444,9 +444,12 @@ static void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int 
 
   const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12); // edgeFunction(v0, v1, v2);
 
-  float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
-  float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
-  float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
+  const float fMinY = float(miny);
+  const float fMinX = float(minx);
+
+  float Cy1 = C1 + Dx12 * fMinY - Dy12 * fMinX;
+  float Cy2 = C2 + Dx23 * fMinY - Dy23 * fMinX;
+  float Cy3 = C3 + Dx31 * fMinY - Dy31 * fMinX;
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
@@ -522,9 +525,12 @@ static void RasterizeTriHalfSpace3D(const TriangleLocal& tri, int tileMinX, int 
 
   const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31 * Dy12); // edgeFunction(v0, v1, v2);
 
-  float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
-  float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
-  float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
+  const float fMinY = float(miny);
+  const float fMinX = float(minx);
+
+  float Cy1 = C1 + Dx12 * fMinY - Dy12 * fMinX;
+  float Cy2 = C2 + Dx23 * fMinY - Dy23 * fMinX;
+  float Cy3 = C3 + Dx31 * fMinY - Dy31 * fMinX;
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
@@ -606,9 +612,12 @@ static void RasterizeTriHalfSpace3DBlend(const TriangleLocal& tri, int tileMinX,
 
   const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31 * Dy12); // edgeFunction(v0, v1, v2);
 
-  float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
-  float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
-  float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
+  const float fMinY = float(miny);
+  const float fMinX = float(minx);
+
+  float Cy1 = C1 + Dx12 * fMinY - Dy12 * fMinX;
+  float Cy2 = C2 + Dx23 * fMinY - Dy23 * fMinX;
+  float Cy3 = C3 + Dx31 * fMinY - Dy31 * fMinX;
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
