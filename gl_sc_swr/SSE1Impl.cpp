@@ -180,6 +180,12 @@ static inline __m128 edgeFunction2(__m128 a, __m128 b, __m128 c) // actuattly ju
                      _mm_mul_ss(_mm_sub_ss(cy,ay), _mm_sub_ss(b,a)));
 }
 
+// static inline __m128 abs_ps(__m128 x)
+// {
+//   static const __m128 sign_mask = _mm_set1_ps(-0.f); // -0.f = 1 << 31
+//   return _mm_andnot_ps(sign_mask, x);
+// }
+
 
 void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, int i1, int i2, int i3,
                                 TriangleLocal* t1)
@@ -223,10 +229,6 @@ void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBa
 
   t1->bb_iminY = _mm_cvtsi128_si32(_mm_shuffle_epi32(bbMinI, _MM_SHUFFLE(0,0,1,1)));
   t1->bb_imaxY = _mm_cvtsi128_si32(_mm_shuffle_epi32(bbMaxI, _MM_SHUFFLE(0,0,1,1)));
-
-  const __m128 v1xv2xZ = _mm_shuffle_ps(v1, v2,           _MM_SHUFFLE(2, 2, 2, 2));
-  const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
-  t1->v3v2v1Z          = _mm_shuffle_ps(v1v2xxZ, v3,      _MM_SHUFFLE(2, 2, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
 
   const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 
@@ -358,7 +360,7 @@ inline __m128 tex2D_sse(const TexSampler& sampler, const __m128 texCoord, const 
 
 struct Colored2D
 {
-  static inline __m128 DrawPixel(const Triangle& tri, const __m128& w)
+  static inline __m128 DrawPixel(const TriangleLocal& tri, const __m128& w)
   {
     const __m128 cc1 = _mm_mul_ps(tri.c1, _mm_shuffle_ps(w, w, _MM_SHUFFLE(0, 0, 0, 0)));
     const __m128 cc2 = _mm_mul_ps(tri.c3, _mm_shuffle_ps(w, w, _MM_SHUFFLE(1, 1, 1, 1)));
@@ -371,7 +373,7 @@ struct Colored2D
 
 struct Colored3D
 {
-  static inline __m128 DrawPixel(const Triangle& tri, const __m128& w, const __m128& zInv)
+  static inline __m128 DrawPixel(const TriangleLocal& tri, const __m128& w, const __m128& zInv)
   {
     const __m128 cc1 = _mm_mul_ps(tri.c1, _mm_shuffle_ps(w, w, _MM_SHUFFLE(0, 0, 0, 0)));
     const __m128 cc2 = _mm_mul_ps(tri.c3, _mm_shuffle_ps(w, w, _MM_SHUFFLE(1, 1, 1, 1)));
@@ -390,13 +392,42 @@ struct Colored3D
 
 };
 
-static inline __m128 abs_ps(__m128 x) 
+struct Textured3D
 {
-  static const __m128 sign_mask = _mm_set1_ps(-0.f); // -0.f = 1 << 31
-  return _mm_andnot_ps(sign_mask, x);
-}
+  static inline __m128 DrawPixel(const TriangleLocal& tri, const __m128& w, const __m128& zInv)
+  {
+    const __m128 w0 = _mm_shuffle_ps(w, w, _MM_SHUFFLE(0, 0, 0, 0));
+    const __m128 w1 = _mm_shuffle_ps(w, w, _MM_SHUFFLE(1, 1, 1, 1));
+    const __m128 w2 = _mm_shuffle_ps(w, w, _MM_SHUFFLE(2, 2, 2, 2));
+
+    const __m128 cc1 = _mm_mul_ps(tri.c1, w0);
+    const __m128 cc2 = _mm_mul_ps(tri.c3, w1);
+    const __m128 cc3 = _mm_mul_ps(tri.c2, w2);
+
+    __m128 clr = _mm_add_ps(cc1, _mm_add_ps(cc2, cc3));
+
+    const __m128 t1 = _mm_mul_ps(tri.t1, w0);
+    const __m128 t2 = _mm_mul_ps(tri.t3, w1);
+    const __m128 t3 = _mm_mul_ps(tri.t2, w2);
+
+    __m128 tc = _mm_add_ps(t1, _mm_add_ps(t2, t3));
+
+  #ifdef PERSP_CORRECT
+    const __m128 z1 = _mm_rcp_ss(zInv);
+    const __m128 z = _mm_shuffle_ps(z1, z1, _MM_SHUFFLE(0, 0, 0, 0));
+    clr = _mm_mul_ps(clr, z);
+    tc  = _mm_mul_ps(tc, z);
+  #endif
+
+    const __m128 texColor = tex2D_sse(tri.texS, tc, tri.tex_txwh);
+
+    return _mm_mul_ps(clr, texColor);
+  }
+
+};
 
 
+template<typename ROP>
 void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   // Bounding rectangle
@@ -437,7 +468,7 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
       if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
       {
         const __m128 w = _mm_mul_ps(triAreaInvV, Cx);
-        colorBuffer[x] = RealColorToUint32_BGRA_SSE(Colored2D::DrawPixel(tri, w));
+        colorBuffer[x] = RealColorToUint32_BGRA_SSE(ROP::DrawPixel(tri, w));
       }
 
       Cx = _mm_sub_ps(Cx, vDy);
@@ -450,7 +481,7 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
 
 }
 
-
+template<typename ROP>
 void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
 {
   // Bounding rectangle
@@ -481,6 +512,11 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   const __m128 triAreaInv  = _mm_rcp_ss(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
   const __m128 triAreaInvV = _mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
 
+  const __m128 v1xv2xZ = _mm_shuffle_ps(tri.v1, tri.v2,   _MM_SHUFFLE(2, 2, 2, 2));
+  const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
+  const __m128 v3v2v1Z = _mm_shuffle_ps(v1v2xxZ, tri.v3,  _MM_SHUFFLE(2, 2, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
+  const __m128 vertZ   = _mm_shuffle_ps(v3v2v1Z, v3v2v1Z, _MM_SHUFFLE(3, 1, 2, 0));
+
   __m128 Cy = vCy;
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
@@ -495,15 +531,12 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
       if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
       {
         const __m128 w        = _mm_mul_ps(triAreaInvV, Cx);
-
-        const __m128 vertZ    = _mm_shuffle_ps(tri.v3v2v1Z, tri.v3v2v1Z, _MM_SHUFFLE(3, 1, 2, 0));
         const __m128 zInvV    = _mm_dp_ps(w, vertZ, 0x7f);
         const __m128 zBuffVal = _mm_load_ss(zbuff + offset + x);
-        const __m128 cmpRes   = _mm_cmpgt_ss(zInvV, zBuffVal);
 
-        if (_mm_movemask_ps(cmpRes) & 1)
+        if (_mm_movemask_ps(_mm_cmpgt_ss(zInvV, zBuffVal)) & 1)
         {
-          cbuff[offset + x] = RealColorToUint32_BGRA_SSE(Colored3D::DrawPixel(tri, w, zInvV));
+          cbuff[offset + x] = RealColorToUint32_BGRA_SSE(ROP::DrawPixel(tri, w, zInvV));
           _mm_store_ss(zbuff + offset + x, zInvV);
         }
 
@@ -522,6 +555,37 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 void HWImpl_SSE1::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleLocal& tri, int tileMinX, int tileMinY,
                                     FrameBuffer* frameBuf)
 {
-  //RasterizeTriHalfSpaceSimple2D(tri, tileMinX, tileMinY, frameBuf);
-  RasterizeTriHalfSpaceSimple3D(tri, tileMinX, tileMinY, frameBuf);
+  _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);
+
+  switch (a_ropT)
+  {
+  case ROP_Colored2D:
+    RasterizeTriHalfSpaceSimple2D<Colored2D>(tri, tileMinX, tileMinY, frameBuf);
+    break;
+
+  case ROP_Colored3D:
+    RasterizeTriHalfSpaceSimple3D<Colored3D>(tri, tileMinX, tileMinY, frameBuf);
+    break;
+
+  // case ROP_TexNearest2D:
+  // case ROP_TexLinear2D:
+  //   RasterizeTriHalfSpace2D<Textured2D>(tri, tileMinX, tileMinY, 
+  //                                       frameBuf);
+  //   break;
+  // 
+  case ROP_TexNearest3D:
+  case ROP_TexLinear3D:
+    RasterizeTriHalfSpaceSimple3D<Textured3D>(tri, tileMinX, tileMinY,
+                                              frameBuf);
+    break;
+  // 
+  // case ROP_TexNearest3D_Blend:
+  // case ROP_TexLinear3D_Blend:
+  //   RasterizeTriHalfSpace3DBlend<Textured3D, Blend_Alpha_OneMinusAlpha>(tri, tileMinX, tileMinY,
+  //                                                                        frameBuf);
+  //   break;
+
+  default :
+    break;
+  };
 }

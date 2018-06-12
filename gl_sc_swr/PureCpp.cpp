@@ -323,7 +323,7 @@ struct Textured3D
   }
 };
 
-struct Blend_Alpha_OneMinusAlapha
+struct Blend_Alpha_OneMinusAlpha
 {
   inline static int BlendPixel(const int a_colorBefore, const float4 newColor)
   {
@@ -690,7 +690,7 @@ void HWImplementationPureCpp::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleT
 
   case ROP_TexNearest3D_Blend:
   case ROP_TexLinear3D_Blend:
-    RasterizeTriHalfSpace3DBlend<Textured3D, Blend_Alpha_OneMinusAlapha>(tri, tileMinX, tileMinY,
+    RasterizeTriHalfSpace3DBlend<Textured3D, Blend_Alpha_OneMinusAlpha>(tri, tileMinX, tileMinY,
                                                                          frameBuf);
     break;
 

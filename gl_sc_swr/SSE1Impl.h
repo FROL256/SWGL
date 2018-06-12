@@ -40,18 +40,17 @@ struct HWImpl_SSE1
     __m128 t3;
 
     __m128 tex_txwh;
-    __m128 v3v2v1Z;
     
     int bb_iminX;
     int bb_imaxX;
     int bb_iminY;
     int bb_imaxY;
     
+    TexSampler texS;
+
     int     psoId;
     uint8_t curr_sval;
     uint8_t curr_smask;
-    
-    TexSampler texS;
   };
 
   typedef TriangleDataSSE TriangleType;
