@@ -51,6 +51,15 @@ bool HWImpl_SSE1::AABBTriangleOverlap(const TriangleType& a_tri, const int tileM
   const bool overlapBoxBox = IntersectBoxBox(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
                                              int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));
 
+  const __m128 xx0xx1yy0yy1 = _mm_cvtepi32_ps(_mm_set_epi32(tileMaxY, tileMinY, tileMaxX, tileMinX));
+
+  // const __m128 v2xv3xX = _mm_shuffle_ps(a_tri.v2, a_tri.v3, _MM_SHUFFLE(0, 0, 0, 0));
+  // const __m128 v2v3xxX = _mm_shuffle_ps(v2xv3xX, v2xv3xX,   _MM_SHUFFLE(0, 0, 2, 0));
+  // const __m128 v1v3v2X = _mm_shuffle_ps(v2v3xxX, a_tri.v1,  _MM_SHUFFLE(0, 0, 1, 0));
+  // const __m128 v1v2v3X  = _mm_shuffle_ps(v1v3v2X, v1v3v2X,  _MM_SHUFFLE(0, 2, 1, 0));
+
+  // #TODO: implement this crap
+
   return overlapBoxBox;
 }
 
