@@ -119,7 +119,7 @@ void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int tileMin
         for (int y1 = j; y1 < j + BlockSize; y1++)
           for (int x1 = x; x1 < x + BlockSize; x1++)
             cbuff[frameBuf->w*y1 + x1] = 0x00FF0000;
-        break;
+        //break;
       }
 
     }
@@ -166,8 +166,10 @@ void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int tileMin
         for (int y1 = j; y1 < j + BlockSize; y1++)
           for (int x1 = x; x1 < x + BlockSize; x1++)
             cbuff[frameBuf->w*y1 + x1] = 0x00FF0000;
-        break;
+        //break;
       }
+     
+     
     }
 
 
@@ -224,7 +226,7 @@ void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int tileMin
         for (int y1 = j; y1 < j + BlockSize; y1++)
           for (int x1 = x; x1 < x + BlockSize; x1++)
             cbuff[frameBuf->w*y1 + x1] = 0x00FF0000;
-        break;
+        //break;
       }
 
     }
@@ -271,7 +273,7 @@ void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int tileMin
         for (int y1 = j; y1 < j + BlockSize; y1++)
           for (int x1 = x; x1 < x + BlockSize; x1++)
             cbuff[frameBuf->w*y1 + x1] = 0x00FF0000;
-        break;
+        //break;
       }
     }
 
