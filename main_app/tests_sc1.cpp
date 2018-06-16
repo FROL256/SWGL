@@ -497,6 +497,34 @@ void test01_colored_triangle()
 
 }
 
+void demo01_colored_triangle(float rtri)
+{
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  glClearColor(0.0f, 0.0f, 0.25f, 0.5f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  
+  glRotatef(rtri, 0.0f, 0.0f, 1.0f);
+
+  glBegin(GL_TRIANGLES);
+  glColor4f(1, 0, 0, 1);
+  glVertex2f(-0.433012f, -0.25f);
+
+  glColor4f(0, 1, 0, 1);
+  glVertex2f(0.0f, 0.5f);
+
+  glColor4f(0, 0, 1, 1);
+  glVertex2f(0.433012f, -0.25f);
+  glEnd();
+
+}
+
+
 void test02_nehe_lesson1_simplified()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

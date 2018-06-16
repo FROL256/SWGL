@@ -11,9 +11,9 @@
 #include "PureCppBlock4x4.h"
 
 //@select current implementation here via typedef assigment :)
-typedef HWImplementationPureCpp HWImpl;
+//typedef HWImplementationPureCpp HWImpl;
 //typedef HWImpl_SSE1 HWImpl;
-//typedef HWImplBlock4x4 HWImpl;
+typedef HWImplBlock4x4 HWImpl;
 
 
 using Triangle = HWImpl::TriangleType;

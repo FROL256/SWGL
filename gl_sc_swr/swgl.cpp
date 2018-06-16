@@ -92,7 +92,7 @@ void SWGL_Context::InitCommon()
   m_texTop       = 0;
   m_textures.resize(1024); // max 1024 tex
 
-  m_useTiledFB = true;
+  m_useTiledFB = false;
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
@@ -615,12 +615,12 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
     const float4 v2 = pBatch->vertPos[i2];
     const float4 v3 = pBatch->vertPos[i3];
 
+    const float4 u  = v2 - v1;
+    const float4 v  = v3 - v1;
+    const float nz  = u.x*v.y - u.y*v.x;
+
     if (pBatch->state.cullFaceEnabled && pBatch->state.cullFaceMode != 0)
     {
-      const float4 u = v2 - v1;
-      const float4 v = v3 - v1;
-      const float nz = u.x*v.y - u.y*v.x;
-
       const bool cullFace = ((pBatch->state.cullFaceMode == GL_FRONT) && (nz > 0.0f)) ||
                             ((pBatch->state.cullFaceMode == GL_BACK)  && (nz < 0.0f));
 
@@ -629,6 +629,8 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
       else if (nz < 0.0f)
         std::swap(i2, i3);
     }
+    else if (nz < 0.0f)
+      std::swap(i2, i3);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -695,26 +697,31 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
   for (int triId = 0; triId < triNum; triId++)
   {
-    const int    i1 = indices[triId * 3 + 0];
-    const int    i2 = indices[triId * 3 + 1];
-    const int    i3 = indices[triId * 3 + 2];
+    int   i1 = indices[triId * 3 + 0];
+    int   i2 = indices[triId * 3 + 1];
+    int   i3 = indices[triId * 3 + 2];
 
     const float4 v1 = pBatch->vertPos[i1];
     const float4 v2 = pBatch->vertPos[i2];
     const float4 v3 = pBatch->vertPos[i3];
 
+    const float4 u = v2 - v1;
+    const float4 v = v3 - v1;
+    const float nz = u.x*v.y - u.y*v.x;
+
     if (pBatch->state.cullFaceEnabled && pBatch->state.cullFaceMode != 0)
     {
-      const float4 u = v2 - v1;
-      const float4 v = v3 - v1;
-      const float nz = u.x*v.y - u.y*v.x;
 
       const bool cullFace = ((pBatch->state.cullFaceMode == GL_FRONT) && (nz > 0.0f)) ||
                             ((pBatch->state.cullFaceMode == GL_BACK) && (nz < 0.0f));
 
       if (cullFace)
         continue;
+      else if (nz < 0.0f)
+        std::swap(i2, i3);
     }
+    else if (nz < 0.0f)
+      std::swap(i2, i3);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -42,6 +42,7 @@ void test23_draw_elements();
 
 void test_box_tri_overlap();
 
+void demo01_colored_triangle(float rtri);
 void demo03_many_small_dynamic_triangles();
 void demo04_pyramid_and_cube_3d(int width, int height, float algle1, float angle2);
 void demo05_texture_3D(int width, int height, float algle1, float angle2);
