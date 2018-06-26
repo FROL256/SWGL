@@ -4,8 +4,7 @@
 #include "LiteMath.h"
 #include <cstdint>
 
-
-enum ROP_TYPE { ROP_FillColor = 1,
+enum RasterOp { ROP_FillColor = 1,
 
                 ROP_Colored2D,
                 ROP_Colored3D,
@@ -20,7 +19,15 @@ enum ROP_TYPE { ROP_FillColor = 1,
                 ROP_TexNearest3D_Blend,
                 ROP_TexLinear2D_Blend,
                 ROP_TexLinear3D_Blend,
+
+                ROP_FillStencil,
 };
+
+enum BlendOp { BlendOp_None               = 0, // no blending, replace color
+               BlendOp_AlphaOneMinusAlpha = 1, // glBlendFunc(GL_ALPHA, GL_ONE_MINUS_ALPHS)
+               BlendOp_Add,                    // glBlendFunc(GL_ONE, GL_ONE)
+               BlendOp_Mul,                    // glBlendFunc(GL_DST_COLOR, GL_ZERO).
+             };
 
 #define HALF_SPACE_EPSILON -1e-3f
 

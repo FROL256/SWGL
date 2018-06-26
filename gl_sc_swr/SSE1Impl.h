@@ -67,6 +67,6 @@ struct HWImpl_SSE1
   static void TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, int i1, int i2, int i3,
                             TriangleType* t1);
 
-  static void RasterizeTriangle(ROP_TYPE a_ropT, const TriangleType& tri, int tileMinX, int tileMinY, 
+  static void RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                 FrameBuffer* frameBuf);
 };

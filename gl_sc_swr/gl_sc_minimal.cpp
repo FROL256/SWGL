@@ -729,7 +729,7 @@ GLAPI void APIENTRY glFlush(void)
 
         auto stateId = swglStateIdFromPSO(pso, g_pContext, sameColor);
 
-        HWImpl::RasterizeTriangle(stateId, tri, tile.minX, tile.minY,
+        HWImpl::RasterizeTriangle(stateId, BlendOp_None, tri, tile.minX, tile.minY,
                                   &fb);
       }
     

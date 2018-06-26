@@ -561,7 +561,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 
 }
 
-void HWImpl_SSE1::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleLocal& tri, int tileMinX, int tileMinY,
+void HWImpl_SSE1::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleLocal& tri, int tileMinX, int tileMinY,
                                     FrameBuffer* frameBuf)
 {
   _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);

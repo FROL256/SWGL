@@ -124,7 +124,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
 
 
 
-void HWImplBlock4x4::RasterizeTriangle(ROP_TYPE a_ropT, const TriangleType& tri, int tileMinX, int tileMinY,
+void HWImplBlock4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                        FrameBuffer* frameBuf)
 {
   RasterizeTriHalfSpace2D_Block(tri, tileMinX, tileMinY,
