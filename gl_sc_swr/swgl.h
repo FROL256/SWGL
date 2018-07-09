@@ -336,8 +336,6 @@ struct SWGL_Context
 
   SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f)
   {
-    m_clFirstFrameLoadDataToGPU = true;
-    m_pRasterImpl               = nullptr;
     InitCommon();
   }
 

@@ -12,10 +12,6 @@
   #include <GL/glu.h>
 #endif
 
-#ifndef NO_LOCAL_MATH
-  #include "../gl_sc_swr/local_math.h"
-#endif
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
