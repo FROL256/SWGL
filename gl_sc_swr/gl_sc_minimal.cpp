@@ -1214,28 +1214,15 @@ GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
 
-  #else
-
-  #ifdef LINUX_PPC
-
-  if (g_pContext->m_width != width && g_pContext->m_height != height)
-  {
-    // g_pContext->Destroy();
-    // g_pContext->Create();
-    //swglInitDrawListAndTiles(&g_pContext->m_drawList, MAX_NUM_TRIANGLES_TOTAL);
-  }
-
-  #else
-
-  // linux path
+  #else // linux path
+  
   if (g_pContext->m_width != width && g_pContext->m_height != height)
   {
     g_pContext->Destroy();
     g_pContext->Create(g_pContext->glxrec.dpy, nullptr, width, height);
-    swglInitDrawListAndTiles(&g_pContext->m_drawList, MAX_NUM_TRIANGLES_TOTAL);
+    swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
-
-  #endif
+  
   #endif
 
   // if (g_pContext->m_width == 0 || g_pContext->m_height == 0) // first time, allocate memory

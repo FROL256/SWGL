@@ -293,64 +293,13 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
 
   this->glxrec.framebuff.resize(dpy, width, height, g_fbColorDepth);
 
-  m_pixels  = (int*)this->glxrec.framebuff.data(); // (int*)malloc(width*height*sizeof(int));
+  m_pixels  = (int*)this->glxrec.framebuff.data(); // #TODO: _aligned_malloc !
   m_pixels2 = (int*)malloc(width*height*sizeof(int));
   m_zbuffer = (float*)malloc(width*height*sizeof(float));
   m_sbuffer = (uint8_t*)malloc(width*height*sizeof(uint8_t));
-
-  // fill tiles data
-  //
-
-  m_drawList.tilesIds.clear();
-
-  int ty = 0;
-
-  for (int y = 0; y < m_height; y += TILE_SIZE)
-  {
-    int h = m_height - y;
-    if (h > TILE_SIZE) h = TILE_SIZE;
-
-    int tx = 0;
-    for (int x = 0; x < m_width; x += TILE_SIZE)
-    {
-      int w = m_width - x;
-      if (w > TILE_SIZE) w = TILE_SIZE;
-
-      ScreenTile tile;
-
-      tile.minX = x;
-      tile.minY = y;
-      tile.maxX = x + TILE_SIZE;
-      tile.maxY = y + TILE_SIZE;
-      tile.beginOffs = tile.endOffs = 0;
-
-      m_drawList.tiles[tx][ty] = tile;
-      m_drawList.tilesIds.push_back(int2(tx, ty));
-
-      tx++;
-    }
-    m_drawList.m_tilesNumX = tx;
-
-    ty++;
-  }
-
-  m_drawList.m_tilesNumY = ty;
-
-  #ifdef ENABLE_MT_TASK_STEAL
-  {
-    if (ENABLE_MT)
-    {
-      if (m_width != 0 && m_height != 0 && m_pTaskPool == nullptr)
-        m_pTaskPool = new TaskQueue(MT_TASK_STEAL_THREADS);
-      else if (m_width == 0 && m_height == 0)
-        m_pTaskPool = nullptr;
-    }
-    else
-    {
-      m_pTaskPool = nullptr;
-    }
-  }
-  #endif
+  
+  m_tiledFrameBuffer.Resize(m_width, m_height);
+  m_tiledFrameBuffer.TestClearChessBoard();
 
 }
 
