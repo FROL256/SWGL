@@ -1,6 +1,8 @@
 #include "SWGL_TiledFrameBuffer.h"
 #include "HWAbstractionLayer.h"
 
+#include <memory.h>
+
 void SWGL_ScreenTile::ClearColor(int32_t a_color)
 {
   HWImpl::memset32(m_color, a_color, BIN_SIZE*BIN_SIZE);

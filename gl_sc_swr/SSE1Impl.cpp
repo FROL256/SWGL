@@ -77,6 +77,13 @@ static const __m128i const_shftBGRA = _mm_set_epi32(24, 0, 8, 16);
 static const __m128i const_maskW    = _mm_set_epi32(0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000);
 static const __m128i const_maskXYZ  = _mm_set_epi32(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 
+inline static __m128 setWtoOne(__m128 a_rhs)
+{
+  return _mm_or_ps(
+          _mm_and_ps(a_rhs,      _mm_castsi128_ps(const_maskXYZ)),
+          _mm_and_ps(const_1111, _mm_castsi128_ps(const_maskW))
+         );
+}
 
 inline static __m128 Uint32_BGRAToRealColor_SSE(int* ptr, int offset)
 {
@@ -262,9 +269,9 @@ void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBa
       }
       else if (tex.format == GL_ALPHA)
       {
-        t1->c1.m128_f32[3] = 1.0f;
-        t1->c2.m128_f32[3] = 1.0f;
-        t1->c3.m128_f32[3] = 1.0f;
+        t1->c1 = setWtoOne(t1->c1);
+        t1->c2 = setWtoOne(t1->c2);
+        t1->c3 = setWtoOne(t1->c3);
       }
     }
   }
