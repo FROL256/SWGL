@@ -442,6 +442,39 @@ struct Textured3D
 
 };
 
+/*
+   const __m128 v2xv3xX = _mm_shuffle_ps(v2, v3, _MM_SHUFFLE(0, 0, 0, 0));
+   const __m128 v2v3xxX = _mm_shuffle_ps(v2xv3xX, v2xv3xX, _MM_SHUFFLE(0, 0, 2, 0));
+   const __m128 v1v3v2X = _mm_shuffle_ps(v2v3xxX, v1, _MM_SHUFFLE(0, 0, 1, 0));      // got _mm_set_ps(0.0f, v1.x, v3.x, v2.x);
+   const __m128 v2v1v3X = _mm_shuffle_ps(v1v3v2X, v1v3v2X, _MM_SHUFFLE(0, 0, 2, 1)); // got _mm_set_ps(0.0f, v1.y, v3.y, v2.y) from _mm_set_ps(0.0f, v1.x, v3.x, v2.x);
+   
+   const __m128 v2xv3xY = _mm_shuffle_ps(v2, v3, _MM_SHUFFLE(1, 1, 1, 1));
+   const __m128 v2v3xxY = _mm_shuffle_ps(v2xv3xY, v2xv3xY, _MM_SHUFFLE(0, 0, 2, 0));
+   const __m128 v1v3v2Y = _mm_shuffle_ps(v2v3xxY, v1, _MM_SHUFFLE(1, 1, 1, 1));      // got _mm_set_ps(0.0f, v1.y, v3.y, v2.y);
+   const __m128 v2v1v3Y = _mm_shuffle_ps(v1v3v2Y, v1v3v2Y, _MM_SHUFFLE(0, 0, 2, 1)); // got _mm_set_ps(0.0f, v2.y, v1.y, v3.y) from _mm_set_ps(0.0f, v2.y, v1.y, v3.y);
+   
+   const __m128 v1xv2xZ = _mm_shuffle_ps(v1, v2, _MM_SHUFFLE(2, 2, 2, 2));
+   const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
+   const __m128 v1v3v2Z = _mm_shuffle_ps(v1v2xxZ, v3, _MM_SHUFFLE(2, 2, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
+ 
+ */
+
+inline static __m128 GetColX(const __m128 v1, const __m128 v2, const __m128 v3)
+{
+  const __m128 v1xv2xZ = _mm_shuffle_ps(v1, v2,           _MM_SHUFFLE(0, 0, 0, 0));
+  const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
+  const __m128 v1v3v2Z = _mm_shuffle_ps(v1v2xxZ, v3,      _MM_SHUFFLE(0, 0, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
+  return v1v3v2Z;
+}
+
+inline static __m128 GetColY(const __m128 v1, const __m128 v2, const __m128 v3)
+{
+  const __m128 v1xv2xZ = _mm_shuffle_ps(v1, v2,           _MM_SHUFFLE(1, 1, 1, 1));
+  const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
+  const __m128 v1v3v2Z = _mm_shuffle_ps(v1v2xxZ, v3,      _MM_SHUFFLE(1, 1, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
+  return v1v3v2Z;
+}
+
 
 template<typename ROP>
 void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
@@ -457,8 +490,8 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const __m128 vTileMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinX, tileMinX, tileMinX));  
   const __m128 vTileMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinY, tileMinY, tileMinY)); 
 
-  const __m128 vx    = _mm_sub_ps( _mm_set_ps(0.0f, tri.v1.m128_f32[0], tri.v2.m128_f32[0], tri.v3.m128_f32[0]), vTileMinX); 
-  const __m128 vy    = _mm_sub_ps( _mm_set_ps(0.0f, tri.v1.m128_f32[1], tri.v2.m128_f32[1], tri.v3.m128_f32[1]), vTileMinY); 
+  const __m128 vx    = _mm_sub_ps( GetColX(tri.v1, tri.v2, tri.v3), vTileMinX);
+  const __m128 vy    = _mm_sub_ps( GetColY(tri.v1, tri.v2, tri.v3), vTileMinY);
   
   const __m128 vMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, minx, minx, minx));                                          
   const __m128 vMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, miny, miny, miny));                                              
@@ -513,8 +546,8 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   const __m128 vTileMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinX, tileMinX, tileMinX));  
   const __m128 vTileMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinY, tileMinY, tileMinY)); 
 
-  const __m128 vx    = _mm_sub_ps( _mm_set_ps(0.0f, tri.v1.m128_f32[0], tri.v2.m128_f32[0], tri.v3.m128_f32[0]), vTileMinX); 
-  const __m128 vy    = _mm_sub_ps( _mm_set_ps(0.0f, tri.v1.m128_f32[1], tri.v2.m128_f32[1], tri.v3.m128_f32[1]), vTileMinY); 
+  const __m128 vx    = _mm_sub_ps( GetColX(tri.v1, tri.v2, tri.v3), vTileMinX);
+  const __m128 vy    = _mm_sub_ps( GetColY(tri.v1, tri.v2, tri.v3), vTileMinY);
   
   const __m128 vMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, minx, minx, minx));                                          
   const __m128 vMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, miny, miny, miny));                                              
