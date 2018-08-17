@@ -44,124 +44,9 @@
 void InfoGL() // check custome extentions here
 {
   CHECK_GL_ERRORS;
-
-  //std::cout << "GPU Vendor: " << glGetString(GL_VENDOR) << std::endl;
-  //std::cout << "GPU Name  : " << glGetString(GL_RENDERER) << std::endl;
-  //std::cout << "GL_VER    : " << glGetString(GL_VERSION) << std::endl;
-  //std::cout << "GLSL_VER  : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-
 }
 
 #ifdef LINUX_PPC
-
-#define BILLION  1000000000L
-
-int swglCreateContextWRM();
-void swglSwapBuffersWRM();
-
-float			TimeCounter, LastFrameTimeCounter, DT, prevTime = 0.0, FPS = 30.0f;
-struct timeval		tv, tv0;
-int			Frame = 1, FramesPerFPS;
-
-GLfloat		rotation_matrix[16];
-float			rot_z_vel = 50.0, rot_y_vel = 30.0;
-
-extern int g_localWidth;
-extern int g_localHeight;
-
-Timer g_timer(false);
-
-int getTimeMS()
-{
-  struct timeval tmval;
-  struct timezone tmzone;
-
-  // Receive current time
-  gettimeofday(&tmval, &tmzone);
-
-  int a = (int)(tmval.tv_sec);
-  int b = (int)((long)tmval.tv_usec / 1000L);
-
-  return a*1000 + b;
-}
-
-int main(int argc, char *argv[]) // 222
-{
-  int device = swglCreateContextWRM();
-
-  std::cout << "wrm deviceId = " << device << std::endl;
-  glViewport(0,0,1024,768);
-
-  g_localWidth  = 1024;
-  g_localHeight = 768;
-
-  const int g_width  = g_localWidth;
-  const int g_height = g_localHeight;
-
-  float angle1 = 30.0f;
-  float angle2 = 50.0f;
-
-  int   frameCounter = 0;
-  int   frameCounterTotal = 0;
-  float frameTime    = 0.0f;
-
-  g_timer.start();
-
-  double accum = 0.0;
-
-  //int oldTime = getTimeMS();
-  struct timeval t0,t1;
-  gettimeofday(&t0, 0);
-
-
-  while(true)
-  {
-    //struct timespec start, stop;
-    //clock_gettime( CLOCK_REALTIME, &start);
-
-    glClearColor(0.0f,0.0f,0.0f,1.0f);
-
-    //demo05_texture_3D(g_width, g_height, angle1, angle2);
-
-    //demo04_pyramid_and_cube_3d(1024, 768, angle1, angle2);
-    //demo03_many_small_dynamic_triangles();
-    //demo19_cubes(1024, 768, angle1, angle2);
-
-    demo25_teapot(1024, 768, angle1, angle2);
-    //demo26_teapots9(g_width, g_height, angle1, angle2);
-
-    //demo24_draw_elements_terrain(1024, 768, angle1, angle2);
-
-    swglSwapBuffersWRM();
-
-    //
-    //
-    angle1 += 50.0f/(FPS+1.0f);
-    angle2 += 100.0f/(FPS+1.0f);
-
-
-
-    frameCounter++;
-    frameCounterTotal++;
-
-    if(frameCounter >= 10)
-    {
-      gettimeofday(&t1, 0);
-
-      long long elapsed = (t1.tv_sec-t0.tv_sec)*1000000LL + t1.tv_usec-t0.tv_usec;
-      float FPS = float(frameCounterTotal)/( float(elapsed) / float(1000000));
-
-      printf("FPS = %f\n", FPS);
-      //std::cout << "Frames = " << frameCounterTotal << std::endl;
-      frameCounter = 0;
-    }
-
-  };
-
-  std::cout << "hello PPC world(333) " << std::endl;
-
-}
-
 
 #else
 
@@ -195,8 +80,8 @@ Timer g_timer(false);
 
 void ExposeFunc()
 {
-    g_localWidth  = wa.width;
     g_localHeight = wa.height;
+    g_localWidth  = wa.width;
 
     float	aspect_ratio;
     char	info_string[256];
@@ -291,7 +176,7 @@ void CreateWindow()
 
     swa.event_mask = KeyPressMask;
     swa.colormap 	= cmap;
-    win = XCreateWindow(dpy, root, 0, 0, 800, 600, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
+    win = XCreateWindow(dpy, root, 0, 0, 1024, 1024, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
     XStoreName(dpy, win, "OpenGL Animation");
     XMapWindow(dpy, win);
 }
