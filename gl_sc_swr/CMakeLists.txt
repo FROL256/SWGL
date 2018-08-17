@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(swgl)
 
-
 set(CMAKE_CXX_STANDARD 11)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1") # disable this for arm later ...
 
 set(SOURCE_LIB
@@ -38,7 +36,7 @@ set(SOURCE_LIB
         TimerLinux.cpp
         )
 
-MESSAGE ( STATUS "Searching for X11..." )
+MESSAGE(STATUS "Searching for X11..." )
 FIND_PACKAGE ( X11 REQUIRED )
 IF ( X11_FOUND )
     INCLUDE_DIRECTORIES ( ${X11_INCLUDE_DIR} )

@@ -36,7 +36,7 @@ extern "C" {
   #endif
 
   #ifndef GLAPI
-  #define GLAPI
+  #define GLAPI extern "C"
   #endif
 
 #endif
