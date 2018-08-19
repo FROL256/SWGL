@@ -3,6 +3,8 @@
 
 #ifdef WIN32
   #include <windows.h>
+#else
+#define USE_SWGL
 #endif
 
 #ifdef USE_SWGL

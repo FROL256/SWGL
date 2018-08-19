@@ -236,20 +236,15 @@ GLAPI void APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GL
   state.clearColor1u = RealColorToUint32_BGRA(state.clearColor4f);
 }
 
-GLAPI void APIENTRY glClearDepthf(GLclampf depth)
+GLAPI void APIENTRY glClearDepthf(GLclampf a_depth)
 {
   if (g_pContext == nullptr)
     return;
 
   if (g_pContext->logMode <= LOG_ALL)
-    *(g_pContext->m_pLog) << "glClearDepthf(" << depth << ")" << std::endl;
+    *(g_pContext->m_pLog) << "glClearDepthf(" << a_depth << ")" << std::endl;
 
-#ifdef WIN32
-  g_pContext->input.clearDepth = depth;
-#else
-  g_pContext->input.clearDepth = 1.0f - depth;
-#endif
-
+  g_pContext->input.clearDepth = a_depth;
 }
 
 GLAPI void APIENTRY glClearStencil(GLint s)

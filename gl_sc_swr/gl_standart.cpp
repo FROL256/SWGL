@@ -39,7 +39,10 @@ GLAPI void APIENTRY glColor3f(GLfloat red, GLfloat green, GLfloat blue)
   g_pContext->input.currInputColor.z = blue;
 }
 
-GLAPI void APIENTRY glClearDepth(GLclampf depth) { glClearDepthf(depth); }
+GLAPI void APIENTRY glClearDepth(GLclampf a_depth)
+{
+  glClearDepthf(a_depth);
+}
 
 GLAPI void APIENTRY glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
