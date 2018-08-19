@@ -288,7 +288,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HydraExport.cpp" />
-    <ClCompile Include="main_app.cpp" />
+    <ClCompile Include="main_win.cpp" />
     <ClCompile Include="tests_sc1.cpp" />
     <ClCompile Include="tests_sc2.cpp" />
     <ClCompile Include="Timer.cpp" />

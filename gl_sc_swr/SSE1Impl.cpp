@@ -490,9 +490,9 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const __m128 vTileMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinX, tileMinX, tileMinX));  
   const __m128 vTileMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinY, tileMinY, tileMinY)); 
 
-  const __m128 vx    = _mm_sub_ps( GetColX(tri.v1, tri.v2, tri.v3), vTileMinX);
-  const __m128 vy    = _mm_sub_ps( GetColY(tri.v1, tri.v2, tri.v3), vTileMinY);
-  
+  const __m128 vx = _mm_sub_ps( GetColX(tri.v3, tri.v2, tri.v1), vTileMinX); // same as _mm_sub_ps(_mm_set_ps(0.0f, tri.v1.m128_f32[0], tri.v2.m128_f32[0], tri.v3.m128_f32[0]), vTileMinX);
+  const __m128 vy = _mm_sub_ps( GetColY(tri.v3, tri.v2, tri.v1), vTileMinY); // smae as _mm_sub_ps(_mm_set_ps(0.0f, tri.v1.m128_f32[1], tri.v2.m128_f32[1], tri.v3.m128_f32[1]), vTileMinY);
+
   const __m128 vMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, minx, minx, minx));                                          
   const __m128 vMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, miny, miny, miny));                                              
 
@@ -546,9 +546,9 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   const __m128 vTileMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinX, tileMinX, tileMinX));  
   const __m128 vTileMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinY, tileMinY, tileMinY)); 
 
-  const __m128 vx    = _mm_sub_ps( GetColX(tri.v1, tri.v2, tri.v3), vTileMinX);
-  const __m128 vy    = _mm_sub_ps( GetColY(tri.v1, tri.v2, tri.v3), vTileMinY);
-  
+  const __m128 vx    = _mm_sub_ps( GetColX(tri.v3, tri.v2, tri.v1), vTileMinX);
+  const __m128 vy    = _mm_sub_ps( GetColY(tri.v3, tri.v2, tri.v1), vTileMinY);
+
   const __m128 vMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, minx, minx, minx));                                          
   const __m128 vMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, miny, miny, miny));                                              
 
