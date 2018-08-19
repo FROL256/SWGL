@@ -93,6 +93,7 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
   return;
 #endif
 
+
   if (mask & GL_COLOR_BUFFER_BIT)
   {
     const int size = a_pContext->m_width*a_pContext->m_height;
@@ -104,7 +105,7 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
 
   if (mask & GL_DEPTH_BUFFER_BIT)
   {
-    const int size = a_pContext->m_width*a_pContext->m_height;
+    const int size  = a_pContext->m_width*a_pContext->m_height;
     const float val = 1.0f - a_pContext->input.clearDepth;
 
     for (int i = 0; i < size; i++)
@@ -188,53 +189,6 @@ void swglFastClear(SWGL_Context* a_pContext, GLbitfield mask)
 
 #endif
 
-void swglFastClearPPC(SWGL_Context* a_pContext, GLbitfield mask)
-{
-  const bool clearColor    = ( (mask & GL_COLOR_BUFFER_BIT)   != 0 );
-  const bool clearDepth    = ( (mask & GL_DEPTH_BUFFER_BIT)   != 0 );
-  const bool clearStencil  = ( (mask & GL_STENCIL_BUFFER_BIT) != 0 );
-
-  const uint32_t valCol    = a_pContext->input.clearColor1u;
-  const float    valDepth  = 1.0f - a_pContext->input.clearDepth;
-  const uint8_t valStencil = a_pContext->input.clearStencil & 0x000000FF;
-
-  const int size  = a_pContext->m_width*a_pContext->m_height;
-  const int size2 = (a_pContext->m_width*a_pContext->m_height) / 4;
-
-  if (size % 4 != 0)
-  {
-    swglSlowClear(a_pContext, mask);
-    return;
-  }
-
-  if (clearColor && clearDepth)
-  {
-    float*    dbuff = a_pContext->m_zbuffer;
-    uint32_t* cbuff = (uint32_t*)&a_pContext->m_pixels2[0];
-
-    #pragma omp parallel for num_threads(NUM_THREADS)
-    for(int i=0;i<size;i+=4)
-    {
-       cbuff[i+0] = valCol;
-       cbuff[i+1] = valCol;
-       cbuff[i+2] = valCol;
-       cbuff[i+3] = valCol;
-
-       dbuff[i+0] = valDepth;
-       dbuff[i+1] = valDepth;
-       dbuff[i+2] = valDepth;
-       dbuff[i+3] = valDepth;
-    }
-
-  }
-  else
-  {
-    swglSlowClear(a_pContext, mask);
-  }
-
-
-}
-
 GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used tiled
 {
   if (g_pContext == nullptr)
@@ -290,7 +244,12 @@ GLAPI void APIENTRY glClearDepthf(GLclampf depth)
   if (g_pContext->logMode <= LOG_ALL)
     *(g_pContext->m_pLog) << "glClearDepthf(" << depth << ")" << std::endl;
 
+#ifdef WIN32
   g_pContext->input.clearDepth = depth;
+#else
+  g_pContext->input.clearDepth = 1.0f - depth;
+#endif
+
 }
 
 GLAPI void APIENTRY glClearStencil(GLint s)

@@ -25,8 +25,7 @@ public:
     #ifdef WIN32
     return (pointer)_aligned_malloc(n*sizeof(T), 16);
     #else
-    pointer p = (pointer)aligned_alloc(n*sizeof(T), 16);
-    return p;
+    return (pointer)aligned_alloc(16, n*sizeof(T));
     #endif
   }
 

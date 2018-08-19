@@ -155,9 +155,9 @@ struct SWGL_Input
   {
     memset(this, 0, sizeof(SWGL_Input));
     inputMatrixMode = GL_MODELVIEW;
-    clearDepth = 1.0f;
-    clearStencil = 0;
-    currPointSize = 1.0f;
+    clearDepth      = 1.0f;
+    clearStencil    = 0;
+    currPointSize   = 1.0f;
 
     top_mw = 0;
     top_mp = 0;
