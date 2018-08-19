@@ -56,17 +56,45 @@ void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
 {
   const int pitchX = sizeX*BIN_SIZE;
 
-  #pragma omp parallel for num_threads(NUM_THREADS)
-  for (int tileId = 0; tileId < tiles.size(); tileId++)
+  #ifdef WIN32
+  const bool swapY = false;
+  #else
+  const bool swapY = true;
+  #endif
+
+  if(swapY)
   {
-    int32_t* output = a_data + tiles[tileId].minY*pitchX + tiles[tileId].minX;
-
-    for (int y = 0; y < BIN_SIZE; y++)
+    #pragma omp parallel for num_threads(NUM_THREADS)
+    for (int tileId = 0; tileId < tiles.size(); tileId++)
     {
-      int32_t* inLine  = tiles[tileId].m_color + y*BIN_SIZE;
-      int32_t* outLine = output + y*pitchX;
+      const int lineY1 = (sizeY*BIN_SIZE - tiles[tileId].minY - BIN_SIZE/4); // #TODDO: BIN_SIZE/4 ???????? WTF !!!!!!
+      int32_t *output = a_data + lineY1 * pitchX + tiles[tileId].minX;
 
-      memcpy(outLine, inLine, BIN_SIZE*sizeof(int32_t));
+      for (int y = 0; y < BIN_SIZE; y++)
+      {
+        const int y1 = (sizeY - y - 1);
+
+        int32_t *inLine  = tiles[tileId].m_color + y * BIN_SIZE;
+        int32_t *outLine = output + y1 * pitchX;
+
+        memcpy(outLine, inLine, BIN_SIZE * sizeof(int32_t));
+      }
+    }
+  }
+  else
+  {
+    #pragma omp parallel for num_threads(NUM_THREADS)
+    for (int tileId = 0; tileId < tiles.size(); tileId++)
+    {
+      int32_t *output = a_data + tiles[tileId].minY * pitchX + tiles[tileId].minX;
+
+      for (int y = 0; y < BIN_SIZE; y++)
+      {
+        int32_t *inLine = tiles[tileId].m_color + y * BIN_SIZE;
+        int32_t *outLine = output + y * pitchX;
+
+        memcpy(outLine, inLine, BIN_SIZE * sizeof(int32_t));
+      }
     }
   }
 }

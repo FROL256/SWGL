@@ -312,24 +312,26 @@ void SWGL_Context::Destroy()
 
 void SWGL_Context::CopyToScreeen()
 {
-  for(int y=0;y<m_height;y++)
+  if (m_useTiledFB)
+    m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
+  else 
   {
-    int offset0 = y*m_width;
-    int offset1 = (m_height - y - 1)*m_width;
-
-    for(int x=0;x<m_width;x++)
+    #pragma omp parallel for
+    for (int y = 0; y < m_height; y++)
     {
-      int oldPx = m_pixels2[offset1+x];
+      int offset0 = y * m_width;
+      int offset1 = (m_height - y - 1) * m_width;
 
-      // int red   = (oldPx & 0x000000FF);
-      // int green = (oldPx & 0x0000FF00) >> 8;
-      // int blue  = (oldPx & 0x00FF0000) >> 16;
-
-      m_pixels[offset0+x] = oldPx; // (blue << 16) | (green << 8) | (red);
+      for (int x = 0; x < m_width; x++)
+      {
+        int oldPx = m_pixels2[offset1 + x];
+        // int red   = (oldPx & 0x000000FF);
+        // int green = (oldPx & 0x0000FF00) >> 8;
+        // int blue  = (oldPx & 0x00FF0000) >> 16;
+        m_pixels[offset0 + x] = oldPx; // (blue << 16) | (green << 8) | (red);
+      }
     }
-
   }
-
 
 }
 
