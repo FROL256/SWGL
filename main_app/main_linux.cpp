@@ -8,27 +8,11 @@
 #include<time.h>
 #include<sys/time.h>
 
+#include "tests_sc1.h"
 
 #ifdef USE_SWGL
-
   #include "../gl_sc_swr/gl_sc.h"
   #include "../gl_sc_swr/glx_sc.h"
-
-
-  #ifdef LINUX_PPC
-
-  extern "C"
-  {
-    #define WRM_LIBWRM
-    #include <libwrm_device.h>
-    #include <libwrm_bm.h>
-    #include <libwrm_scm.h>
-  }
-  #endif
-
-
-#else
-  #include<GL/glx.h>
 #endif // USE_SWGL
 
 
@@ -36,7 +20,6 @@
 #include <stdexcept>
 #include <iostream>
 
-#include "tests_sc1.h"
 #include "../gl_sc_swr/Timer.h"
 
 
@@ -109,10 +92,10 @@ void ExposeFunc()
       //test01_colored_triangle();
       //test02_nehe_lesson1_simplified();
 
-      demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
+      //demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
       //demo03_many_small_dynamic_triangles();
       //demo14_transparent_cube(wa.width, wa.height, angle1, angle2);
-      //demo19_cubes(wa.width, wa.height, angle1, angle2);
+      demo19_cubes(wa.width, wa.height, angle1, angle2);
 
       //demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
       //demo05_texture_3D(wa.width, wa.height, angle1, angle2);

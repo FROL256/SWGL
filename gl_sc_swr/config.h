@@ -1,6 +1,4 @@
 #pragma once
-
-#define ENABLE_MT false
 #define NUM_THREADS 2
 
 //#define TEX_NEAREST

@@ -1,12 +1,6 @@
 #include "tests_sc1.h"
 #include "../gl_sc_swr/LiteMath.h"
 
-#ifdef WIN32
-  #include <windows.h>
-#else
-#define USE_SWGL
-#endif
-
 #ifdef USE_SWGL
 #include "../gl_sc_swr/gl_sc.h"
 #include "../gl_sc_swr/gl_std.h"

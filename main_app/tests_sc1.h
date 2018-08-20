@@ -2,6 +2,12 @@
 
 #include "../gl_sc_swr/config.h"
 
+#ifdef WIN32
+  #include <windows.h>
+#else
+  #define USE_SWGL
+#endif
+
 void ThrowExceptionOnGLError(int line, const char *file);
 
 #undef CHECK_GL_ERRORS

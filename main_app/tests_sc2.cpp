@@ -1,9 +1,5 @@
 #include "tests_sc1.h"
 
-#ifdef WIN32
-  #include <windows.h>
-#endif
-
 #ifdef USE_SWGL
   #include "../gl_sc_swr/gl_sc.h"
   #include "../gl_sc_swr/gl_std.h"
