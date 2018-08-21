@@ -67,7 +67,7 @@ void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
     #pragma omp parallel for num_threads(NUM_THREADS)
     for (int tileId = 0; tileId < tiles.size(); tileId++)
     {
-      const int lineY1 = (sizeY*BIN_SIZE - tiles[tileId].minY - BIN_SIZE/4); // #TODDO: BIN_SIZE/4 ???????? WTF !!!!!!
+      const int lineY1 = (sizeY*BIN_SIZE - tiles[tileId].minY - 16); // #TODDO: 16 ???????? WTF !!!!!! works for BIN_SIZE = 64 only !!!
       int32_t *output = a_data + lineY1 * pitchX + tiles[tileId].minX;
 
       for (int y = 0; y < BIN_SIZE; y++)

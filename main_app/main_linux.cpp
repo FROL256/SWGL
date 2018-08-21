@@ -90,7 +90,6 @@ void ExposeFunc()
     try
     {
       //test01_colored_triangle();
-      //demo01_colored_triangle(25.0f);
       demo01_colored_triangle(angle1);
       //test02_nehe_lesson1_simplified();
 

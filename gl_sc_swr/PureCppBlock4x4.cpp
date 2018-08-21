@@ -48,9 +48,9 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
 
   const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12); // edgeFunction(v0, v1, v2);
 
-  float Cy1 = C1 + Dx12 * miny - Dy12 * minx;
-  float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
-  float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
+  float Cy1_b = C1 + Dx12 * miny - Dy12 * minx;
+  float Cy2_b = C2 + Dx23 * miny - Dy23 * minx;
+  float Cy3_b = C3 + Dx31 * miny - Dy31 * minx;
 
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
   
@@ -61,27 +61,27 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
   for (int by = miny; by <= maxy; by += blockSize)
   {
     // Start value for horizontal scan
-    float Cx1 = Cy1;
-    float Cx2 = Cy2;
-    float Cx3 = Cy3;
+    float Cx1_b = Cy1_b;
+    float Cx2_b = Cy2_b;
+    float Cx3_b = Cy3_b;
 
     for (int bx = minx; bx <= maxx; bx+= blockSize)
     {
-      const float Cx1_00 = Cx1;
-      const float Cx2_00 = Cx2;
-      const float Cx3_00 = Cx3;
+      const float Cx1_00 = Cx1_b;
+      const float Cx2_00 = Cx2_b;
+      const float Cx3_00 = Cx3_b;
 
-      const float Cx1_01 = Cx1 - Dy12*blockSizeF;
-      const float Cx2_01 = Cx2 - Dy23*blockSizeF;
-      const float Cx3_01 = Cx3 - Dy31*blockSizeF;
+      const float Cx1_01 = Cx1_b - Dy12*blockSizeF;
+      const float Cx2_01 = Cx2_b - Dy23*blockSizeF;
+      const float Cx3_01 = Cx3_b - Dy31*blockSizeF;
 
-      const float Cx1_10 = Cx1 + Dx12*blockSizeF;
-      const float Cx2_10 = Cx2 + Dx23*blockSizeF;
-      const float Cx3_10 = Cx3 + Dx31*blockSizeF;
+      const float Cx1_10 = Cx1_b + Dx12*blockSizeF;
+      const float Cx2_10 = Cx2_b + Dx23*blockSizeF;
+      const float Cx3_10 = Cx3_b + Dx31*blockSizeF;
 
-      const float Cx1_11 = Cx1 + Dx12*blockSizeF - Dy12*blockSizeF;
-      const float Cx2_11 = Cx2 + Dx23*blockSizeF - Dy23*blockSizeF;
-      const float Cx3_11 = Cx3 + Dx31*blockSizeF - Dy31*blockSizeF;
+      const float Cx1_11 = Cx1_b + Dx12*blockSizeF - Dy12*blockSizeF;
+      const float Cx2_11 = Cx2_b + Dx23*blockSizeF - Dy23*blockSizeF;
+      const float Cx3_11 = Cx3_b + Dx31*blockSizeF - Dy31*blockSizeF;
 
       const bool v0Inside = (Cx1_00 > HALF_SPACE_EPSILON && Cx2_00 > HALF_SPACE_EPSILON && Cx3_00 > HALF_SPACE_EPSILON);
       const bool v1Inside = (Cx1_01 > HALF_SPACE_EPSILON && Cx2_01 > HALF_SPACE_EPSILON && Cx3_01 > HALF_SPACE_EPSILON);
@@ -90,30 +90,50 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
 
       if (v0Inside && v1Inside && v2Inside && v3Inside)
       {
-        // RenderBlock(x,j,BlockSize);
+        // RenderBlock
         for (int y1 = by; y1 < by + blockSize; y1++)
           for (int x1 = bx; x1 < bx + blockSize; x1++)
-            if(x1 < frameBuf->w && y1 < frameBuf->h)
+            if(x1 <= maxx && y1 <= maxy)     // replace (maxx, maxy) to (maxx-1, maxy01) to see tile borders !!
               cbuff[frameBuf->w*y1 + x1] = 0x0000FF00;
       }
       else if (v0Inside || v1Inside || v2Inside || v3Inside)
       {
-        // RenderPartiallyCoveredBlock(j,x, BlockSize);
+        // RenderPartiallyCoveredBlock
+        float Cy1 = 0.0f;
+        float Cy2 = 0.0f;
+        float Cy3 = 0.0f;
+
         for (int y1 = by; y1 < by + blockSize; y1++)
+        {
+          float Cx1 = Cx1_b + Cy1;
+          float Cx2 = Cx2_b + Cy2;
+          float Cx3 = Cx3_b + Cy3;
+
           for (int x1 = bx; x1 < bx + blockSize; x1++)
-            if(x1 < frameBuf->w && y1 < frameBuf->h)
-              cbuff[frameBuf->w*y1 + x1] = 0x00FF0000;
+          {
+            const bool hsTest = (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON);
+            if (x1 <= maxx && y1 <= maxy && hsTest)
+              cbuff[frameBuf->w * y1 + x1] = 0x0000FF00;
+
+            Cx1 -= Dy12;
+            Cx2 -= Dy23;
+            Cx3 -= Dy31;
+          }
+
+          Cy1 += Dx12;
+          Cy2 += Dx23;
+          Cy3 += Dx31;
+        }
       }
 
-
-      Cx1 -= Dy12*blockSizeF;
-      Cx2 -= Dy23*blockSizeF;
-      Cx3 -= Dy31*blockSizeF;
+      Cx1_b -= Dy12*blockSizeF;
+      Cx2_b -= Dy23*blockSizeF;
+      Cx3_b -= Dy31*blockSizeF;
     }
 
-    Cy1 += Dx12*blockSizeF;
-    Cy2 += Dx23*blockSizeF;
-    Cy3 += Dx31*blockSizeF;
+    Cy1_b += Dx12*blockSizeF;
+    Cy2_b += Dx23*blockSizeF;
+    Cy3_b += Dx31*blockSizeF;
 
     offset = nextLine(offset, frameBuf->w, frameBuf->h);
   }
