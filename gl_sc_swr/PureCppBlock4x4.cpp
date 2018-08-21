@@ -67,11 +67,6 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
 
     for (int bx = minx; bx <= maxx; bx+= blockSize)
     {
-      const float fx1 = bx;
-      const float fy1 = by;
-      const float fx2 = bx + blockSizeF;
-      const float fy2 = by + blockSizeF;
-
       const float Cx1_00 = Cx1;
       const float Cx2_00 = Cx2;
       const float Cx3_00 = Cx3;
@@ -98,14 +93,16 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
         // RenderBlock(x,j,BlockSize);
         for (int y1 = by; y1 < by + blockSize; y1++)
           for (int x1 = bx; x1 < bx + blockSize; x1++)
-            cbuff[frameBuf->w*y1 + x1] = 0x0000FF00;
+            if(x1 < frameBuf->w && y1 < frameBuf->h)
+              cbuff[frameBuf->w*y1 + x1] = 0x0000FF00;
       }
       else if (v0Inside || v1Inside || v2Inside || v3Inside)
       {
         // RenderPartiallyCoveredBlock(j,x, BlockSize);
         for (int y1 = by; y1 < by + blockSize; y1++)
           for (int x1 = bx; x1 < bx + blockSize; x1++)
-            cbuff[frameBuf->w*y1 + x1] = 0x00FF0000;
+            if(x1 < frameBuf->w && y1 < frameBuf->h)
+              cbuff[frameBuf->w*y1 + x1] = 0x00FF0000;
       }
 
 
