@@ -33,6 +33,14 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   const float Dy23 = y2 - y3;
   const float Dy31 = y3 - y1;
 
+  const simdpp::float32<blockSize*blockSize> Dx12v = simdpp::splat(Dx12);
+  const simdpp::float32<blockSize*blockSize> Dx23v = simdpp::splat(Dx23);
+  const simdpp::float32<blockSize*blockSize> Dx31v = simdpp::splat(Dx31);
+
+  const simdpp::float32<blockSize*blockSize> Dy12v = simdpp::splat(Dy12);
+  const simdpp::float32<blockSize*blockSize> Dy23v = simdpp::splat(Dy23);
+  const simdpp::float32<blockSize*blockSize> Dy31v = simdpp::splat(Dy31);
+
   // Bounding rectangle
   const int minx = std::max(tri.bb_iminX - tileMinX, 0);
   const int miny = std::max(tri.bb_iminY - tileMinY, 0);
@@ -55,6 +63,27 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
   constexpr float blockSizeF = float(blockSize);
+
+  typename VROP<blockSize*blockSize>::vec4 tri_c1, tri_c2, tri_c3;
+  {
+    tri_c1.x = simdpp::splat(tri.c1.x);
+    tri_c1.y = simdpp::splat(tri.c1.y);
+    tri_c1.z = simdpp::splat(tri.c1.z);
+    tri_c1.w = simdpp::splat(tri.c1.w);
+
+    tri_c2.x = simdpp::splat(tri.c2.x);
+    tri_c2.y = simdpp::splat(tri.c2.y);
+    tri_c2.z = simdpp::splat(tri.c2.z);
+    tri_c2.w = simdpp::splat(tri.c2.w);
+
+    tri_c3.x = simdpp::splat(tri.c3.x);
+    tri_c3.y = simdpp::splat(tri.c3.y);
+    tri_c3.z = simdpp::splat(tri.c3.z);
+    tri_c3.w = simdpp::splat(tri.c3.w);
+  }
+
+  const auto pixOffsX = PixOffsetX<blockSize * blockSize>();
+  const auto pixOffsY = PixOffsetY<blockSize * blockSize>();
 
   // Scan through bounding rectangle
   for (int by = miny; by <= maxy; by += blockSize)
@@ -87,18 +116,21 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
       const bool v2Inside = (Cx1_10 > HALF_SPACE_EPSILON && Cx2_10 > HALF_SPACE_EPSILON && Cx3_10 > HALF_SPACE_EPSILON);
       const bool v3Inside = (Cx1_11 > HALF_SPACE_EPSILON && Cx2_11 > HALF_SPACE_EPSILON && Cx3_11 > HALF_SPACE_EPSILON);
 
+      const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat(Cx1_b);
+      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx2_b);
+      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx3_b);
+
+      SIMDPP_ALIGN(64) int pixels[blockSize*blockSize];
+
       if (v0Inside && v1Inside && v2Inside && v3Inside)
       {
-        typename VROP<blockSize*blockSize>::vec4 color;
-        color.x = simdpp::splat(0.0f);
-        color.y = simdpp::splat(1.0f);
-        color.z = simdpp::splat(0.0f);
-        color.w = simdpp::splat(0.0f);
 
-        simdpp::uint32<blockSize*blockSize> pixData = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
-        //simdpp::uint32<blockSize*blockSize> pixData = simdpp::splat(0x0000FF00);
+        const simdpp::float32<blockSize*blockSize> w1 = Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY;
+        const simdpp::float32<blockSize*blockSize> w2 = Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY;
+        const simdpp::float32<blockSize*blockSize> w3 = Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY;
 
-        SIMDPP_ALIGN(64) int pixels[blockSize*blockSize];
+        const auto color   = VROP<blockSize*blockSize>::Colored2D::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
+        const auto pixData = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
         simdpp::store(pixels, pixData);
 
         // store pixels

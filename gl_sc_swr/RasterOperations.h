@@ -9,6 +9,25 @@
 #include "../simdpp/simd.h"
 
 
+static SIMDPP_ALIGN(64) float g_YMult[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+static SIMDPP_ALIGN(64) float g_XMult[4] = {0.0f, 1.0f, 0.0f, 1.0f};
+
+template<int DIM>
+static inline simdpp::float32<4> PixOffsetX()
+{
+  simdpp::float32<4> r = simdpp::load(g_XMult);
+  return r;
+}
+
+template<int DIM>
+static inline simdpp::float32<4> PixOffsetY()
+{
+  simdpp::float32<4> r = simdpp::load(g_YMult);
+  return r;
+}
+
+
+
 template<int DIM>
 struct VROP                  // Vectorizeable Raster OPerations
 {
@@ -38,41 +57,44 @@ struct VROP                  // Vectorizeable Raster OPerations
 
   struct FillColor
   {
-    inline static void DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
-                                 const Scalar& w0, const Scalar& w1, const Scalar& w2,
-                                 vec4& res)
+    inline static vec4 DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
+                                 const Scalar& w0, const Scalar& w1, const Scalar& w2)
     {
+      vec4 res;
       res.x = tri_c1.x;
       res.y = tri_c1.y;
       res.z = tri_c1.z;
       res.w = tri_c1.w;
+      return res;
     }
   };
 
   struct Colored2D
   {
     inline static vec4 DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
-                                 const Scalar& w0, const Scalar& w1, const Scalar& w2,
-                                 vec4& res)
+                                 const Scalar& w0, const Scalar& w1, const Scalar& w2)
     {
+      vec4 res;
       res.x = tri_c1.x*w0 + tri_c2.x*w1 + tri_c3.x*w2;
       res.y = tri_c1.y*w0 + tri_c2.y*w1 + tri_c3.y*w2;
       res.z = tri_c1.z*w0 + tri_c2.z*w1 + tri_c3.z*w2;
       res.w = tri_c1.w*w0 + tri_c2.w*w1 + tri_c3.w*w2;
+      return res;
     }
   };
 
   struct Colored3D
   {
-    inline static void DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
-                                 const Scalar& w0, const Scalar& w1, const Scalar& w2, const Scalar zInv,
-                                 vec4& res)
+    inline static vec4 DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
+                                 const Scalar& w0, const Scalar& w1, const Scalar& w2, const Scalar zInv)
     {
       const Scalar z = simdpp::rcp_e(zInv);
+      vec4 res;
       res.x = z*( tri_c1.x*w0 + tri_c2.x*w1 + tri_c3.x*w2 );
       res.y = z*( tri_c1.y*w0 + tri_c2.y*w1 + tri_c3.y*w2 );
       res.z = z*( tri_c1.z*w0 + tri_c2.z*w1 + tri_c3.z*w2 );
       res.w = z*( tri_c1.w*w0 + tri_c2.w*w1 + tri_c3.w*w2 );
+      return res;
     }
   };
 
