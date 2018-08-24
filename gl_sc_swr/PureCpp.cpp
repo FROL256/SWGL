@@ -7,6 +7,7 @@
 #endif
 
 #include <algorithm>
+#include "RasterOperations.h"
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 

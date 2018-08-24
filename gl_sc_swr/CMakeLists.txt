@@ -34,7 +34,7 @@ set(SOURCE_LIB
         SSE1Impl.h
         SWGL_TiledFrameBuffer.h
         TimerLinux.cpp
-        )
+        RasterOperations.h PureCppBlock2x2.h PureCppBlock2x2.cpp PureCppBlock.h)
 
 MESSAGE(STATUS "Searching for X11..." )
 FIND_PACKAGE ( X11 REQUIRED )
