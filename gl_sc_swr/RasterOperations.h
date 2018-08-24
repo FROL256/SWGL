@@ -5,19 +5,36 @@
 #ifndef TEST_GL_TOP_RASTEROPERATIONS_H
 #define TEST_GL_TOP_RASTEROPERATIONS_H
 
-namespace simdpp
-{
-  //float splat(const float x) { return x; }
-  static inline float rcp_e(const float x) {return 1.0f/x; }
-}
+#define  	SIMDPP_ARCH_X86_SSE4_1
+#include "../simdpp/simd.h"
 
-template<typename Scalar>
+
+template<int DIM>
 struct VROP                  // Vectorizeable Raster OPerations
 {
-  struct vec4
+  using Scalar   = simdpp::float32<DIM>;
+  using Scalarui = simdpp::uint32<DIM>;
+
+  SIMDPP_ALIGN(64) struct vec4
   {
     Scalar x,y,z,w;
   };
+
+  static inline Scalarui RealColorToUint32_BGRA(const vec4& rc)
+  {
+    const Scalar const_255 = simdpp::splat(255.0f);
+    const Scalar r = rc.x*const_255;
+    const Scalar g = rc.y*const_255;
+    const Scalar b = rc.z*const_255;
+    const Scalar a = rc.w*const_255;
+
+    const auto red   = simdpp::to_uint32(r);
+    const auto green = simdpp::to_uint32(g);
+    const auto blue  = simdpp::to_uint32(b);
+    const auto alpha = simdpp::to_uint32(a);
+
+    return simdpp::bit_or(blue, simdpp::bit_or(simdpp::shift_l(green, 8), simdpp::bit_or(simdpp::shift_l(red,  16), simdpp::shift_l(alpha,24)) ));
+  }
 
   struct FillColor
   {

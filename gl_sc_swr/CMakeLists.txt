@@ -36,6 +36,8 @@ set(SOURCE_LIB
         TimerLinux.cpp
         RasterOperations.h PureCppBlock2x2.h PureCppBlock2x2.cpp PureCppBlock.h)
 
+include_directories("..")
+
 MESSAGE(STATUS "Searching for X11..." )
 FIND_PACKAGE ( X11 REQUIRED )
 IF ( X11_FOUND )

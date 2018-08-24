@@ -463,17 +463,17 @@ inline float4x4 lookAt(float3 eye, float3 center, float3 up)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-inline static int RealColorToUint32_BGRA(float4 real_color)
+inline static unsigned int RealColorToUint32_BGRA(float4 real_color)
 {
   const float r = real_color.x*255.0f;
   const float g = real_color.y*255.0f;
   const float b = real_color.z*255.0f;
   const float a = real_color.w*255.0f;
 
-  const unsigned char red   = (unsigned char)r;
-  const unsigned char green = (unsigned char)g;
-  const unsigned char blue  = (unsigned char)b;
-  const unsigned char alpha = (unsigned char)a;
+  const unsigned int red   = (unsigned int)r;
+  const unsigned int green = (unsigned int)g;
+  const unsigned int blue  = (unsigned int)b;
+  const unsigned int alpha = (unsigned int)a;
 
   return blue | (green << 8) | (red << 16) | (alpha << 24);
 }

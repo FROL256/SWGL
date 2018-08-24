@@ -6,9 +6,10 @@
 #define TEST_GL_TOP_PURECPPBLOCK_H
 
 #include "TriRaster.h"
+#include "RasterOperations.h"
 
 
-template<typename TriangleType, const int blockSize, typename ROP_VECTOR, typename ROP_SCALAR>
+template<typename TriangleType, const int blockSize, typename ROP_VECTOR>
 void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int tileMinY,
                                    FrameBuffer* frameBuf)
 {
@@ -88,8 +89,17 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
 
       if (v0Inside && v1Inside && v2Inside && v3Inside)
       {
+        typename VROP<blockSize*blockSize>::vec4 color;
+        color.x = simdpp::splat(0.0f);
+        color.y = simdpp::splat(1.0f);
+        color.z = simdpp::splat(0.0f);
+        color.w = simdpp::splat(0.0f);
 
+        simdpp::uint32<blockSize*blockSize> pixData = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
+        //simdpp::uint32<blockSize*blockSize> pixData = simdpp::splat(0x0000FF00);
 
+        SIMDPP_ALIGN(64) int pixels[blockSize*blockSize];
+        simdpp::store(pixels, pixData);
 
         // store pixels
         //
@@ -103,7 +113,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
             const int x1 = bx + ix;
             const int y1 = by + iy;
             if(x1 <= maxx && y1 <= maxy)     // replace (maxx, maxy) to (maxx-1, maxy01) to see tile borders !!
-              cbuff[frameBuf->w*y1 + x1] = 0x0000FF00;
+              cbuff[frameBuf->w*y1 + x1] = pixels[iy*blockSize + ix];
           }
         }
       }
