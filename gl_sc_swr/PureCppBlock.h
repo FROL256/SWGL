@@ -373,7 +373,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
         const simdpp::float32<blockSize*blockSize> w1       = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> w3       = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> w2       = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
-        const simdpp::float32<blockSize*blockSize> zInv     = tri_v1_z*w1 + tri_v2_z*w2 + tri_v1_z*w3;
+        const simdpp::float32<blockSize*blockSize> zInv     = tri_v1_z*w1 + tri_v2_z*w2 + tri_v3_z*w3;
         const simdpp::float32<blockSize*blockSize> zBuffVal = simdpp::load(z_buff);
 
         const auto zTestPass = simdpp::cmp_gt(zInv, zBuffVal);
