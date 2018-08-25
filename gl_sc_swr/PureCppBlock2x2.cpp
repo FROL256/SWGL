@@ -8,15 +8,44 @@
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
-using FillColor_4x4 = VROP< 4 >::FillColor;
-using Colored2D_4x4 = VROP< 4 >::Colored2D;
-using Colored3D_4x4 = VROP< 4 >::Colored3D;
+using FillColor_2x2 = VROP< 4 >::FillColor;
+using Colored2D_2x2 = VROP< 4 >::Colored2D;
+using Colored3D_2x2 = VROP< 4 >::Colored3D;
 
 void HWImplBlock2x2::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                        FrameBuffer* frameBuf)
 {
-  RasterizeTriHalfSpace2D_Block<TriangleLocal, 2, FillColor_4x4>
-      (tri, tileMinX, tileMinY,
-       frameBuf);
+
+  switch (a_ropT)
+  {
+    case ROP_Colored2D:
+      RasterizeTriHalfSpace2D_Block<TriangleLocal, 2, Colored2D_2x2>(tri, tileMinX, tileMinY,
+                                                                     frameBuf);
+      break;
+
+    case ROP_Colored3D:
+      RasterizeTriHalfSpace3D_Block<TriangleLocal, 2, Colored3D_2x2>(tri, tileMinX, tileMinY,
+                                                                     frameBuf);
+      break;
+
+    case ROP_TexNearest2D:
+    case ROP_TexLinear2D:
+      break;
+
+    case ROP_TexNearest3D:
+    case ROP_TexLinear3D:
+
+      break;
+
+    case ROP_TexNearest3D_Blend:
+    case ROP_TexLinear3D_Blend:
+
+      break;
+
+    default :
+      RasterizeTriHalfSpace2D_Block<TriangleLocal, 2, FillColor_2x2>(tri, tileMinX, tileMinY,
+                                                                     frameBuf);
+      break;
+  };
 
 }

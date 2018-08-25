@@ -9,24 +9,6 @@
 #include "../simdpp/simd.h"
 
 
-static SIMDPP_ALIGN(64) float g_YMult[4] = {0.0f, 0.0f, 1.0f, 1.0f};
-static SIMDPP_ALIGN(64) float g_XMult[4] = {0.0f, 1.0f, 0.0f, 1.0f};
-
-template<int DIM>
-static inline simdpp::float32<4> PixOffsetX()
-{
-  simdpp::float32<4> r = simdpp::load(g_XMult);
-  return r;
-}
-
-template<int DIM>
-static inline simdpp::float32<4> PixOffsetY()
-{
-  simdpp::float32<4> r = simdpp::load(g_YMult);
-  return r;
-}
-
-
 
 template<int DIM>
 struct VROP                  // Vectorizeable Raster OPerations
@@ -38,6 +20,16 @@ struct VROP                  // Vectorizeable Raster OPerations
   {
     Scalar x,y,z,w;
   };
+
+  static inline vec4 splat_v4(const float4& v)
+  {
+    vec4 res;
+    res.x = simdpp::splat(v.x);
+    res.y = simdpp::splat(v.y);
+    res.z = simdpp::splat(v.z);
+    res.w = simdpp::splat(v.w);
+    return res;
+  }
 
   static inline Scalarui RealColorToUint32_BGRA(const vec4& rc)
   {
