@@ -305,8 +305,6 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
   const simdpp::float32<blockSize*blockSize> Dy23v    = simdpp::splat(Dy23);
   const simdpp::float32<blockSize*blockSize> Dy31v    = simdpp::splat(Dy31);
 
-  const simdpp::uint32<blockSize*blockSize> maski = simdpp::splat(0xFFFFFFFF);
-
   const auto pixOffsX = PixOffsetX<blockSize * blockSize>();
   const auto pixOffsY = PixOffsetY<blockSize * blockSize>();
 
@@ -346,7 +344,6 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
       const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx3_b);
 
       SIMDPP_ALIGN(64) int   pixels[blockSize*blockSize];
-      SIMDPP_ALIGN(64) int   z_test[blockSize*blockSize];
       SIMDPP_ALIGN(64) float z_buff[blockSize*blockSize];
 
       if (v0Inside || v1Inside || v2Inside || v3Inside)
@@ -374,11 +371,6 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
         const simdpp::float32<blockSize*blockSize> w3       = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> w2       = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> zInv     = tri_v1_z*w1 + tri_v2_z*w2 + tri_v3_z*w3;
-        const simdpp::float32<blockSize*blockSize> zBuffVal = simdpp::load(z_buff);
-
-        const auto zTestPass = simdpp::cmp_gt(zInv, zBuffVal);
-
-        simdpp::store(z_test, simdpp::bit_and(zTestPass, maski));
         simdpp::store(z_buff, zInv);
 
         const auto color     = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3, zInv);
@@ -397,8 +389,9 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           #pragma unroll (blockSize)
           for (int ix = 0; ix < blockSize; ix++)
           {
-            const int x1 = bx + ix;
-            if(x1 <= maxx && y1 <= maxy && (z_test[iy*blockSize + ix] != 0)) // (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1])
+            const int  x1    = bx + ix;
+            const bool zTest = (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1]);
+            if(x1 <= maxx && y1 <= maxy && zTest)
             {
               cbuff[frameBuf->w * y1 + x1] = pixels[iy * blockSize + ix];
               zbuff[frameBuf->w * y1 + x1] = z_buff[iy * blockSize + ix];
@@ -425,9 +418,10 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           #pragma unroll (blockSize)
           for (int ix = 0; ix < blockSize; ix++)
           {
-            const int x1 = bx + ix;
+            const int  x1     = bx + ix;
             const bool hsTest = (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON);
-            if (x1 <= maxx && y1 <= maxy && hsTest && (z_test[iy*blockSize + ix] != 0))
+            const bool zTest  = (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1]);
+            if (x1 <= maxx && y1 <= maxy && hsTest && zTest)
             {
               cbuff[frameBuf->w * y1 + x1] = pixels[iy * blockSize + ix];
               zbuff[frameBuf->w * y1 + x1] = z_buff[iy * blockSize + ix];
