@@ -7,7 +7,7 @@
 #define PERSP_CORRECT
 
 //#define MEASURE_NOLOAD_PERF
-//#define MEASURE_STATS
+#define MEASURE_STATS
 
 #define BIN_SIZE  64
 

@@ -687,7 +687,6 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
 #ifdef MEASURE_STATS
   Timer timer(true);
-  //Timer timerLocal(false);
 #endif
 
   float timeAccumTriSetUp  = 0.0f;

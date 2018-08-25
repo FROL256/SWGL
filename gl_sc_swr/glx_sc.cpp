@@ -197,6 +197,8 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx)
 
 void glXSwapBuffers( Display *dpy, GLXDrawable drawable )
 {
+  static int totalFrameCounter = 0;
+
   if(g_pContext == nullptr)
     return;
 
@@ -204,7 +206,23 @@ void glXSwapBuffers( Display *dpy, GLXDrawable drawable )
 
   g_pContext->CopyToScreeen();
   g_pContext->glxrec.framebuff.present(g_pContext->glxrec.win);
+
+
+  if (totalFrameCounter == 100)
+  {
+    *(g_pContext->m_pLog) << "Stats At frame 100: " << std::endl;
+    *(g_pContext->m_pLog) << "msCL = " << g_pContext->m_timeStats.msClear << std::endl;
+    *(g_pContext->m_pLog) << "msVS = " << g_pContext->m_timeStats.msVertexShader << std::endl;
+    *(g_pContext->m_pLog) << "msTS = " << g_pContext->m_timeStats.msTriSetUp << std::endl;
+    *(g_pContext->m_pLog) << "msBR = " << g_pContext->m_timeStats.msBinRaster << std::endl;
+    *(g_pContext->m_pLog) << "msRS = " << g_pContext->m_timeStats.msRasterAndPixelShader << std::endl;
+    *(g_pContext->m_pLog) << "msSW = " << g_pContext->m_timeStats.msSwapBuffers << std::endl;
+    *(g_pContext->m_pLog) << std::endl;
+    totalFrameCounter = 0;
+  }
+
   g_pContext->m_timeStats.clear();
+  totalFrameCounter++;
 }
 
 

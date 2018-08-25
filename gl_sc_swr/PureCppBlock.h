@@ -318,6 +318,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
 
     for (int bx = minx; bx <= maxx; bx+= blockSize)
     {
+
       const float Cx1_00 = Cx1_b;
       const float Cx2_00 = Cx2_b;
       const float Cx3_00 = Cx3_b;
@@ -375,6 +376,8 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
 
         const auto color     = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3, zInv);
         const auto pixData   = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
+
+        //const simdpp::uint32<blockSize*blockSize> pixData = simdpp::make_int(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
         simdpp::store(pixels, pixData);
       }
 

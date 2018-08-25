@@ -5,9 +5,8 @@
 #ifndef TEST_GL_TOP_RASTEROPERATIONS_H
 #define TEST_GL_TOP_RASTEROPERATIONS_H
 
-#define  	SIMDPP_ARCH_X86_SSE4_1
+#define  	SIMDPP_ARCH_X86_AVX
 #include "../simdpp/simd.h"
-
 
 
 template<int DIM>

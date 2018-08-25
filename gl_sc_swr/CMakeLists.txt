@@ -3,7 +3,11 @@ cmake_minimum_required(VERSION 3.10)
 project(swgl)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1") # disable this for arm later ...
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
+
+#set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(SOURCE_LIB
         alloc16.h
