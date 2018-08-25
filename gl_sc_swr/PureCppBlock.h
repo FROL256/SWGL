@@ -56,6 +56,8 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
 
   const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12); // edgeFunction(v0, v1, v2);
 
+  const simdpp::float32<blockSize*blockSize> areaInvV = simdpp::splat(areaInv);
+
   float Cy1_b = C1 + Dx12 * miny - Dy12 * minx;
   float Cy2_b = C2 + Dx23 * miny - Dy23 * minx;
   float Cy3_b = C3 + Dx31 * miny - Dy31 * minx;
@@ -125,9 +127,9 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
       if (v0Inside && v1Inside && v2Inside && v3Inside)
       {
 
-        const simdpp::float32<blockSize*blockSize> w1 = Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY;
-        const simdpp::float32<blockSize*blockSize> w2 = Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY;
-        const simdpp::float32<blockSize*blockSize> w3 = Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY;
+        const simdpp::float32<blockSize*blockSize> w1 = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
+        const simdpp::float32<blockSize*blockSize> w2 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
+        const simdpp::float32<blockSize*blockSize> w3 = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
 
         const auto color   = VROP<blockSize*blockSize>::Colored2D::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
         const auto pixData = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
