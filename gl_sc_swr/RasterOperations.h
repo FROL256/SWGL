@@ -78,7 +78,7 @@ struct VROP                  // Vectorizeable Raster OPerations
   struct Colored3D
   {
     inline static vec4 DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
-                                 const Scalar& w0, const Scalar& w1, const Scalar& w2, const Scalar zInv)
+                                 const Scalar& w0, const Scalar& w1, const Scalar& w2, const Scalar& zInv)
     {
       const Scalar z = simdpp::rcp_e(zInv);
       vec4 res;

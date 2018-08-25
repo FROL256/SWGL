@@ -2,11 +2,11 @@
 #include "../gl_sc_swr/LiteMath.h"
 
 #ifdef USE_SWGL
-#include "../gl_sc_swr/gl_sc.h"
-#include "../gl_sc_swr/gl_std.h"
+  #include "../gl_sc_swr/gl_sc.h"
+  #include "../gl_sc_swr/gl_std.h"
 #else
-#include <GL/gl.h>
-#include <GL/glu.h>
+  #include <GL/gl.h>
+  #include <GL/glu.h>
 #endif
 
 #include <iostream>

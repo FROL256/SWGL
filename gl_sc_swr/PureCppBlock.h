@@ -153,8 +153,8 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
       const bool v3Inside = (Cx1_11 > HALF_SPACE_EPSILON && Cx2_11 > HALF_SPACE_EPSILON && Cx3_11 > HALF_SPACE_EPSILON);
 
       const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat(Cx1_b);
-      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx2_b);
-      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx3_b);
+      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx2_b);
+      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx3_b);
 
       SIMDPP_ALIGN(64) int pixels[blockSize*blockSize];
 
@@ -176,11 +176,11 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
         #pragma unroll (blockSize)
         for (int iy = 0; iy < blockSize; iy++)
         {
+          const int y1 = by + iy;
           #pragma unroll (blockSize)
           for (int ix = 0; ix < blockSize; ix++)
           {
             const int x1 = bx + ix;
-            const int y1 = by + iy;
             if(x1 <= maxx && y1 <= maxy)     // replace (maxx, maxy) to (maxx-1, maxy01) to see tile borders !!
               cbuff[frameBuf->w*y1 + x1] = pixels[iy*blockSize + ix];
           }
@@ -342,8 +342,8 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
       const bool v3Inside = (Cx1_11 > HALF_SPACE_EPSILON && Cx2_11 > HALF_SPACE_EPSILON && Cx3_11 > HALF_SPACE_EPSILON);
 
       const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat(Cx1_b);
-      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx2_b);
-      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx3_b);
+      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx2_b);
+      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx3_b);
 
       SIMDPP_ALIGN(64) int   pixels[blockSize*blockSize];
       SIMDPP_ALIGN(64) int   z_test[blockSize*blockSize];
@@ -356,15 +356,19 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
         #pragma unroll (blockSize)
         for (int iy = 0; iy < blockSize; iy++)
         {
+          const int y1 = by + iy;
           #pragma unroll (blockSize)
           for (int ix = 0; ix < blockSize; ix++)
           {
             const int x1 = bx + ix;
-            const int y1 = by + iy;
-            if(x1 <= maxx && y1 <= maxy && (z_test[iy*blockSize + ix] != 0))
+            if(x1 <= maxx && y1 <= maxy && (z_test[iy*blockSize + ix] != 0)) // (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1])
               z_buff[iy*blockSize + ix] = zbuff[frameBuf->w*y1 + x1];
           }
         }
+
+        //const float3 w       = areaInv * float3(Cx1, Cx3, Cx2);
+        //const float zInv     = tri.v1.z*w.x + tri.v2.z*w.y + tri.v3.z*w.z;
+        //const float zBuffVal = zbuff[offset + x];
 
         const simdpp::float32<blockSize*blockSize> w1       = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> w2       = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
@@ -389,11 +393,11 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
         #pragma unroll (blockSize)
         for (int iy = 0; iy < blockSize; iy++)
         {
+          const int y1 = by + iy;
           #pragma unroll (blockSize)
           for (int ix = 0; ix < blockSize; ix++)
           {
             const int x1 = bx + ix;
-            const int y1 = by + iy;
             if(x1 <= maxx && y1 <= maxy && (z_test[iy*blockSize + ix] != 0))
             {
               cbuff[frameBuf->w * y1 + x1] = pixels[iy * blockSize + ix];
@@ -428,6 +432,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
               cbuff[frameBuf->w * y1 + x1] = pixels[iy * blockSize + ix];
               zbuff[frameBuf->w * y1 + x1] = z_buff[iy * blockSize + ix];
             }
+
             Cx1 -= Dy12;
             Cx2 -= Dy23;
             Cx3 -= Dy31;

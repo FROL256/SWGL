@@ -93,25 +93,38 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
   return;
 #endif
 
-
-  if (mask & GL_COLOR_BUFFER_BIT)
+  if((mask & GL_COLOR_BUFFER_BIT) != 0 && (mask & GL_DEPTH_BUFFER_BIT) != 0)
   {
-    const int size = a_pContext->m_width*a_pContext->m_height;
+    const int size     = a_pContext->m_width*a_pContext->m_height;
     const uint32_t val = a_pContext->input.clearColor1u;
+    const float vald   = 1.0f - a_pContext->input.clearDepth;
 
     for (int i = 0; i < size; i++)
+    {
       a_pContext->m_pixels2[i] = val;
+      a_pContext->m_zbuffer[i] = vald;
+    }
   }
-
-  if (mask & GL_DEPTH_BUFFER_BIT)
+  else
   {
-    const int size  = a_pContext->m_width*a_pContext->m_height;
-    const float val = 1.0f - a_pContext->input.clearDepth;
+    if (mask & GL_COLOR_BUFFER_BIT)
+    {
+      const int size = a_pContext->m_width * a_pContext->m_height;
+      const uint32_t val = a_pContext->input.clearColor1u;
 
-    for (int i = 0; i < size; i++)
-      a_pContext->m_zbuffer[i] = val;
+      for (int i = 0; i < size; i++)
+        a_pContext->m_pixels2[i] = val;
+    }
+
+    if (mask & GL_DEPTH_BUFFER_BIT)
+    {
+      const int size = a_pContext->m_width * a_pContext->m_height;
+      const float val = 1.0f - a_pContext->input.clearDepth;
+
+      for (int i = 0; i < size; i++)
+        a_pContext->m_zbuffer[i] = val;
+    }
   }
-
 
   if (mask & GL_STENCIL_BUFFER_BIT) //# TODO implement
   {
