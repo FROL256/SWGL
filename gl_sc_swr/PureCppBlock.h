@@ -153,16 +153,16 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
       const bool v3Inside = (Cx1_11 > HALF_SPACE_EPSILON && Cx2_11 > HALF_SPACE_EPSILON && Cx3_11 > HALF_SPACE_EPSILON);
 
       const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat(Cx1_b);
-      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx2_b);
-      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx3_b);
+      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx2_b);
+      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx3_b);
 
       SIMDPP_ALIGN(64) int pixels[blockSize*blockSize];
 
       if (v0Inside || v1Inside || v2Inside || v3Inside)
       {
         const simdpp::float32<blockSize*blockSize> w1 = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
-        const simdpp::float32<blockSize*blockSize> w2 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
-        const simdpp::float32<blockSize*blockSize> w3 = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
+        const simdpp::float32<blockSize*blockSize> w3 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
+        const simdpp::float32<blockSize*blockSize> w2 = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
 
         const auto color   = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
         const auto pixData = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
@@ -342,8 +342,8 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
       const bool v3Inside = (Cx1_11 > HALF_SPACE_EPSILON && Cx2_11 > HALF_SPACE_EPSILON && Cx3_11 > HALF_SPACE_EPSILON);
 
       const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat(Cx1_b);
-      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx2_b);
-      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx3_b);
+      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx2_b);
+      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx3_b);
 
       SIMDPP_ALIGN(64) int   pixels[blockSize*blockSize];
       SIMDPP_ALIGN(64) int   z_test[blockSize*blockSize];
@@ -371,8 +371,8 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
         //const float zBuffVal = zbuff[offset + x];
 
         const simdpp::float32<blockSize*blockSize> w1       = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
-        const simdpp::float32<blockSize*blockSize> w2       = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
-        const simdpp::float32<blockSize*blockSize> w3       = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
+        const simdpp::float32<blockSize*blockSize> w3       = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
+        const simdpp::float32<blockSize*blockSize> w2       = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> zInv     = tri_v1_z*w1 + tri_v2_z*w2 + tri_v1_z*w3;
         const simdpp::float32<blockSize*blockSize> zBuffVal = simdpp::load(z_buff);
 
