@@ -361,7 +361,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           for (int ix = 0; ix < blockSize; ix++)
           {
             const int x1 = bx + ix;
-            if(x1 <= maxx && y1 <= maxy && (z_test[iy*blockSize + ix] != 0)) // (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1])
+            if(x1 <= maxx && y1 <= maxy)
               z_buff[iy*blockSize + ix] = zbuff[frameBuf->w*y1 + x1];
           }
         }
@@ -398,7 +398,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           for (int ix = 0; ix < blockSize; ix++)
           {
             const int x1 = bx + ix;
-            if(x1 <= maxx && y1 <= maxy && (z_test[iy*blockSize + ix] != 0))
+            if(x1 <= maxx && y1 <= maxy && (z_test[iy*blockSize + ix] != 0)) // (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1])
             {
               cbuff[frameBuf->w * y1 + x1] = pixels[iy * blockSize + ix];
               zbuff[frameBuf->w * y1 + x1] = z_buff[iy * blockSize + ix];
