@@ -102,6 +102,8 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
   constexpr float blockSizeF = float(blockSize);
+  const simdpp::float32<4> blockSizeF_4v = simdpp::splat(blockSizeF);
+
 
   //// vectorized per triangle variables
   //
@@ -121,6 +123,12 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   const auto pixOffsX = PixOffsetX<blockSize * blockSize>();
   const auto pixOffsY = PixOffsetY<blockSize * blockSize>();
 
+  SIMDPP_ALIGN(64) const float Cx1_va[4] = {0.f, - Dy12*blockSizeF, Dx12*blockSizeF, Dx12*blockSizeF - Dy12*blockSizeF};
+  SIMDPP_ALIGN(64) const float Cx2_va[4] = {0.f, - Dy23*blockSizeF, Dx23*blockSizeF, Dx23*blockSizeF - Dy23*blockSizeF};
+  SIMDPP_ALIGN(64) const float Cx3_va[4] = {0.f, - Dy31*blockSizeF, Dx31*blockSizeF, Dx31*blockSizeF - Dy31*blockSizeF};
+
+  const simdpp::float32<4> hs_eps_v = simdpp::splat(HALF_SPACE_EPSILON);
+
   // Scan through bounding rectangle
   for (int by = miny; by <= maxy; by += blockSize)
   {
@@ -131,26 +139,13 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
 
     for (int bx = minx; bx <= maxx; bx+= blockSize)
     {
-      const float Cx1_00 = Cx1_b;
-      const float Cx2_00 = Cx2_b;
-      const float Cx3_00 = Cx3_b;
+      const simdpp::float32<4> Cx1_v = (const simdpp::float32<4>)simdpp::splat(Cx1_b) + ((const simdpp::float32<4>)simdpp::load(Cx1_va));
+      const simdpp::float32<4> Cx2_v = (const simdpp::float32<4>)simdpp::splat(Cx2_b) + ((const simdpp::float32<4>)simdpp::load(Cx2_va));
+      const simdpp::float32<4> Cx3_v = (const simdpp::float32<4>)simdpp::splat(Cx3_b) + ((const simdpp::float32<4>)simdpp::load(Cx3_va));
 
-      const float Cx1_01 = Cx1_b - Dy12*blockSizeF;
-      const float Cx2_01 = Cx2_b - Dy23*blockSizeF;
-      const float Cx3_01 = Cx3_b - Dy31*blockSizeF;
-
-      const float Cx1_10 = Cx1_b + Dx12*blockSizeF;
-      const float Cx2_10 = Cx2_b + Dx23*blockSizeF;
-      const float Cx3_10 = Cx3_b + Dx31*blockSizeF;
-
-      const float Cx1_11 = Cx1_b + Dx12*blockSizeF - Dy12*blockSizeF;
-      const float Cx2_11 = Cx2_b + Dx23*blockSizeF - Dy23*blockSizeF;
-      const float Cx3_11 = Cx3_b + Dx31*blockSizeF - Dy31*blockSizeF;
-
-      const bool v0Inside = (Cx1_00 > HALF_SPACE_EPSILON && Cx2_00 > HALF_SPACE_EPSILON && Cx3_00 > HALF_SPACE_EPSILON);
-      const bool v1Inside = (Cx1_01 > HALF_SPACE_EPSILON && Cx2_01 > HALF_SPACE_EPSILON && Cx3_01 > HALF_SPACE_EPSILON);
-      const bool v2Inside = (Cx1_10 > HALF_SPACE_EPSILON && Cx2_10 > HALF_SPACE_EPSILON && Cx3_10 > HALF_SPACE_EPSILON);
-      const bool v3Inside = (Cx1_11 > HALF_SPACE_EPSILON && Cx2_11 > HALF_SPACE_EPSILON && Cx3_11 > HALF_SPACE_EPSILON);
+      const auto vInside_v4u = simdpp::bit_cast< simdpp::uint32<4>, simdpp::float32<4> >(
+          ( (Cx1_v > hs_eps_v) & (Cx2_v > hs_eps_v) & (Cx3_v > hs_eps_v) ).eval().unmask()
+      );
 
       const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat(Cx1_b);
       const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx2_b);
@@ -158,7 +153,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
 
       SIMDPP_ALIGN(64) int pixels[blockSize*blockSize];
 
-      if (v0Inside || v1Inside || v2Inside || v3Inside)
+      if (simdpp::reduce_or(vInside_v4u))
       {
         const simdpp::float32<blockSize*blockSize> w1 = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> w3 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
@@ -169,7 +164,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
         simdpp::store(pixels, pixData);
       }
 
-      if (v0Inside && v1Inside && v2Inside && v3Inside)
+      if(simdpp::reduce_and(vInside_v4u))
       {
         // store all pixels
         //
@@ -186,7 +181,8 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
           }
         }
       }
-      else if (v0Inside || v1Inside || v2Inside || v3Inside)
+
+      else if (simdpp::reduce_or(vInside_v4u))
       {
         // store covered pixels
         //
@@ -221,10 +217,12 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
         }
       }
 
+
       Cx1_b -= Dy12*blockSizeF;
       Cx2_b -= Dy23*blockSizeF;
       Cx3_b -= Dy31*blockSizeF;
     }
+
 
     Cy1_b += Dx12*blockSizeF;
     Cy2_b += Dx23*blockSizeF;
@@ -402,6 +400,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           }
         }
       }
+
       else if (v0Inside || v1Inside || v2Inside || v3Inside)
       {
         // store covered pixels
