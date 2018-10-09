@@ -38,7 +38,7 @@ set(SOURCE_LIB
         SSE1Impl.h
         SWGL_TiledFrameBuffer.h
         TimerLinux.cpp
-        RasterOperations.h PureCppBlock2x2.h PureCppBlock2x2.cpp PureCppBlock.h)
+        RasterOperations.h PureCppBlock2x2.h PureCppBlock2x2.cpp PureCppBlock.h SimdCppBlockLine.h)
 
 include_directories("..")
 

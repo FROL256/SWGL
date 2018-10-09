@@ -10,6 +10,7 @@
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
 
+
 void RasterizeTriHalfSpace2DFill_Block(const TriangleLocal& tri, int tileMinX, int tileMinY,
                                        FrameBuffer* frameBuf)
 {
@@ -401,4 +402,19 @@ void HWImplBlock4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const Tr
 
   //RasterizeTriHalfSpace2DFill_Block(tri, tileMinX, tileMinY,
     //                                frameBuf);
+}
+
+#include "SimdCppBlockLine.h"
+
+using FillColor_1x4 = VROP< 4 >::FillColor;
+using Colored2D_1x4 = VROP< 4 >::Colored2D;
+using Colored3D_1x4 = VROP< 4 >::Colored3D;
+
+void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
+                                           FrameBuffer* frameBuf)
+{
+  RasterizeTriHalfSpace2D_BlockLine<TriangleType,4,Colored2D_1x4>(tri, tileMinX, tileMinY,
+                                                                  frameBuf);
+
+
 }
