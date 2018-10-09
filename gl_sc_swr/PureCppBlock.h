@@ -97,8 +97,6 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   float Cy2_b = C2 + Dx23 * miny - Dy23 * minx;
   float Cy3_b = C3 + Dx31 * miny - Dy31 * minx;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
-
   constexpr float blockSizeF = float(blockSize);
 
   ///////////////////////////////////////////////////////////////////////////////// vectorized per triangle variables
@@ -220,8 +218,6 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
     }
 
     Cy_abc = Cy_abc + Dx_abc*blockSizeF_4v;
-
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
   }
 }
 
