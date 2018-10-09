@@ -58,8 +58,6 @@ template<typename TriangleType, const int blockSize, typename ROP>
 void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int tileMinY,
                                    FrameBuffer* frameBuf)
 {
-  typedef typename VROP<blockSize*blockSize>::vec4 vec4f;
-
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
 
@@ -102,11 +100,11 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
 
   constexpr float blockSizeF = float(blockSize);
+
+  ///////////////////////////////////////////////////////////////////////////////// vectorized per triangle variables
+  //
   const simdpp::float32<4> blockSizeF_4v = simdpp::splat(blockSizeF);
 
-
-  //// vectorized per triangle variables
-  //
   const auto tri_c1 = VROP<blockSize*blockSize>::splat_v4(tri.c1);
   const auto tri_c2 = VROP<blockSize*blockSize>::splat_v4(tri.c2);
   const auto tri_c3 = VROP<blockSize*blockSize>::splat_v4(tri.c3);
@@ -123,37 +121,46 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   const auto pixOffsX = PixOffsetX<blockSize * blockSize>();
   const auto pixOffsY = PixOffsetY<blockSize * blockSize>();
 
-  SIMDPP_ALIGN(64) const float Cx1_va[4] = {0.f, - Dy12*blockSizeF, Dx12*blockSizeF, Dx12*blockSizeF - Dy12*blockSizeF};
-  SIMDPP_ALIGN(64) const float Cx2_va[4] = {0.f, - Dy23*blockSizeF, Dx23*blockSizeF, Dx23*blockSizeF - Dy23*blockSizeF};
-  SIMDPP_ALIGN(64) const float Cx3_va[4] = {0.f, - Dy31*blockSizeF, Dx31*blockSizeF, Dx31*blockSizeF - Dy31*blockSizeF};
+  SIMDPP_ALIGN(16) const float Cx1_va[4] = {0.f, - Dy12*blockSizeF, Dx12*blockSizeF, Dx12*blockSizeF - Dy12*blockSizeF};
+  SIMDPP_ALIGN(16) const float Cx2_va[4] = {0.f, - Dy23*blockSizeF, Dx23*blockSizeF, Dx23*blockSizeF - Dy23*blockSizeF};
+  SIMDPP_ALIGN(16) const float Cx3_va[4] = {0.f, - Dy31*blockSizeF, Dx31*blockSizeF, Dx31*blockSizeF - Dy31*blockSizeF};
 
   const simdpp::float32<4> hs_eps_v = simdpp::splat(HALF_SPACE_EPSILON);
+
+  SIMDPP_ALIGN(16) float Dy_a[4]   = {Dy12,  Dy23,  Dy31,  0.0f};
+  SIMDPP_ALIGN(16) float Dx_a[4]   = {Dx12,  Dx23,  Dx31,  0.0f};
+  SIMDPP_ALIGN(16) float Cy1_ba[4] = {Cy1_b, Cy2_b, Cy3_b, 0.0f};
+
+  const simdpp::float32<4> Dy_abc = simdpp::load(Dy_a);
+  const simdpp::float32<4> Dx_abc = simdpp::load(Dx_a);
+  simdpp::float32<4>       Cy_abc = simdpp::load(Cy1_ba);
+
+  //
+  ///////////////////////////////////////////////////////////////////////////////// vectorized per triangle variables
+
 
   // Scan through bounding rectangle
   for (int by = miny; by <= maxy; by += blockSize)
   {
-    // Start value for horizontal scan
-    float Cx1_b = Cy1_b;
-    float Cx2_b = Cy2_b;
-    float Cx3_b = Cy3_b;
+    simdpp::float32<4> Cx_abc = Cy_abc;
 
     for (int bx = minx; bx <= maxx; bx+= blockSize)
     {
-      const simdpp::float32<4> Cx1_v = (const simdpp::float32<4>)simdpp::splat(Cx1_b) + ((const simdpp::float32<4>)simdpp::load(Cx1_va));
-      const simdpp::float32<4> Cx2_v = (const simdpp::float32<4>)simdpp::splat(Cx2_b) + ((const simdpp::float32<4>)simdpp::load(Cx2_va));
-      const simdpp::float32<4> Cx3_v = (const simdpp::float32<4>)simdpp::splat(Cx3_b) + ((const simdpp::float32<4>)simdpp::load(Cx3_va));
+      const simdpp::float32<4> Cx1_v = simdpp::splat<0>(Cx_abc) + ((const simdpp::float32<4>)simdpp::load(Cx1_va));
+      const simdpp::float32<4> Cx2_v = simdpp::splat<1>(Cx_abc) + ((const simdpp::float32<4>)simdpp::load(Cx2_va));
+      const simdpp::float32<4> Cx3_v = simdpp::splat<2>(Cx_abc) + ((const simdpp::float32<4>)simdpp::load(Cx3_va));
 
       const auto vInside_v4u = simdpp::bit_cast< simdpp::uint32<4>, simdpp::float32<4> >(
           ( (Cx1_v > hs_eps_v) & (Cx2_v > hs_eps_v) & (Cx3_v > hs_eps_v) ).eval().unmask()
       );
 
-      const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat(Cx1_b);
-      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat(Cx2_b);
-      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat(Cx3_b);
+      const simdpp::float32<blockSize*blockSize> Cx1_bv = simdpp::splat<0>(Cx_abc); // simdpp::splat(Cx1_b);
+      const simdpp::float32<blockSize*blockSize> Cx2_bv = simdpp::splat<1>(Cx_abc); // simdpp::splat(Cx2_b);
+      const simdpp::float32<blockSize*blockSize> Cx3_bv = simdpp::splat<2>(Cx_abc); // simdpp::splat(Cx3_b);
 
       SIMDPP_ALIGN(64) int pixels[blockSize*blockSize];
 
-      if (simdpp::reduce_or(vInside_v4u))
+      if (simdpp::reduce_or(vInside_v4u) != 0)
       {
         const simdpp::float32<blockSize*blockSize> w1 = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
         const simdpp::float32<blockSize*blockSize> w3 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
@@ -164,7 +171,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
         simdpp::store(pixels, pixData);
       }
 
-      if(simdpp::reduce_and(vInside_v4u))
+      if(simdpp::reduce_and(vInside_v4u) != 0)
       {
         // store all pixels
         //
@@ -181,52 +188,38 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
           }
         }
       }
-
-      else if (simdpp::reduce_or(vInside_v4u))
+      else if (simdpp::reduce_or(vInside_v4u) != 0)
       {
-        // store covered pixels
-        //
-        float Cy1 = 0.0f;
-        float Cy2 = 0.0f;
-        float Cy3 = 0.0f;
+        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f);
 
         for (int iy = 0; iy < blockSize; iy++)
         {
-          const int y1 = by + iy;
-
-          float Cx1 = Cx1_b + Cy1;
-          float Cx2 = Cx2_b + Cy2;
-          float Cx3 = Cx3_b + Cy3;
+          const int          y1     = by + iy;
+          simdpp::float32<4> Cx_123 = Cy_123 + Cx_abc;
 
           #pragma unroll (blockSize)
           for (int ix = 0; ix < blockSize; ix++)
           {
+            const auto vInside_123 = simdpp::bit_cast< simdpp::uint32<4>, simdpp::float32<4> >(
+                ((Cx_123 > hs_eps_v)).eval().unmask()
+            );
+
             const int x1 = bx + ix;
-            const bool hsTest = (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON);
-            if (x1 <= maxx && y1 <= maxy && hsTest)
+
+            if (x1 <= maxx && y1 <= maxy && (simdpp::reduce_and(vInside_123) != 0))
               cbuff[frameBuf->w * y1 + x1] = pixels[iy*blockSize + ix];
 
-            Cx1 -= Dy12;
-            Cx2 -= Dy23;
-            Cx3 -= Dy31;
+            Cx_123 = Cx_123 - Dy_abc;
           }
 
-          Cy1 += Dx12;
-          Cy2 += Dx23;
-          Cy3 += Dx31;
+          Cy_123 = Cy_123 + Dx_abc;
         }
       }
 
-
-      Cx1_b -= Dy12*blockSizeF;
-      Cx2_b -= Dy23*blockSizeF;
-      Cx3_b -= Dy31*blockSizeF;
+      Cx_abc = Cx_abc - Dy_abc*blockSizeF_4v;
     }
 
-
-    Cy1_b += Dx12*blockSizeF;
-    Cy2_b += Dx23*blockSizeF;
-    Cy3_b += Dx31*blockSizeF;
+    Cy_abc = Cy_abc + Dx_abc*blockSizeF_4v;
 
     offset = nextLine(offset, frameBuf->w, frameBuf->h);
   }
