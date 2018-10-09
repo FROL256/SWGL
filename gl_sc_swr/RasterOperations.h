@@ -48,6 +48,12 @@ struct VROP                  // Vectorizeable Raster OPerations
 
   struct FillColor
   {
+    inline static vec4 DrawPixel(const TriangleType& tri,
+                                 const Scalar& w0, const Scalar& w1, const Scalar& w2)
+    {
+      return splat_v4(tri.c1);
+    }
+
     inline static vec4 DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
                                  const Scalar& w0, const Scalar& w1, const Scalar& w2)
     {
@@ -62,6 +68,21 @@ struct VROP                  // Vectorizeable Raster OPerations
 
   struct Colored2D
   {
+    inline static vec4 DrawPixel(const TriangleType& tri,
+                                 const Scalar& w0, const Scalar& w1, const Scalar& w2)
+    {
+      const auto tri_c1 = splat_v4(tri.c1);
+      const auto tri_c2 = splat_v4(tri.c2);
+      const auto tri_c3 = splat_v4(tri.c3);
+
+      vec4 res;
+      res.x = tri_c1.x*w0 + tri_c2.x*w1 + tri_c3.x*w2;
+      res.y = tri_c1.y*w0 + tri_c2.y*w1 + tri_c3.y*w2;
+      res.z = tri_c1.z*w0 + tri_c2.z*w1 + tri_c3.z*w2;
+      res.w = tri_c1.w*w0 + tri_c2.w*w1 + tri_c3.w*w2;
+      return res;
+    }
+
     inline static vec4 DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
                                  const Scalar& w0, const Scalar& w1, const Scalar& w2)
     {
@@ -76,6 +97,23 @@ struct VROP                  // Vectorizeable Raster OPerations
 
   struct Colored3D
   {
+    inline static vec4 DrawPixel(const TriangleType& tri,
+                                 const Scalar& w0, const Scalar& w1, const Scalar& w2, const Scalar& zInv)
+    {
+      const Scalar z    = simdpp::rcp_e(zInv);
+
+      const auto tri_c1 = splat_v4(tri.c1);
+      const auto tri_c2 = splat_v4(tri.c2);
+      const auto tri_c3 = splat_v4(tri.c3);
+
+      vec4 res;
+      res.x = ( tri_c1.x*w0 + tri_c2.x*w1 + tri_c3.x*w2 )*z;
+      res.y = ( tri_c1.y*w0 + tri_c2.y*w1 + tri_c3.y*w2 )*z;
+      res.z = ( tri_c1.z*w0 + tri_c2.z*w1 + tri_c3.z*w2 )*z;
+      res.w = ( tri_c1.w*w0 + tri_c2.w*w1 + tri_c3.w*w2 )*z;
+      return res;
+    }
+
     inline static vec4 DrawPixel(const vec4& tri_c1, const vec4& tri_c2, const vec4& tri_c3,
                                  const Scalar& w0, const Scalar& w1, const Scalar& w2, const Scalar& zInv)
     {

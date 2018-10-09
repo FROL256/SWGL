@@ -410,8 +410,15 @@ using FillColor_1x4 = VROP<4, TriangleLocal>::FillColor;
 using Colored2D_1x4 = VROP<4, TriangleLocal>::Colored2D;
 using Colored3D_1x4 = VROP<4, TriangleLocal>::Colored3D;
 
+struct FillColor_S
+{
+  inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234)
+  {
+    return simdpp::load(&tri.c1);
+  }
+};
 
-struct Colored2D_VEX_RGBA
+struct Colored2D_S
 {
   inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234)
   {
@@ -422,11 +429,55 @@ struct Colored2D_VEX_RGBA
   }
 };
 
+
+struct Colored3D_S
+{
+  inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234, const simdpp::float32<4>& zInv)
+  {
+    const auto z = simdpp::rcp_e(zInv);
+    const simdpp::float32<4> tv1 = simdpp::load(&tri.c1);
+    const simdpp::float32<4> tv2 = simdpp::load(&tri.c2);
+    const simdpp::float32<4> tv3 = simdpp::load(&tri.c3);
+    return ( tv1*simdpp::splat<0>(w1234) + tv2*simdpp::splat<2>(w1234) + tv3*simdpp::splat<1>(w1234) )*z;
+  }
+};
+
+
+
+
 void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                            FrameBuffer* frameBuf)
 {
-  RasterizeTriHalfSpace2D_BlockLine<TriangleType, 4, Colored2D_1x4, Colored2D_VEX_RGBA>(tri, tileMinX, tileMinY,
-                                                                                        frameBuf);
 
+  switch (a_ropT)
+  {
+    case ROP_Colored2D:
+      RasterizeTriHalfSpace2D_BlockLine<TriangleType, 4, Colored2D_1x4, Colored2D_S>(tri, tileMinX, tileMinY,
+                                                                                     frameBuf);
+      break;
+
+    case ROP_Colored3D:
+
+      break;
+
+    case ROP_TexNearest2D:
+    case ROP_TexLinear2D:
+      break;
+
+    case ROP_TexNearest3D:
+    case ROP_TexLinear3D:
+
+      break;
+
+    case ROP_TexNearest3D_Blend:
+    case ROP_TexLinear3D_Blend:
+
+      break;
+
+    default :
+      RasterizeTriHalfSpace2D_BlockLine<TriangleType, 4, FillColor_1x4, FillColor_S>(tri, tileMinX, tileMinY,
+                                                                                     frameBuf);
+      break;
+  };
 
 }

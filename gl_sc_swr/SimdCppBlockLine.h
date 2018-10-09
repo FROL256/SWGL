@@ -89,10 +89,6 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
   //
   const simdpp::float32<4> blockSizeF_4v = simdpp::splat(blockSizeF);
 
-  const auto tri_c1 = VROP<lineSize, TriangleType>::splat_v4(tri.c1);
-  const auto tri_c2 = VROP<lineSize, TriangleType>::splat_v4(tri.c2);
-  const auto tri_c3 = VROP<lineSize, TriangleType>::splat_v4(tri.c3);
-
   const simdpp::float32<lineSize> areaInvV = simdpp::splat(areaInv);
   const simdpp::float32<lineSize> Dx12v    = simdpp::splat(Dx12);
   const simdpp::float32<lineSize> Dx23v    = simdpp::splat(Dx23);
@@ -158,7 +154,7 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
             const simdpp::float32<lineSize> w2 = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
             const simdpp::float32<lineSize> w3 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
 
-            const auto color   = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
+            const auto color   = ROP::DrawPixel(tri, w1, w2, w3);
             const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
 
             if(bx + lineSize < maxx)
