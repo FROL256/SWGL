@@ -410,20 +410,23 @@ using FillColor_1x4 = VROP< 4 >::FillColor;
 using Colored2D_1x4 = VROP< 4 >::Colored2D;
 using Colored3D_1x4 = VROP< 4 >::Colored3D;
 
-struct Colored2D_Scalar
+
+struct Colored2D_VEX_RGBA
 {
-  inline static float4 DrawPixel(const TriangleLocal& tri, const float3& w)
+  inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234)
   {
-    return tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
+    const simdpp::float32<4> tv1 = simdpp::load(&tri.c1);
+    const simdpp::float32<4> tv2 = simdpp::load(&tri.c2);
+    const simdpp::float32<4> tv3 = simdpp::load(&tri.c3);
+    return tv1*simdpp::splat<0>(w1234) + tv2*simdpp::splat<2>(w1234) + tv3*simdpp::splat<1>(w1234);
   }
 };
 
 void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                            FrameBuffer* frameBuf)
 {
-  RasterizeTriHalfSpace2D_BlockLine<TriangleType, 4, Colored2D_1x4, Colored2D_Scalar>
-      (tri, tileMinX, tileMinY,
-       frameBuf);
+  RasterizeTriHalfSpace2D_BlockLine<TriangleType, 4, Colored2D_1x4, Colored2D_VEX_RGBA>(tri, tileMinX, tileMinY,
+                                                                                        frameBuf);
 
 
 }

@@ -2,13 +2,14 @@
 
 #include <cstdint>
 #include "LiteMath.h"
-
 #include "TriRaster.h"        
+
+#include "RasterOperations.h"
 
 struct SWGL_Context;
 struct Batch;
 
-struct HWImplementationPureCpp
+SIMDPP_ALIGN(16) struct HWImplementationPureCpp
 {
 
   struct TriangleDataNoSSE
@@ -24,13 +25,13 @@ struct HWImplementationPureCpp
       psoId      = -1;
     }
 
-    float4 v1;
-    float4 v2;
-    float4 v3;
+    SIMDPP_ALIGN(16) float4 v1;
+    SIMDPP_ALIGN(16) float4 v2;
+    SIMDPP_ALIGN(16) float4 v3;
 
-    float4 c1;
-    float4 c2;
-    float4 c3;
+    SIMDPP_ALIGN(16) float4 c1;
+    SIMDPP_ALIGN(16) float4 c2;
+    SIMDPP_ALIGN(16) float4 c3;
 
     float2 t1;
     float2 t2;

@@ -51,6 +51,7 @@ IF ( X11_FOUND )
     MESSAGE ( STATUS " X11_LIBRARIES: " ${X11_LIBRARIES} )
 ENDIF ( X11_FOUND )
 
+
 find_package(OpenMP REQUIRED)
 
 add_library(swgl STATIC ${SOURCE_LIB})
