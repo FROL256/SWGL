@@ -410,11 +410,20 @@ using FillColor_1x4 = VROP< 4 >::FillColor;
 using Colored2D_1x4 = VROP< 4 >::Colored2D;
 using Colored3D_1x4 = VROP< 4 >::Colored3D;
 
+struct Colored2D_Scalar
+{
+  inline static float4 DrawPixel(const TriangleLocal& tri, const float3& w)
+  {
+    return tri.c1*w.x + tri.c2*w.y + tri.c3*w.z;
+  }
+};
+
 void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                            FrameBuffer* frameBuf)
 {
-  RasterizeTriHalfSpace2D_BlockLine<TriangleType,4,Colored2D_1x4>(tri, tileMinX, tileMinY,
-                                                                  frameBuf);
+  RasterizeTriHalfSpace2D_BlockLine<TriangleType, 4, Colored2D_1x4, Colored2D_Scalar>
+      (tri, tileMinX, tileMinY,
+       frameBuf);
 
 
 }

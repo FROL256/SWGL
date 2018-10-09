@@ -39,7 +39,7 @@ inline simdpp::float32<8> PixOffsetX<8>()
 #endif
 
 
-template<typename TriangleType, const int lineSize, typename ROP>
+template<typename TriangleType, const int lineSize, typename ROP, typename ROP_SCALAR>
 void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, int tileMinY,
                                        FrameBuffer* frameBuf)
 {
@@ -145,47 +145,7 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
         {
           const int y1 = by + iy;
 
-          const simdpp::float32<lineSize> pixOffsY = simdpp::splat(float(iy));
-
-          const simdpp::float32<lineSize> Cx1_bv = simdpp::splat<0>(Cx_abc);
-          const simdpp::float32<lineSize> Cx2_bv = simdpp::splat<1>(Cx_abc);
-          const simdpp::float32<lineSize> Cx3_bv = simdpp::splat<2>(Cx_abc);
-
-          const simdpp::float32<lineSize> w1 = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
-          const simdpp::float32<lineSize> w2 = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
-          const simdpp::float32<lineSize> w3 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
-
-          const auto color   = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
-          const auto pixData = VROP<lineSize>::RealColorToUint32_BGRA(color);
-
           if(y1 <= maxy)
-          {
-            if(bx + lineSize < maxx)
-            {
-              simdpp::store_u(cbuff + frameBuf->w * y1 + bx, pixData);
-            }
-            else
-            {
-              simdpp::store(pixelsTemp, pixData);
-
-              #pragma unroll (lineSize)
-              for (int ix = 0; ix < lineSize; ix++)
-                if(bx + ix <= maxx)
-                  cbuff[frameBuf->w*y1 + bx + ix] = pixelsTemp[ix];
-            }
-          }
-
-        }
-      }
-      else if (simdpp::reduce_or(vInside_v4u) != 0)
-      {
-        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f);
-
-        for (int iy = 0; iy < lineSize; iy++)
-        {
-          const int          y1     = by + iy;
-          simdpp::float32<4> Cx_123 = Cy_123 + Cx_abc;
-
           {
             const simdpp::float32<lineSize> pixOffsY = simdpp::splat(float(iy));
 
@@ -199,8 +159,34 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
 
             const auto color   = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
             const auto pixData = VROP<lineSize>::RealColorToUint32_BGRA(color);
-            simdpp::store(pixelsTemp, pixData);
-          }
+
+            if(bx + lineSize < maxx)
+            {
+              simdpp::store_u(cbuff + frameBuf->w * y1 + bx, pixData);
+            }
+            else
+            {
+              simdpp::store(pixelsTemp, pixData);
+
+              #pragma unroll (lineSize)
+              for (int ix = 0; ix < lineSize; ix++)
+                if(bx + ix <= maxx)
+                  cbuff[frameBuf->w*y1 + bx + ix] = pixelsTemp[ix];
+            }
+
+          } //  if(y1 <= maxy)
+
+        }
+      }
+      else if (simdpp::reduce_or(vInside_v4u) != 0)
+      {
+        SIMDPP_ALIGN(16) float Cx1234[4];
+        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f);
+
+        for (int iy = 0; iy < lineSize; iy++)
+        {
+          const int          y1     = by + iy;
+          simdpp::float32<4> Cx_123 = Cy_123 + Cx_abc;
 
           #pragma unroll (blockSize)
           for (int ix = 0; ix < lineSize; ix++)
@@ -211,7 +197,11 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
 
             const int x1 = bx + ix;
             if (x1 <= maxx && y1 <= maxy && (simdpp::reduce_and(vInside_123) != 0))
-              cbuff[frameBuf->w * y1 + x1] = pixelsTemp[ix];
+            {
+              simdpp::store(Cx1234, Cx_123);
+              const float4 color           = ROP_SCALAR::DrawPixel(tri, areaInv*float3(Cx1234[0], Cx1234[2], Cx1234[1]));
+              cbuff[frameBuf->w * y1 + x1] = RealColorToUint32_BGRA(color);
+            }
 
             Cx_123 = Cx_123 - Dy_abc;
           }
