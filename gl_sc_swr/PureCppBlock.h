@@ -103,9 +103,9 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
   //
   const simdpp::float32<4> blockSizeF_4v = simdpp::splat(blockSizeF);
 
-  const auto tri_c1 = VROP<blockSize*blockSize>::splat_v4(tri.c1);
-  const auto tri_c2 = VROP<blockSize*blockSize>::splat_v4(tri.c2);
-  const auto tri_c3 = VROP<blockSize*blockSize>::splat_v4(tri.c3);
+  const auto tri_c1 = VROP<blockSize*blockSize, TriangleType>::splat_v4(tri.c1);
+  const auto tri_c2 = VROP<blockSize*blockSize, TriangleType>::splat_v4(tri.c2);
+  const auto tri_c3 = VROP<blockSize*blockSize, TriangleType>::splat_v4(tri.c3);
 
   const simdpp::float32<blockSize*blockSize> areaInvV = simdpp::splat(areaInv);
   const simdpp::float32<blockSize*blockSize> Dx12v    = simdpp::splat(Dx12);
@@ -165,7 +165,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
         const simdpp::float32<blockSize*blockSize> w2 = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
 
         const auto color   = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
-        const auto pixData = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
+        const auto pixData = VROP<blockSize*blockSize, TriangleType>::RealColorToUint32_BGRA(color);
         simdpp::store(pixels, pixData);
       }
 
@@ -227,7 +227,7 @@ template<typename TriangleType, const int blockSize, typename ROP>
 void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int tileMinY,
                                    FrameBuffer* frameBuf)
 {
-  typedef typename VROP<blockSize*blockSize>::vec4 vec4f;
+  typedef typename VROP<blockSize*blockSize, TriangleType>::vec4 vec4f;
 
   const float tileMinX_f = float(tileMinX);
   const float tileMinY_f = float(tileMinY);
@@ -275,9 +275,9 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
 
   //// vectorized per triangle variables
   //
-  const auto tri_c1 = VROP<blockSize*blockSize>::splat_v4(tri.c1);
-  const auto tri_c2 = VROP<blockSize*blockSize>::splat_v4(tri.c2);
-  const auto tri_c3 = VROP<blockSize*blockSize>::splat_v4(tri.c3);
+  const auto tri_c1 = VROP<blockSize*blockSize, TriangleType>::splat_v4(tri.c1);
+  const auto tri_c2 = VROP<blockSize*blockSize, TriangleType>::splat_v4(tri.c2);
+  const auto tri_c3 = VROP<blockSize*blockSize, TriangleType>::splat_v4(tri.c3);
 
   const simdpp::float32<blockSize*blockSize> tri_v1_z = simdpp::splat(tri.v1.z);
   const simdpp::float32<blockSize*blockSize> tri_v2_z = simdpp::splat(tri.v2.z);
@@ -362,7 +362,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
         simdpp::store(z_buff, zInv);
 
         const auto color     = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3, zInv);
-        const auto pixData   = VROP<blockSize*blockSize>::RealColorToUint32_BGRA(color);
+        const auto pixData   = VROP<blockSize*blockSize, TriangleType>::RealColorToUint32_BGRA(color);
 
         //const simdpp::uint32<blockSize*blockSize> pixData = simdpp::make_int(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
         simdpp::store(pixels, pixData);

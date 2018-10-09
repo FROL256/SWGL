@@ -8,9 +8,9 @@
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
-using FillColor_2x2 = VROP< 4 >::FillColor;
-using Colored2D_2x2 = VROP< 4 >::Colored2D;
-using Colored3D_2x2 = VROP< 4 >::Colored3D;
+using FillColor_2x2 = VROP<4, TriangleLocal>::FillColor;
+using Colored2D_2x2 = VROP<4, TriangleLocal>::Colored2D;
+using Colored3D_2x2 = VROP<4, TriangleLocal>::Colored3D;
 
 void HWImplBlock2x2::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                        FrameBuffer* frameBuf)

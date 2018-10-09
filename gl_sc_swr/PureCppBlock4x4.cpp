@@ -406,9 +406,9 @@ void HWImplBlock4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const Tr
 
 #include "SimdCppBlockLine.h"
 
-using FillColor_1x4 = VROP< 4 >::FillColor;
-using Colored2D_1x4 = VROP< 4 >::Colored2D;
-using Colored3D_1x4 = VROP< 4 >::Colored3D;
+using FillColor_1x4 = VROP<4, TriangleLocal>::FillColor;
+using Colored2D_1x4 = VROP<4, TriangleLocal>::Colored2D;
+using Colored3D_1x4 = VROP<4, TriangleLocal>::Colored3D;
 
 
 struct Colored2D_VEX_RGBA

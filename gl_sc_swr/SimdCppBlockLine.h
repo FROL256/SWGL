@@ -40,7 +40,7 @@ inline static unsigned int RealColorToUint32_BGRA_SIMD(const simdpp::float32<4>&
 }
 
 
-template<typename TriangleType, const int lineSize, typename ROP, typename ROP_S>
+template<typename TriangleType, const int lineSize, typename ROP, typename SROP>
 void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, int tileMinY,
                                        FrameBuffer* frameBuf)
 {
@@ -89,9 +89,9 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
   //
   const simdpp::float32<4> blockSizeF_4v = simdpp::splat(blockSizeF);
 
-  const auto tri_c1 = VROP<lineSize>::splat_v4(tri.c1);
-  const auto tri_c2 = VROP<lineSize>::splat_v4(tri.c2);
-  const auto tri_c3 = VROP<lineSize>::splat_v4(tri.c3);
+  const auto tri_c1 = VROP<lineSize, TriangleType>::splat_v4(tri.c1);
+  const auto tri_c2 = VROP<lineSize, TriangleType>::splat_v4(tri.c2);
+  const auto tri_c3 = VROP<lineSize, TriangleType>::splat_v4(tri.c3);
 
   const simdpp::float32<lineSize> areaInvV = simdpp::splat(areaInv);
   const simdpp::float32<lineSize> Dx12v    = simdpp::splat(Dx12);
@@ -137,7 +137,7 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
           ( (Cx1_v > hs_eps_v) & (Cx2_v > hs_eps_v) & (Cx3_v > hs_eps_v) ).eval().unmask()
       );
 
-      if(simdpp::reduce_and(vInside_v4u) != 0)
+      if(simdpp::reduce_and(vInside_v4u) != 0) // render fully covered block
       {
         // store all pixels
         //
@@ -159,7 +159,7 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
             const simdpp::float32<lineSize> w3 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
 
             const auto color   = ROP::DrawPixel(tri_c1, tri_c2, tri_c3, w1, w2, w3);
-            const auto pixData = VROP<lineSize>::RealColorToUint32_BGRA(color);
+            const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
 
             if(bx + lineSize < maxx)
             {
@@ -175,13 +175,13 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
                   cbuff[frameBuf->w*y1 + bx + ix] = pixelsTemp[ix];
             }
 
-          } //  if(y1 <= maxy)
+          } //  end if(y1 <= maxy)
 
-        }
+        } // end for (int iy = 0; iy < lineSize; iy++)
       }
-      else if (simdpp::reduce_or(vInside_v4u) != 0)
+      else if (simdpp::reduce_or(vInside_v4u) != 0) // render partially covered block
       {
-        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f);
+        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f, 0.0f, 0.0f, 10.0f); // set last component to 10 to be always gt than hs_eps_v.w
 
         for (int iy = 0; iy < lineSize; iy++)
         {
@@ -198,7 +198,7 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
             const int x1 = bx + ix;
             if (x1 <= maxx && y1 <= maxy && (simdpp::reduce_and(vInside_123) != 0))
             {
-              const simdpp::float32<4> color2 = ROP_S::DrawPixel(tri, areaInvV*Cx_123);
+              const simdpp::float32<4> color2 = SROP::DrawPixel(tri, areaInvV*Cx_123);
               cbuff[frameBuf->w * y1 + x1]    = RealColorToUint32_BGRA_SIMD(color2);
             }
 

@@ -9,7 +9,7 @@
 #include "../simdpp/simd.h"
 
 
-template<int DIM>
+template<int DIM, typename TriangleType>
 struct VROP                  // Vectorizeable Raster OPerations
 {
   using Scalar   = simdpp::float32<DIM>;
