@@ -30,13 +30,17 @@ inline simdpp::float32<8> PixOffsetX<8>()
   return r;
 }
 
-#ifdef __GNUC__
-#define likely(x)       __builtin_expect(!!(x), 1)
-#define unlikely(x)     __builtin_expect(!!(x), 0)
-#else
-#define likely(x)       (x)
-#define unlikely(x)     (x)
-#endif
+
+inline static unsigned int RealColorToUint32_BGRA_SIMD(const simdpp::float32<4>& real_color)
+{
+  static const simdpp::float32<4> const_255 = simdpp::make_float(255.0f);
+  static const simdpp::uint32<4>  shiftmask = simdpp::make_int(16,8,0,24);
+
+  const simdpp::float32<4> rgbaf = real_color*const_255;
+  const simdpp::uint32<4>  rgbai = simdpp::to_int32(rgbaf);
+
+  return simdpp::reduce_or(simdpp::shift_l(rgbai, shiftmask)); // return blue | (green << 8) | (red << 16) | (alpha << 24);
+}
 
 
 template<typename TriangleType, const int lineSize, typename ROP, typename ROP_SCALAR>
@@ -198,9 +202,20 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
             const int x1 = bx + ix;
             if (x1 <= maxx && y1 <= maxy && (simdpp::reduce_and(vInside_123) != 0))
             {
-              simdpp::store(Cx1234, Cx_123);
-              const float4 color           = ROP_SCALAR::DrawPixel(tri, areaInv*float3(Cx1234[0], Cx1234[2], Cx1234[1]));
-              cbuff[frameBuf->w * y1 + x1] = RealColorToUint32_BGRA(color);
+              //simdpp::store(Cx1234, Cx_123);
+              //const float4 color           = ROP_SCALAR::DrawPixel(tri, areaInv*float3(Cx1234[0], Cx1234[2], Cx1234[1]));
+              //cbuff[frameBuf->w * y1 + x1] = RealColorToUint32_BGRA(color);
+              //const simdpp::float32<lineSize> pixOffsX1 = simdpp::splat(float(ix));
+
+              const simdpp::float32<4> w1234  = areaInvV*Cx_123;
+              const simdpp::float32<4> tv1 = simdpp::load_u(&tri.c1);
+              const simdpp::float32<4> tv2 = simdpp::load_u(&tri.c2);
+              const simdpp::float32<4> tv3 = simdpp::load_u(&tri.c3);
+              const simdpp::float32<4> color2 = tv1*simdpp::splat<0>(w1234) +
+                                                tv2*simdpp::splat<2>(w1234) +
+                                                tv3*simdpp::splat<1>(w1234);
+
+              cbuff[frameBuf->w * y1 + x1] = RealColorToUint32_BGRA_SIMD(color2);
             }
 
             Cx_123 = Cx_123 - Dy_abc;
