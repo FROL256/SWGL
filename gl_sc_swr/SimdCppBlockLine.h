@@ -184,7 +184,7 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
           const int          y1     = by + iy;
           simdpp::float32<4> Cx_123 = Cy_123 + Cx_abc;
 
-          #pragma unroll (blockSize)
+          #pragma unroll (lineSize)
           for (int ix = 0; ix < lineSize; ix++)
           {
             const auto vInside_123 = simdpp::bit_cast< simdpp::uint32<4>, simdpp::float32<4> >(
