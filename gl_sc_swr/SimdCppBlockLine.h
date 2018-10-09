@@ -146,13 +146,9 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
           {
             const simdpp::float32<lineSize> pixOffsY = simdpp::splat(float(iy));
 
-            const simdpp::float32<lineSize> Cx1_bv = simdpp::splat<0>(Cx_abc);
-            const simdpp::float32<lineSize> Cx2_bv = simdpp::splat<1>(Cx_abc);
-            const simdpp::float32<lineSize> Cx3_bv = simdpp::splat<2>(Cx_abc);
-
-            const simdpp::float32<lineSize> w1 = areaInvV*( Cx1_bv + Dx12v*pixOffsX - Dy12v*pixOffsY );
-            const simdpp::float32<lineSize> w2 = areaInvV*( Cx3_bv + Dx31v*pixOffsX - Dy31v*pixOffsY );
-            const simdpp::float32<lineSize> w3 = areaInvV*( Cx2_bv + Dx23v*pixOffsX - Dy23v*pixOffsY );
+            const simdpp::float32<lineSize> w1 = areaInvV*( simdpp::splat<0>(Cx_abc) + Dx12v*pixOffsX - Dy12v*pixOffsY );
+            const simdpp::float32<lineSize> w2 = areaInvV*( simdpp::splat<2>(Cx_abc) + Dx31v*pixOffsX - Dy31v*pixOffsY );
+            const simdpp::float32<lineSize> w3 = areaInvV*( simdpp::splat<1>(Cx_abc) + Dx23v*pixOffsX - Dy23v*pixOffsY );
 
             const auto color   = ROP::DrawPixel(tri, w1, w2, w3);
             const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
