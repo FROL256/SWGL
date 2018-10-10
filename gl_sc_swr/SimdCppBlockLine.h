@@ -143,7 +143,8 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
 
           if(y1 <= maxy)
           {
-            const simdpp::float32<lineSize> pixOffsY = simdpp::splat(float(iy));
+            //const simdpp::float32<lineSize> pixOffsY = simdpp::splat(float(iy));
+            const simdpp::float32<lineSize> pixOffsY = simdpp::to_float32(((simdpp::int32<lineSize>)simdpp::splat(iy)));
 
             const simdpp::float32<lineSize> w1 = areaInvV*( simdpp::splat<0>(Cx_abc) + Dx12v*pixOffsY - Dy12v*pixOffsX );
             const simdpp::float32<lineSize> w2 = areaInvV*( simdpp::splat<1>(Cx_abc) + Dx23v*pixOffsY - Dy23v*pixOffsX );
