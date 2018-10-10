@@ -53,7 +53,7 @@ void RasterizeTriHalfSpace2DFill_Block(const TriangleLocal& tri, int tileMinX, i
   float Cy2_b = C2 + Dx23 * miny - Dy23 * minx;
   float Cy3_b = C3 + Dx31 * miny - Dy31 * minx;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
   
   constexpr int   blockSize  = 4;
   constexpr float blockSizeF = float(blockSize);
@@ -96,7 +96,7 @@ void RasterizeTriHalfSpace2DFill_Block(const TriangleLocal& tri, int tileMinX, i
         for (int y1 = by; y1 < by + blockSize; y1++)
           for (int x1 = bx; x1 < bx + blockSize; x1++)
             if(x1 <= maxx && y1 <= maxy)     // replace (maxx, maxy) to (maxx-1, maxy01) to see tile borders !!
-              cbuff[frameBuf->w*y1 + x1] = 0x0000FF00;
+              cbuff[frameBuf->pitch*y1 + x1] = 0x0000FF00;
       }
       else if (v0Inside || v1Inside || v2Inside || v3Inside)
       {
@@ -115,7 +115,7 @@ void RasterizeTriHalfSpace2DFill_Block(const TriangleLocal& tri, int tileMinX, i
           {
             const bool hsTest = (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON);
             if (x1 <= maxx && y1 <= maxy && hsTest)
-              cbuff[frameBuf->w * y1 + x1] = 0x0000FF00;
+              cbuff[frameBuf->pitch * y1 + x1] = 0x0000FF00;
 
             Cx1 -= Dy12;
             Cx2 -= Dy23;
@@ -137,7 +137,7 @@ void RasterizeTriHalfSpace2DFill_Block(const TriangleLocal& tri, int tileMinX, i
     Cy2_b += Dx23*blockSizeF;
     Cy3_b += Dx31*blockSizeF;
 
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+    offset = nextLine(offset, frameBuf->pitch, frameBuf->h);
   }
 }
 
@@ -184,7 +184,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
   float Cy2_b = C2 + Dx23 * miny - Dy23 * minx;
   float Cy3_b = C3 + Dx31 * miny - Dy31 * minx;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   constexpr int   blockSize  = 4;
   constexpr float blockSizeF = float(blockSize);
@@ -342,7 +342,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
             const int x1 = bx + ix;
             const int y1 = by + iy;
             if(x1 <= maxx && y1 <= maxy)     // replace (maxx, maxy) to (maxx-1, maxy01) to see tile borders !!
-              cbuff[frameBuf->w*y1 + x1] = colors_int32[iy*blockSize + ix];
+              cbuff[frameBuf->pitch*y1 + x1] = colors_int32[iy*blockSize + ix];
           }
         }
       }
@@ -365,7 +365,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
             if (x1 <= maxx && y1 <= maxy && hsTest)
             {
               const float3 w = areaInv*float3(Cx1, Cx2, Cx3);
-              cbuff[frameBuf->w * y1 + x1] = RealColorToUint32_BGRA( tri.c1*w.x + tri.c2*w.y + tri.c3*w.z );
+              cbuff[frameBuf->pitch * y1 + x1] = RealColorToUint32_BGRA( tri.c1*w.x + tri.c2*w.y + tri.c3*w.z );
             }
 
             Cx1 -= Dy12;
@@ -388,7 +388,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleLocal& tri, int tileMinX, int t
     Cy2_b += Dx23*blockSizeF;
     Cy3_b += Dx31*blockSizeF;
 
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+    offset = nextLine(offset, frameBuf->pitch, frameBuf->h);
   }
 }
 

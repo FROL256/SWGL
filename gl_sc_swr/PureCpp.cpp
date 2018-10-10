@@ -376,7 +376,7 @@ static void RasterizeTriHalfSpace2D_Fill(const TriangleLocal& tri, int tileMinX,
   float Cy2 = C2 + Dx23 * miny - Dy23 * minx;
   float Cy3 = C3 + Dx31 * miny - Dy31 * minx;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   const int fillColorI = RealColorToUint32_BGRA(tri.c1*(1.0f/tri.v1.z)); // #TODO: need opt for color fill mode
 
@@ -402,7 +402,7 @@ static void RasterizeTriHalfSpace2D_Fill(const TriangleLocal& tri, int tileMinX,
     Cy2 += Dx23;
     Cy3 += Dx31;
 
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+    offset = nextLine(offset, frameBuf->pitch, frameBuf->h);
   }
 
 }
@@ -452,7 +452,7 @@ static void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int 
   float Cy2 = C2 + Dx23 * fMinY - Dy23 * fMinX;
   float Cy3 = C3 + Dx31 * fMinY - Dy31 * fMinX;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   //const int fillColorI = RealColorToUint32_BGRA(tri.c1); // #TODO: need opt for color fill mode
 
@@ -481,7 +481,7 @@ static void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int 
     Cy2 += Dx23;
     Cy3 += Dx31;
 
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+    offset = nextLine(offset, frameBuf->pitch, frameBuf->h);
   }
 
 }
@@ -533,7 +533,7 @@ static void RasterizeTriHalfSpace3D(const TriangleLocal& tri, int tileMinX, int 
   float Cy2 = C2 + Dx23 * fMinY - Dy23 * fMinX;
   float Cy3 = C3 + Dx31 * fMinY - Dy31 * fMinX;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
@@ -568,7 +568,7 @@ static void RasterizeTriHalfSpace3D(const TriangleLocal& tri, int tileMinX, int 
     Cy2 += Dx23;
     Cy3 += Dx31;
 
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+    offset = nextLine(offset, frameBuf->pitch, frameBuf->h);
   }
 
 }
@@ -620,7 +620,7 @@ static void RasterizeTriHalfSpace3DBlend(const TriangleLocal& tri, int tileMinX,
   float Cy2 = C2 + Dx23 * fMinY - Dy23 * fMinX;
   float Cy3 = C3 + Dx31 * fMinY - Dy31 * fMinX;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
@@ -655,7 +655,7 @@ static void RasterizeTriHalfSpace3DBlend(const TriangleLocal& tri, int tileMinX,
     Cy2 += Dx23;
     Cy3 += Dx31;
 
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+    offset = nextLine(offset, frameBuf->pitch, frameBuf->h);
   }
 
 }

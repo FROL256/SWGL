@@ -51,11 +51,13 @@ static inline int nextLine(int y, int w, int h)   { return y + w; }
 
 struct FrameBuffer
 {
-  FrameBuffer() : w(0), h(0), vx(0), vy(0), vw(0), vh(0),
+  FrameBuffer() : w(0), h(0), pitch(0), dummy(0), vx(0), vy(0), vw(0), vh(0),
                   cbuffer(nullptr), zbuffer(nullptr), sbuffer(nullptr) {}
 
   int w;
   int h;
+  int pitch;
+  int dummy;
 
   int vx; // viewport min x
   int vy; // viewport min y
@@ -65,9 +67,6 @@ struct FrameBuffer
   int*     cbuffer;
   float*   zbuffer;
   uint8_t* sbuffer;
-
-  //uint8_t curr_sval;
-  //uint8_t curr_smask;
 };
 
 struct ALIGNED(16) TexSampler

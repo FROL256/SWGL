@@ -656,6 +656,7 @@ GLAPI void APIENTRY glFlush(void)
   frameBuff.sbuffer = g_pContext->m_sbuffer;
   frameBuff.w       = g_pContext->m_width;
   frameBuff.h       = g_pContext->m_height;
+  frameBuff.pitch   = frameBuff.w + FB_BILLET_SIZE;
 
   frameBuff.vx = 0;
   frameBuff.vy = 0;
@@ -675,8 +676,9 @@ GLAPI void APIENTRY glFlush(void)
       auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
       
       FrameBuffer fb;
-      fb.w  = BIN_SIZE;
-      fb.h  = BIN_SIZE;
+      fb.w     = BIN_SIZE;
+      fb.h     = BIN_SIZE;
+      fb.pitch = fb.w + FB_BILLET_SIZE;
       fb.vx = 0;
       fb.vy = 0;
       fb.vw = BIN_SIZE;

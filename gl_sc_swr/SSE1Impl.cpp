@@ -485,7 +485,7 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
-  int* colorBuffer = frameBuf->cbuffer + miny * frameBuf->w;
+  int* colorBuffer = frameBuf->cbuffer + miny * frameBuf->pitch;
 
   const __m128 vTileMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinX, tileMinX, tileMinX));  
   const __m128 vTileMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinY, tileMinY, tileMinY)); 
@@ -525,7 +525,7 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
 
     Cy = _mm_add_ps(Cy, vDx);
 
-    colorBuffer += frameBuf->w;
+    colorBuffer += frameBuf->pitch;
   }
 
 }
@@ -568,7 +568,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 
   __m128 Cy = vCy;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
@@ -596,7 +596,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 
     Cy = _mm_add_ps(Cy, vDx);
 
-    offset += frameBuf->w;
+    offset += frameBuf->pitch;
   }
 
 }

@@ -15,3 +15,4 @@
   #define FULL_GL
 #endif
 
+#define FB_BILLET_SIZE 0

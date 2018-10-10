@@ -182,7 +182,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
           {
             const int x1 = bx + ix;
             if(x1 <= maxx && y1 <= maxy)     // replace (maxx, maxy) to (maxx-1, maxy01) to see tile borders !!
-              cbuff[frameBuf->w*y1 + x1] = pixels[iy*blockSize + ix];
+              cbuff[frameBuf->pitch*y1 + x1] = pixels[iy*blockSize + ix];
           }
         }
       }
@@ -205,7 +205,7 @@ void RasterizeTriHalfSpace2D_Block(const TriangleType& tri, int tileMinX, int ti
             const int x1 = bx + ix;
 
             if (x1 <= maxx && y1 <= maxy && (simdpp::reduce_and(vInside_123) != 0))
-              cbuff[frameBuf->w * y1 + x1] = pixels[iy*blockSize + ix];
+              cbuff[frameBuf->pitch * y1 + x1] = pixels[iy*blockSize + ix];
 
             Cx_123 = Cx_123 - Dy_abc;
           }
@@ -269,7 +269,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
   float Cy2_b = C2 + Dx23 * miny - Dy23 * minx;
   float Cy3_b = C3 + Dx31 * miny - Dy31 * minx;
 
-  int offset = lineOffset(miny, frameBuf->w, frameBuf->h);
+  int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   constexpr float blockSizeF = float(blockSize);
 
@@ -347,7 +347,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           {
             const int x1 = bx + ix;
             if(x1 <= maxx && y1 <= maxy)
-              z_buff[iy*blockSize + ix] = zbuff[frameBuf->w*y1 + x1];
+              z_buff[iy*blockSize + ix] = zbuff[frameBuf->pitch*y1 + x1];
           }
         }
 
@@ -380,11 +380,11 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           for (int ix = 0; ix < blockSize; ix++)
           {
             const int  x1    = bx + ix;
-            const bool zTest = (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1]);
+            const bool zTest = (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->pitch * y1 + x1]);
             if(x1 <= maxx && y1 <= maxy && zTest)
             {
-              cbuff[frameBuf->w * y1 + x1] = pixels[iy * blockSize + ix];
-              zbuff[frameBuf->w * y1 + x1] = z_buff[iy * blockSize + ix];
+              cbuff[frameBuf->pitch * y1 + x1] = pixels[iy * blockSize + ix];
+              zbuff[frameBuf->pitch * y1 + x1] = z_buff[iy * blockSize + ix];
             }
           }
         }
@@ -411,11 +411,11 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
           {
             const int  x1     = bx + ix;
             const bool hsTest = (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON);
-            const bool zTest  = (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->w * y1 + x1]);
+            const bool zTest  = (z_buff[iy*blockSize + ix] >  zbuff[frameBuf->pitch * y1 + x1]);
             if (x1 <= maxx && y1 <= maxy && hsTest && zTest)
             {
-              cbuff[frameBuf->w * y1 + x1] = pixels[iy * blockSize + ix];
-              zbuff[frameBuf->w * y1 + x1] = z_buff[iy * blockSize + ix];
+              cbuff[frameBuf->pitch * y1 + x1] = pixels[iy * blockSize + ix];
+              zbuff[frameBuf->pitch * y1 + x1] = z_buff[iy * blockSize + ix];
             }
 
             Cx1 -= Dy12;
@@ -438,7 +438,7 @@ void RasterizeTriHalfSpace3D_Block(const TriangleType& tri, int tileMinX, int ti
     Cy2_b += Dx23*blockSizeF;
     Cy3_b += Dx31*blockSizeF;
 
-    offset = nextLine(offset, frameBuf->w, frameBuf->h);
+    offset = nextLine(offset, frameBuf->pitch, frameBuf->h);
   }
 }
 
