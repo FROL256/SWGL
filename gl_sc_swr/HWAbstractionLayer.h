@@ -21,5 +21,4 @@
 typedef HWImplBlockLine4x4 HWImpl;
 
 
-
 using Triangle = HWImpl::TriangleType;
