@@ -5,13 +5,13 @@
 
 void SWGL_ScreenTile::ClearColor(int32_t a_color)
 {
-  HWImpl::memset32(m_color, a_color, BIN_SIZE*BIN_SIZE);
+  HWImpl::memset32(m_color, a_color, (BIN_SIZE + FB_BILLET_SIZE)*BIN_SIZE);
 }
 
 void SWGL_ScreenTile::ClearDepth(float a_val)
 {
   int32_t idata = *((int32_t*)(&a_val));
-  HWImpl::memset32((int32_t*)m_depth, idata, BIN_SIZE*BIN_SIZE);
+  HWImpl::memset32((int32_t*)m_depth, idata, (BIN_SIZE + FB_BILLET_SIZE)*BIN_SIZE);
 }
 
 void SWGL_FrameBuffer::Resize(int a_w, int a_h) 
@@ -74,7 +74,7 @@ void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
       {
         const int y1 = (sizeY - y - 1);
 
-        int32_t *inLine  = tiles[tileId].m_color + y * BIN_SIZE;
+        int32_t *inLine  = tiles[tileId].m_color + y * (BIN_SIZE + FB_BILLET_SIZE);
         int32_t *outLine = output + y1 * pitchX;
 
         memcpy(outLine, inLine, BIN_SIZE * sizeof(int32_t));
@@ -90,7 +90,7 @@ void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
 
       for (int y = 0; y < BIN_SIZE; y++)
       {
-        int32_t *inLine = tiles[tileId].m_color + y * BIN_SIZE;
+        int32_t *inLine = tiles[tileId].m_color + y * (BIN_SIZE + FB_BILLET_SIZE);
         int32_t *outLine = output + y * pitchX;
 
         memcpy(outLine, inLine, BIN_SIZE * sizeof(int32_t));

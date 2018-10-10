@@ -118,9 +118,9 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
   this->glxrec.framebuff.resize(dpy, width, height, g_fbColorDepth);
 
   m_pixels  = (int*)this->glxrec.framebuff.data(); // #TODO: _aligned_malloc !
-  m_pixels2 = (int*)malloc(width*height*sizeof(int));
-  m_zbuffer = (float*)malloc(width*height*sizeof(float));
-  m_sbuffer = (uint8_t*)malloc(width*height*sizeof(uint8_t));
+  m_pixels2 = (int*)    malloc((width + FB_BILLET_SIZE)*height*sizeof(int));
+  m_zbuffer = (float*)  malloc((width + FB_BILLET_SIZE)*height*sizeof(float));
+  m_sbuffer = (uint8_t*)malloc((width + FB_BILLET_SIZE)*height*sizeof(uint8_t));
   
   m_tiledFrameBuffer.Resize(m_width, m_height);
   m_tiledFrameBuffer.TestClearChessBoard();
