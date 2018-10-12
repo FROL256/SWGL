@@ -140,11 +140,13 @@ void SWGL_Context::CopyToScreeen()
     m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
   else 
   {
+    const int pitch = (m_width + FB_BILLET_SIZE);
+
     #pragma omp parallel for
     for (int y = 0; y < m_height; y++)
     {
       int offset0 = y * m_width;
-      int offset1 = (m_height - y - 1) * m_width;
+      int offset1 = (m_height - y - 1) * pitch;
 
       for (int x = 0; x < m_width; x++)
       {
@@ -206,7 +208,6 @@ void glXSwapBuffers( Display *dpy, GLXDrawable drawable )
 
   g_pContext->CopyToScreeen();
   g_pContext->glxrec.framebuff.present(g_pContext->glxrec.win);
-
 
   if (totalFrameCounter == 100)
   {
