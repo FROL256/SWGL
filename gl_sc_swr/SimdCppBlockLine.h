@@ -335,13 +335,21 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
       }
       else if (simdpp::reduce_or(vInside_v4u) != 0) // render partially covered block
       {
-        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f, 0.0f, 0.0f, 10.0f); // set last component to 10 to be always gt than hs_eps_v.w
+        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f, 0.0f, 0.0f, 10000000.0f); // set last component to 10 to be always gt than hs_eps_v.w
         const simdpp::float32<4> areaInvV4 = simdpp::splat(areaInv);
+
+        const int maxx2 = std::min(maxx, bx+lineSize-1);
+        const int maxy2 = std::min(maxy, by+lineSize-1);
 
         for (int iy = 0; iy < lineSize; iy++)
         {
           const int          y1     = by + iy;
           simdpp::float32<4> Cx_123 = Cy_123 + Cx_abc;
+          const int offsetY         = frameBuf->pitch * y1;
+
+          simdpp::prefetch_read(zbuff + frameBuf->pitch * (y1+0) + bx);
+          if(y1+1 <= maxy2 && y1+1 != lineSize)
+            simdpp::prefetch_read(zbuff + frameBuf->pitch * (y1+1) + bx);
 
           #pragma unroll (lineSize)
           for (int ix = 0; ix < lineSize; ix++)
@@ -351,7 +359,7 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
             );
 
             const int x1 = bx + ix;
-            if (x1 <= maxx && y1 <= maxy && (simdpp::reduce_and(vInside_123) != 0))
+            if (x1 <= maxx2 && y1 <= maxy2 && (simdpp::reduce_and(vInside_123) != 0))
             {
               const simdpp::float32<4> w1234 = areaInvV4*Cx_123;
 
@@ -359,14 +367,13 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
               simdpp::store(w1234_A, w1234);
 
               const float zInv = tri.v1.z*w1234_A[0] + tri.v2.z*w1234_A[2] + tri.v3.z*w1234_A[1];
-              const float zOld = zbuff[frameBuf->pitch * y1 + x1];
+              const float zOld = zbuff[offsetY + x1];
 
               if(zInv > zOld)
               {
-                const simdpp::float32<4> zInv_v  = simdpp::splat(zInv);
-                const simdpp::float32<4> color2  = SROP::DrawPixel(tri, w1234, zInv_v);
-                cbuff[frameBuf->pitch * y1 + x1] = RealColorToUint32_BGRA_SIMD(color2);
-                zbuff[frameBuf->pitch * y1 + x1] = zInv;
+                const simdpp::float32<4> color2  = SROP::DrawPixel(tri, w1234, simdpp::splat(zInv));
+                cbuff[offsetY + x1] = RealColorToUint32_BGRA_SIMD(color2);
+                zbuff[offsetY + x1] = zInv;
               }
             }
 

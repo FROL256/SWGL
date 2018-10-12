@@ -29,7 +29,7 @@ enum BlendOp { BlendOp_None               = 0, // no blending, replace color
                BlendOp_Mul,                    // glBlendFunc(GL_DST_COLOR, GL_ZERO).
              };
 
-#define HALF_SPACE_EPSILON -1e-4f
+#define HALF_SPACE_EPSILON (-1e-4f)
 
 static inline float edgeFunction(float2 a, float2 b, float2 c) // actuattly just a mixed product ... :)
 {
