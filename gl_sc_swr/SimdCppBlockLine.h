@@ -346,12 +346,21 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
             {
               const simdpp::float32<4> w1234 = areaInvV*Cx_123;
 
-              simdpp::float32<4> w1, w2, w3;
-              Splat4XYZ<4>(w1234, w1, w2, w3);
+              SIMDPP_ALIGN(16) float w1234_A[4];
+              simdpp::store(w1234_A, w1234);
 
-              const simdpp::float32<4> zInv    = tri_v1_z*w1 + tri_v2_z*w3 + tri_v3_z*w2;
-              const simdpp::float32<4> color2  = SROP::DrawPixel(tri, w1234, zInv);
-              cbuff[frameBuf->pitch * y1 + x1] = RealColorToUint32_BGRA_SIMD(color2);
+              const float zInv = tri.v1.z*w1234_A[0] + tri.v2.z*w1234_A[2] + tri.v3.z*w1234_A[1];
+              const float zOld = zbuff[frameBuf->pitch * y1 + x1];
+
+              if(zInv > zOld)
+              {
+                simdpp::float32<4> w1, w2, w3;
+                Splat4XYZ<4>(w1234, w1, w3, w2);
+                const simdpp::float32<4> zInv_v  = tri_v1_z * w1 + tri_v2_z * w2 + tri_v3_z * w3;
+                const simdpp::float32<4> color2  = SROP::DrawPixel(tri, w1234, zInv_v);
+                cbuff[frameBuf->pitch * y1 + x1] = RealColorToUint32_BGRA_SIMD(color2);
+                zbuff[frameBuf->pitch * y1 + x1] = zInv;
+              }
             }
 
             Cx_123 = Cx_123 - Dy_12_23_31;
