@@ -457,7 +457,8 @@ void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, cons
       break;
 
     case ROP_Colored3D:
-
+      RasterizeTriHalfSpace3D_BlockLine<TriangleType, 4, Colored3D_1x4, Colored3D_S>(tri, tileMinX, tileMinY,
+                                                                                     frameBuf);
       break;
 
     case ROP_TexNearest2D:
