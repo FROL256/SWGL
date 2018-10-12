@@ -410,6 +410,10 @@ using FillColor_1x4 = VROP<4, TriangleLocal>::FillColor;
 using Colored2D_1x4 = VROP<4, TriangleLocal>::Colored2D;
 using Colored3D_1x4 = VROP<4, TriangleLocal>::Colored3D;
 
+using FillColor_1x8 = VROP<8, TriangleLocal>::FillColor;
+using Colored2D_1x8 = VROP<8, TriangleLocal>::Colored2D;
+using Colored3D_1x8 = VROP<8, TriangleLocal>::Colored3D;
+
 struct FillColor_S
 {
   inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234)
@@ -459,6 +463,9 @@ void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, cons
     case ROP_Colored3D:
       RasterizeTriHalfSpace3D_BlockLine<TriangleType, 4, Colored3D_1x4, Colored3D_S>(tri, tileMinX, tileMinY,
                                                                                      frameBuf);
+
+      //RasterizeTriHalfSpace3D_BlockLine<TriangleType, 8, Colored3D_1x8, Colored3D_S>(tri, tileMinX, tileMinY,
+      //                                                                               frameBuf);
       break;
 
     case ROP_TexNearest2D:

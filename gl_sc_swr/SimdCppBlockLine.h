@@ -293,6 +293,13 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
         {
           const int y1 = by + iy;
 
+          if(y1+1 <= maxy && y1+1 != lineSize)
+          {
+            const int offset1 = frameBuf->pitch * (y1+1) + bx;
+            simdpp::prefetch_read(cbuff + offset1);
+            simdpp::prefetch_read(zbuff + offset1);
+          }
+
           if(y1 <= maxy)
           {
             const simdpp::float32<lineSize> pixOffsY = simdpp::to_float32(((simdpp::int32<lineSize>)simdpp::splat(iy)));
@@ -301,7 +308,8 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
             simdpp::float32<lineSize> Cx1, Cx2, Cx3;
             Splat4XYZ<lineSize>(Cx_abc, Cx1, Cx2, Cx3);
 
-            const simdpp::float32<lineSize> zOld =  simdpp::load_u(zbuff + frameBuf->pitch * y1 + bx);
+            const int offset = frameBuf->pitch * y1 + bx;
+            const simdpp::float32<lineSize> zOld = simdpp::load_u(zbuff + offset);
 
             const simdpp::float32<lineSize> w1   = areaInvV*(Cx1 + Dx12v*pixOffsY - Dy12v*pixOffsX );
             const simdpp::float32<lineSize> w2   = areaInvV*(Cx2 + Dx23v*pixOffsY - Dy23v*pixOffsX );
@@ -316,10 +324,10 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
               const auto color   = ROP::DrawPixel(tri, w1, w3, w2, zInv);
               const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
 
-              const simdpp::uint32<lineSize>  colorOld = simdpp::load_u(cbuff + frameBuf->pitch * y1 + bx);
+              const simdpp::uint32<lineSize>  colorOld = simdpp::load_u(cbuff + offset);
 
-              simdpp::store_u(cbuff + frameBuf->pitch * y1 + bx, simdpp::blend(pixData, colorOld, zTest));
-              simdpp::store_u(zbuff + frameBuf->pitch * y1 + bx, simdpp::blend(zInv,    zOld,     zTest));
+              simdpp::store_u(cbuff + offset, simdpp::blend(pixData, colorOld, zTest));
+              simdpp::store_u(zbuff + offset, simdpp::blend(zInv,    zOld,     zTest));
             }
           } //  end if(y1 <= maxy)
 
@@ -328,6 +336,7 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
       else if (simdpp::reduce_or(vInside_v4u) != 0) // render partially covered block
       {
         simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f, 0.0f, 0.0f, 10.0f); // set last component to 10 to be always gt than hs_eps_v.w
+        const simdpp::float32<4> areaInvV4 = simdpp::splat(areaInv);
 
         for (int iy = 0; iy < lineSize; iy++)
         {
@@ -344,7 +353,7 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
             const int x1 = bx + ix;
             if (x1 <= maxx && y1 <= maxy && (simdpp::reduce_and(vInside_123) != 0))
             {
-              const simdpp::float32<4> w1234 = areaInvV*Cx_123;
+              const simdpp::float32<4> w1234 = areaInvV4*Cx_123;
 
               SIMDPP_ALIGN(16) float w1234_A[4];
               simdpp::store(w1234_A, w1234);
