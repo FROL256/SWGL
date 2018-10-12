@@ -5,8 +5,7 @@
 #include "RasterOperations.h"
 
 
-SIMDPP_ALIGN(64) static const float g_XPixOffets_8[8] = {0.0f, 1.0f, 2.0f, 3.0f,
-                                                         4.0f, 5.0f, 6.0f, 7.0f};
+SIMDPP_ALIGN(64) static const float g_XPixOffets_8[8] = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f};
 
 
 template<int DIM>
@@ -26,8 +25,7 @@ inline simdpp::float32<2> PixOffsetX<2>()
 template<>
 inline simdpp::float32<8> PixOffsetX<8>()
 {
-  simdpp::float32<8> r = simdpp::load(g_XPixOffets_8);
-  return r;
+  return ((simdpp::float32<8>)simdpp::load(g_XPixOffets_8));
 }
 
 
@@ -37,6 +35,26 @@ inline static unsigned int RealColorToUint32_BGRA_SIMD(const simdpp::float32<4>&
   static const simdpp::uint32<4>  shiftmask = simdpp::make_int(16,8,0,24);
   const simdpp::uint32<4>         rgbai     = simdpp::to_int32(real_color*const_255);
   return simdpp::reduce_or(simdpp::shift_l(rgbai, shiftmask)); // return blue | (green << 8) | (red << 16) | (alpha << 24);
+}
+
+template<int size>
+static inline void Splat4XYZ(const simdpp::float32<4> in_val,
+                            simdpp::float32<size>& out_X, simdpp::float32<size>& out_Y, simdpp::float32<size>& out_Z)
+{
+  SIMDPP_ALIGN(16) float data[4];
+  simdpp::store(data, in_val);
+  out_X = simdpp::splat(data[0]);
+  out_Y = simdpp::splat(data[1]);
+  out_Z = simdpp::splat(data[2]);
+}
+
+template<>
+inline void Splat4XYZ<4>(const simdpp::float32<4> in_val,
+                         simdpp::float32<4>& out_X, simdpp::float32<4>& out_Y, simdpp::float32<4>& out_Z)
+{
+  out_X = simdpp::splat<0>(in_val);
+  out_Y = simdpp::splat<1>(in_val);
+  out_Z = simdpp::splat<2>(in_val);
 }
 
 
@@ -90,16 +108,13 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
   const simdpp::float32<lineSize> Dy31v    = simdpp::splat(Dy12_Dy23_Dy31[2]);
 
   const simdpp::float32<4> blockSizeF_4v = simdpp::to_float32(((simdpp::int32<4>)simdpp::splat(lineSize)));
-  const simdpp::float32<4> hs_eps_v = simdpp::make_float(HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON);
+  const simdpp::float32<4> hs_eps_v      = simdpp::make_float(HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON);
 
   simdpp::float32<4> col0 = simdpp::make_float(0.0f, 0.0f, 0.0f, 0.0f);  // {0.f, 0.f, 0.f, 0.f};
   simdpp::float32<4> col1 = simdpp::neg(Dy_12_23_31*blockSizeF_4v);      // {0.f, - Dy12*blockSizeF, Dx12*blockSizeF, Dx12*blockSizeF - Dy12*blockSizeF};
   simdpp::float32<4> col2 = Dx_12_23_31*blockSizeF_4v;                   // {0.f, - Dy23*blockSizeF, Dx23*blockSizeF, Dx23*blockSizeF - Dy23*blockSizeF};
   simdpp::float32<4> col3 = col1 + col2;                                 // {0.f, - Dy31*blockSizeF, Dx31*blockSizeF, Dx31*blockSizeF - Dy31*blockSizeF};
   simdpp::transpose4(col0, col1, col2, col3);
-
-  //
-  ///////////////////////////////////////////////////////////////////////////////// vectorized per triangle variables
 
   int* cbuff = frameBuf->cbuffer;
 
@@ -132,14 +147,18 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
             const simdpp::float32<lineSize> pixOffsY = simdpp::to_float32(((simdpp::int32<lineSize>)simdpp::splat(iy)));
             const simdpp::float32<lineSize> pixOffsX = PixOffsetX<lineSize>();
 
-            const simdpp::float32<lineSize> w1 = areaInvV*( simdpp::splat<0>(Cx_abc) + Dx12v*pixOffsY - Dy12v*pixOffsX );
-            const simdpp::float32<lineSize> w2 = areaInvV*( simdpp::splat<1>(Cx_abc) + Dx23v*pixOffsY - Dy23v*pixOffsX );
-            const simdpp::float32<lineSize> w3 = areaInvV*( simdpp::splat<2>(Cx_abc) + Dx31v*pixOffsY - Dy31v*pixOffsX );
+            simdpp::float32<lineSize> Cx1, Cx2, Cx3;
+            Splat4XYZ<lineSize>(Cx_abc, Cx1, Cx2, Cx3);
+
+            const simdpp::float32<lineSize> w1 = areaInvV*(Cx1 + Dx12v*pixOffsY - Dy12v*pixOffsX );
+            const simdpp::float32<lineSize> w2 = areaInvV*(Cx2 + Dx23v*pixOffsY - Dy23v*pixOffsX );
+            const simdpp::float32<lineSize> w3 = areaInvV*(Cx3 + Dx31v*pixOffsY - Dy31v*pixOffsX );
 
             const auto color   = ROP::DrawPixel(tri, w1, w3, w2);
             const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
 
             simdpp::store_u(cbuff + frameBuf->pitch * y1 + bx, pixData);
+
           } //  end if(y1 <= maxy)
 
         } // end for (int iy = 0; iy < lineSize; iy++)
