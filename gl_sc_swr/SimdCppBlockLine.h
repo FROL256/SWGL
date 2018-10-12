@@ -60,8 +60,8 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
 
   const simdpp::float32<4> tx123 = ((simdpp::float32<4>)simdpp::load(x1234)) - tileMinX_f4;
   const simdpp::float32<4> ty123 = ((simdpp::float32<4>)simdpp::load(y1234)) - tileMinY_f4;
-  const simdpp::float32<4> tx231 = ((simdpp::float32<4>)simdpp::load(x2314)) - tileMinX_f4;
-  const simdpp::float32<4> ty231 = ((simdpp::float32<4>)simdpp::load(y2314)) - tileMinY_f4;
+  const simdpp::float32<4> tx231 = ((simdpp::float32<4>)simdpp::load(x2314)) - tileMinX_f4; // simdpp::permute4<1,2,0,0>(tx123); seems permute4 does not works !!!
+  const simdpp::float32<4> ty231 = ((simdpp::float32<4>)simdpp::load(y2314)) - tileMinY_f4; // simdpp::permute4<1,2,0,0>(ty123);
 
   const simdpp::float32<4> Dx_12_23_31 = tx123 - tx231;
   const simdpp::float32<4> Dy_12_23_31 = ty123 - ty231;
@@ -92,15 +92,10 @@ void RasterizeTriHalfSpace2D_BlockLine(const TriangleType& tri, int tileMinX, in
   const simdpp::float32<4> blockSizeF_4v = simdpp::to_float32(((simdpp::int32<4>)simdpp::splat(lineSize)));
   const simdpp::float32<4> hs_eps_v = simdpp::make_float(HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON);
 
-
-  //SIMDPP_ALIGN(16) const float Cx1_va[4] = {0.f, - Dy12*blockSizeF, Dx12*blockSizeF, Dx12*blockSizeF - Dy12*blockSizeF};
-  //SIMDPP_ALIGN(16) const float Cx2_va[4] = {0.f, - Dy23*blockSizeF, Dx23*blockSizeF, Dx23*blockSizeF - Dy23*blockSizeF};
-  //SIMDPP_ALIGN(16) const float Cx3_va[4] = {0.f, - Dy31*blockSizeF, Dx31*blockSizeF, Dx31*blockSizeF - Dy31*blockSizeF};
-
-  simdpp::float32<4> col0 = simdpp::make_float(0.0f, 0.0f, 0.0f, 0.0f);
-  simdpp::float32<4> col1 = simdpp::neg(Dy_12_23_31*blockSizeF_4v);
-  simdpp::float32<4> col2 = Dx_12_23_31*blockSizeF_4v;
-  simdpp::float32<4> col3 = col2 + col1;
+  simdpp::float32<4> col0 = simdpp::make_float(0.0f, 0.0f, 0.0f, 0.0f);  // {0.f, 0.f, 0.f, 0.f};
+  simdpp::float32<4> col1 = simdpp::neg(Dy_12_23_31*blockSizeF_4v);      // {0.f, - Dy12*blockSizeF, Dx12*blockSizeF, Dx12*blockSizeF - Dy12*blockSizeF};
+  simdpp::float32<4> col2 = Dx_12_23_31*blockSizeF_4v;                   // {0.f, - Dy23*blockSizeF, Dx23*blockSizeF, Dx23*blockSizeF - Dy23*blockSizeF};
+  simdpp::float32<4> col3 = col1 + col2;                                 // {0.f, - Dy31*blockSizeF, Dx31*blockSizeF, Dx31*blockSizeF - Dy31*blockSizeF};
   simdpp::transpose4(col0, col1, col2, col3);
 
   //
