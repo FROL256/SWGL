@@ -480,4 +480,9 @@ void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, cons
       break;
   };
 
+  // test splat for different vector size --> (!!!) this does not works !!!! FUCK!
+  //
+  //const simdpp::float32<4> from = simdpp::make_float(1,2,3,4);
+  //const simdpp::float32<8> to   = simdpp::splat<0>(from);
+
 }
