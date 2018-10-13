@@ -27,19 +27,19 @@ struct HWImpl_SSE1
       psoId      = -1;
     }
 
-    __m128 v1;
-    __m128 v2;
-    __m128 v3;
-    
-    __m128 c1;
-    __m128 c2;
-    __m128 c3;
-    
-    __m128 t1;
-    __m128 t2;
-    __m128 t3;
+    vfloat4 v1;
+    vfloat4 v2;
+    vfloat4 v3;
 
-    __m128 tex_txwh;
+    vfloat4 c1;
+    vfloat4 c2;
+    vfloat4 c3;
+
+    vfloat4 t1;
+    vfloat4 t2;
+    vfloat4 t3;
+
+    vfloat4 tex_txwh;
     
     int bb_iminX;
     int bb_imaxX;

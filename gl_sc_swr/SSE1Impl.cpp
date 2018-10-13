@@ -19,22 +19,21 @@ void HWImpl_SSE1::memset32(int32_t* a_data, int32_t a_val, int32_t numElements)
 
   if ((numElements % 32 == 0) && (ip%16 == 0))
   {
-    const __m128i val = _mm_set_epi32(a_val, a_val, a_val, a_val);
-    //const __m128i val = _mm_set_epi32(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
+    const vint4 val = splat_1to4(a_val);
 
-    __m128i* color128  = (__m128i*)(a_data);
-    const int size     = numElements/4;
+    vint4* color128  = (vint4*)(a_data);
+    const int size   = numElements/4;
 
     for (int i = 0; i < size; i += 8)
     {
-      _mm_stream_si128(color128 + i + 0, val); // _mm_store_si128
-      _mm_stream_si128(color128 + i + 1, val);
-      _mm_stream_si128(color128 + i + 2, val);
-      _mm_stream_si128(color128 + i + 3, val);
-      _mm_stream_si128(color128 + i + 4, val);
-      _mm_stream_si128(color128 + i + 5, val);
-      _mm_stream_si128(color128 + i + 6, val);
-      _mm_stream_si128(color128 + i + 7, val);
+      stream(color128 + i + 0, val);
+      stream(color128 + i + 1, val);
+      stream(color128 + i + 2, val);
+      stream(color128 + i + 3, val);
+      stream(color128 + i + 4, val);
+      stream(color128 + i + 5, val);
+      stream(color128 + i + 6, val);
+      stream(color128 + i + 7, val);
     }
   }
   else
@@ -51,82 +50,40 @@ bool HWImpl_SSE1::AABBTriangleOverlap(const TriangleType& a_tri, const int tileM
   const bool overlapBoxBox = IntersectBoxBox(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
                                              int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));
 
-  const __m128 xx0xx1yy0yy1 = _mm_cvtepi32_ps(_mm_set_epi32(tileMaxY, tileMinY, tileMaxX, tileMinX));
-
-  // const __m128 v2xv3xX = _mm_shuffle_ps(a_tri.v2, a_tri.v3, _MM_SHUFFLE(0, 0, 0, 0));
-  // const __m128 v2v3xxX = _mm_shuffle_ps(v2xv3xX, v2xv3xX,   _MM_SHUFFLE(0, 0, 2, 0));
-  // const __m128 v1v3v2X = _mm_shuffle_ps(v2v3xxX, a_tri.v1,  _MM_SHUFFLE(0, 0, 1, 0));
-  // const __m128 v1v2v3X  = _mm_shuffle_ps(v1v3v2X, v1v3v2X,  _MM_SHUFFLE(0, 2, 1, 0));
-
-  // #TODO: implement this crap
-
   return overlapBoxBox;
 }
 
-static const __m128 const_255_inv   = _mm_set_ps(1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f);
-static const __m128 const_256       = _mm_set_ps(256.0f, 256.0f, 256.0f, 256.0f);
-static const __m128 const_255       = _mm_set_ps(255.0f, 255.0f, 255.0f, 255.0f);
-static const __m128 const_2222      = _mm_set_ps(2.0f, 2.0f, 2.0f, 2.0f);
-static const __m128 const_1111      = _mm_set_ps(1.0f, 1.0f, 1.0f, 1.0f);
-static const __m128 const_0000      = _mm_set_ps(0.0f, 0.0f, 0.0f, 0.0f);
-static const __m128 const_half_one  = _mm_set_ps(0.5f, 0.5f, 0.5f, 0.5f);
-static const __m128 g_epsE3         = _mm_set_ps(-10000000.0f, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON);
+static const vfloat4 const_255_inv   = {1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f};
+static const vfloat4 const_256       = {256.0f, 256.0f, 256.0f, 256.0f};
+static const vfloat4 const_2222      = {2.0f, 2.0f, 2.0f, 2.0f};
+static const vfloat4 const_1111      = {1.0f, 1.0f, 1.0f, 1.0f};
+static const vfloat4 const_0000      = {0.0f, 0.0f, 0.0f, 0.0f};
+static const vfloat4 const_half_one  = {0.5f, 0.5f, 0.5f, 0.5f};
+static const vfloat4 g_epsE3         = {HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, -10000000.0f};
 
-static const __m128i const_maskBGRA = _mm_set_epi32(0xFF000000, 0x000000FF, 0x0000FF00, 0x00FF0000);
-static const __m128i const_shftBGRA = _mm_set_epi32(24, 0, 8, 16);
-static const __m128i const_maskW    = _mm_set_epi32(0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000);
-static const __m128i const_maskXYZ  = _mm_set_epi32(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
+static const vint4 const_maskXYZ     = make_vint4(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000);
 
-inline static __m128 setWtoOne(__m128 a_rhs)
+inline static vfloat4 setWtoOne(vfloat4 a_rhs)
 {
-  return _mm_or_ps(
-          _mm_and_ps(a_rhs,      _mm_castsi128_ps(const_maskXYZ)),
-          _mm_and_ps(const_1111, _mm_castsi128_ps(const_maskW))
-         );
+  return blend(a_rhs, const_1111, const_maskXYZ);
 }
 
-inline static __m128 Uint32_BGRAToRealColor_SSE(int* ptr, int offset)
+static inline vfloat4 mul_matrix_vector(const vfloat4 cols[4], const vfloat4 v)
 {
-  //const __m128  data     = _mm_load_ss((const float*)(ptr + offset));
-  //const __m128i pixeliSS = _mm_castps_si128(_mm_shuffle_ps(data, data, _MM_SHUFFLE(0, 0, 0, 0)));
+  const vfloat4 prod1 = splat_0(v)*cols[0];
+  const vfloat4 prod2 = splat_1(v)*cols[1];
+  const vfloat4 prod3 = splat_2(v)*cols[2];
+  const vfloat4 prod4 = splat_3(v)*cols[3];
 
-  const int packedColor = ptr[offset];
-  const int red   = (packedColor & 0x00FF0000) >> 16;
-  const int green = (packedColor & 0x0000FF00) >> 8;
-  const int blue  = (packedColor & 0x000000FF) >> 0;
-  const int alpha = (packedColor & 0xFF000000) >> 24;
-
-  return _mm_mul_ps(_mm_cvtepi32_ps(_mm_set_epi32(alpha, red, green, blue)), const_255_inv);
+  return ((prod1 + prod2) + (prod3 + prod4));
 }
 
-inline static int RealColorToUint32_BGRA_SSE(const __m128 rel_col)
-{
-  const __m128i rgba = _mm_cvtps_epi32(_mm_mul_ps(rel_col, const_255));
-  const __m128i out  = _mm_packus_epi32(rgba, _mm_setzero_si128());
-  const __m128i out2 = _mm_packus_epi16(out,  _mm_setzero_si128());
-
-  return _mm_cvtsi128_si32(out2);
-}
-
-static inline __m128 mul_sse(const __m128 cols[4], const __m128 v)
-{
-  const __m128 u1    = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
-  const __m128 u2    = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
-  const __m128 u3    = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
-  const __m128 u4    = _mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 3, 3, 3));
-
-  const __m128 prod1 = _mm_mul_ps(u1, cols[0]);
-  const __m128 prod2 = _mm_mul_ps(u2, cols[1]);
-  const __m128 prod3 = _mm_mul_ps(u3, cols[2]);
-  const __m128 prod4 = _mm_mul_ps(u4, cols[3]);
-
-  return _mm_add_ps(_mm_add_ps(prod1, prod2), _mm_add_ps(prod3, prod4));
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 static inline __m128  swglVertexShaderTransformSSE(const __m128 worlViewProjCols[4], __m128 a_pos) // pre (pBatch != nullptr)
 {
-  const __m128 cs   = mul_sse(worlViewProjCols, a_pos);
+  const __m128 cs   = mul_matrix_vector(worlViewProjCols, a_pos);
 
   const __m128 w    = _mm_shuffle_ps(cs, cs, _MM_SHUFFLE(3, 3, 3, 3));
   const __m128 invW = _mm_rcp_ps(w);
@@ -382,7 +339,7 @@ struct Colored2D
     const __m128 cc2 = _mm_mul_ps(tri.c3, _mm_shuffle_ps(w, w, _MM_SHUFFLE(1, 1, 1, 1)));
     const __m128 cc3 = _mm_mul_ps(tri.c2, _mm_shuffle_ps(w, w, _MM_SHUFFLE(2, 2, 2, 2)));
 
-    return _mm_add_ps(cc1, _mm_add_ps(cc2, cc3));  // RealColorToUint32_BGRA_SSE(clr);
+    return _mm_add_ps(cc1, _mm_add_ps(cc2, cc3));  // RealColorToUint32_BGRA_SIMD(clr);
   }
 
 };
@@ -403,7 +360,7 @@ struct Colored3D
     clr = _mm_mul_ps(clr, z);
   #endif
 
-    return clr; // RealColorToUint32_BGRA_SSE(clr);
+    return clr; // RealColorToUint32_BGRA_SIMD(clr);
   }
 
 };
@@ -517,7 +474,7 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
       if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
       {
         const __m128 w = _mm_mul_ps(triAreaInvV, Cx);
-        colorBuffer[x] = RealColorToUint32_BGRA_SSE(ROP::DrawPixel(tri, w));
+        colorBuffer[x] = RealColorToUint32_BGRA_SIMD(ROP::DrawPixel(tri, w));
       }
 
       Cx = _mm_sub_ps(Cx, vDy);
@@ -575,6 +532,9 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   {
     __m128 Cx = Cy;
 
+    //if(y != maxy)
+    //  _mm_prefetch (zbuff + offset + frameBuf->pitch, _MM_HINT_T0);
+
     for (int x = minx; x <= maxx; x++)
     {
       if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
@@ -585,7 +545,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 
         if (_mm_movemask_ps(_mm_cmpgt_ss(zInvV, zBuffVal)) & 1)
         {
-          cbuff[offset + x] = RealColorToUint32_BGRA_SSE(ROP::DrawPixel(tri, w, zInvV));
+          cbuff[offset + x] = RealColorToUint32_BGRA_SIMD(ROP::DrawPixel(tri, w, zInvV));
           _mm_store_ss(zbuff + offset + x, zInvV);
         }
 

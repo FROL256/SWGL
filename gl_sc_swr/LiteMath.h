@@ -19,10 +19,12 @@
 #undef max
 #endif
 
+#ifndef ALIGNED
 #ifdef WIN32
   #define ALIGNED(x) __declspec(align(x))
 #else
   #define ALIGNED(x) __attribute__ ((aligned (x)))
+#endif
 #endif
 
 struct int2

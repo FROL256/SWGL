@@ -16,3 +16,6 @@
 #endif
 
 #define FB_BILLET_SIZE 8
+
+#include "vfloat4.h"
+#include "vfloat8.h"

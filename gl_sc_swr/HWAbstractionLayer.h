@@ -15,12 +15,12 @@
 
 //@select current implementation here via typedef assigment :)
 //typedef HWImplementationPureCpp HWImpl;
-//typedef HWImpl_SSE1 HWImpl;
+typedef HWImpl_SSE1 HWImpl;
 //typedef HWImplSimdCpp1 HWImpl;
 
 //typedef HWImplBlock2x2 HWImpl;
 //typedef HWImplBlock4x4 HWImpl;
-typedef HWImplBlockLine4x4 HWImpl;
+//typedef HWImplBlockLine4x4 HWImpl;
 
 
 using Triangle = HWImpl::TriangleType;

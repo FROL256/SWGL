@@ -462,5 +462,6 @@ void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, cons
   //
   //const simdpp::float32<4> from = simdpp::make_float(1,2,3,4);
   //const simdpp::float32<8> to   = simdpp::splat<0>(from);
+  //const simdpp::float32<4> test = {1.0f, 2.0f, 3.0f, 4.0f};
 
 }
