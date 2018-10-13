@@ -414,39 +414,9 @@ using FillColor_1x8 = VROP<8, TriangleLocal>::FillColor;
 using Colored2D_1x8 = VROP<8, TriangleLocal>::Colored2D;
 using Colored3D_1x8 = VROP<8, TriangleLocal>::Colored3D;
 
-struct FillColor_S
-{
-  inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234)
-  {
-    return simdpp::load(&tri.c1);
-  }
-};
-
-struct Colored2D_S
-{
-  inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234)
-  {
-    const simdpp::float32<4> tv1 = simdpp::load(&tri.c1);
-    const simdpp::float32<4> tv2 = simdpp::load(&tri.c2);
-    const simdpp::float32<4> tv3 = simdpp::load(&tri.c3);
-    return tv1*simdpp::splat<0>(w1234) + tv2*simdpp::splat<2>(w1234) + tv3*simdpp::splat<1>(w1234);
-  }
-};
-
-
-struct Colored3D_S
-{
-  inline static simdpp::float32<4> DrawPixel(const TriangleLocal& tri, const simdpp::float32<4>& w1234, const simdpp::float32<4>& zInv)
-  {
-    const auto z = simdpp::rcp_e(zInv);
-    const simdpp::float32<4> tv1 = simdpp::load(&tri.c1);
-    const simdpp::float32<4> tv2 = simdpp::load(&tri.c2);
-    const simdpp::float32<4> tv3 = simdpp::load(&tri.c3);
-    return ( tv1*simdpp::splat<0>(w1234) + tv2*simdpp::splat<2>(w1234) + tv3*simdpp::splat<1>(w1234) )*z;
-  }
-};
-
-
+using FillColor_S   = SROP<TriangleLocal>::FillColor;
+using Colored2D_S   = SROP<TriangleLocal>::Colored2D;
+using Colored3D_S   = SROP<TriangleLocal>::Colored3D;
 
 
 void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,

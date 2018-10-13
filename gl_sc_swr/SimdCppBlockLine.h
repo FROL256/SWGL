@@ -29,14 +29,6 @@ inline simdpp::float32<8> PixOffsetX<8>()
 }
 
 
-inline static unsigned int RealColorToUint32_BGRA_SIMD(const simdpp::float32<4>& real_color)
-{
-  static const simdpp::float32<4> const_255 = simdpp::make_float(255.0f);
-  static const simdpp::uint32<4>  shiftmask = simdpp::make_int(16,8,0,24);
-  const simdpp::uint32<4>         rgbai     = simdpp::to_int32(real_color*const_255);
-  return simdpp::reduce_or(simdpp::shift_l(rgbai, shiftmask)); // return blue | (green << 8) | (red << 16) | (alpha << 24);
-}
-
 template<int size>
 static inline void Splat4XYZ(const simdpp::float32<4> in_val,
                             simdpp::float32<size>& out_X, simdpp::float32<size>& out_Y, simdpp::float32<size>& out_Z)

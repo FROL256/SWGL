@@ -118,7 +118,7 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
 
     if (mask & GL_DEPTH_BUFFER_BIT)
     {
-      const int size = a_pContext->m_width * a_pContext->m_height;
+      const int size  = a_pContext->m_width * a_pContext->m_height;
       const float val = 1.0f - a_pContext->input.clearDepth;
 
       for (int i = 0; i < size; i++)

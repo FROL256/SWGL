@@ -8,6 +8,13 @@
 #define  	SIMDPP_ARCH_X86_AVX
 #include "../simdpp/simd.h"
 
+inline static unsigned int RealColorToUint32_BGRA_SIMD(const simdpp::float32<4>& real_color)
+{
+  static const simdpp::float32<4> const_255 = simdpp::make_float(255.0f);
+  static const simdpp::uint32<4>  shiftmask = simdpp::make_int(16,8,0,24);
+  const simdpp::uint32<4>         rgbai     = simdpp::to_int32(real_color*const_255);
+  return simdpp::reduce_or(simdpp::shift_l(rgbai, shiftmask)); // return blue | (green << 8) | (red << 16) | (alpha << 24);
+}
 
 template<int DIM, typename TriangleType>
 struct VROP                  // Vectorizeable Raster OPerations
@@ -128,6 +135,45 @@ struct VROP                  // Vectorizeable Raster OPerations
   };
 
 };
+
+
+template<typename TriangleType>
+struct SROP
+{
+  struct FillColor
+  {
+    inline static simdpp::float32<4> DrawPixel(const TriangleType& tri, const simdpp::float32<4>& w1234)
+    {
+      return simdpp::load(&tri.c1);
+    }
+  };
+
+  struct Colored2D
+  {
+    inline static simdpp::float32<4> DrawPixel(const TriangleType& tri, const simdpp::float32<4>& w1234)
+    {
+      const simdpp::float32<4> tv1 = simdpp::load(&tri.c1);
+      const simdpp::float32<4> tv2 = simdpp::load(&tri.c2);
+      const simdpp::float32<4> tv3 = simdpp::load(&tri.c3);
+      return tv1*simdpp::splat<0>(w1234) + tv2*simdpp::splat<2>(w1234) + tv3*simdpp::splat<1>(w1234);
+    }
+  };
+
+  struct Colored3D
+  {
+    inline static simdpp::float32<4> DrawPixel(const TriangleType& tri, const simdpp::float32<4>& w1234, const simdpp::float32<4>& zInv)
+    {
+      const auto z = simdpp::rcp_e(zInv);
+      const simdpp::float32<4> tv1 = simdpp::load(&tri.c1);
+      const simdpp::float32<4> tv2 = simdpp::load(&tri.c2);
+      const simdpp::float32<4> tv3 = simdpp::load(&tri.c3);
+      return ( tv1*simdpp::splat<0>(w1234) + tv2*simdpp::splat<2>(w1234) + tv3*simdpp::splat<1>(w1234) )*z;
+    }
+  };
+
+};
+
+
 
 
 #endif //TEST_GL_TOP_RASTEROPERATIONS_H
