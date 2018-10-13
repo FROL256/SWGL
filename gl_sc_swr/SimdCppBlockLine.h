@@ -305,16 +305,40 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
             const simdpp::float32<lineSize> pixOffsY = simdpp::to_float32(((simdpp::int32<lineSize>)simdpp::splat(iy)));
             const simdpp::float32<lineSize> pixOffsX = PixOffsetX<lineSize>();
 
-            simdpp::float32<lineSize> Cx1, Cx2, Cx3;
-            Splat4XYZ<lineSize>(Cx_abc, Cx1, Cx2, Cx3);
-
             const int offset = frameBuf->pitch * y1 + bx;
             const simdpp::float32<lineSize> zOld = simdpp::load_u(zbuff + offset);
 
-            const simdpp::float32<lineSize> w1   = areaInvV*(Cx1 + Dx12v*pixOffsY - Dy12v*pixOffsX );
-            const simdpp::float32<lineSize> w2   = areaInvV*(Cx2 + Dx23v*pixOffsY - Dy23v*pixOffsX );
-            const simdpp::float32<lineSize> w3   = areaInvV*(Cx3 + Dx31v*pixOffsY - Dy31v*pixOffsX );
+            simdpp::float32<lineSize> Cx1, Cx2, Cx3;
+            {
+              Splat4XYZ<lineSize>(Cx_abc, Cx1, Cx2, Cx3);
+              Cx1 = Cx1 + Dx12v * pixOffsY - Dy12v * pixOffsX;
+              Cx2 = Cx2 + Dx23v * pixOffsY - Dy23v * pixOffsX;
+              Cx3 = Cx3 + Dx31v * pixOffsY - Dy31v * pixOffsX;
+            }
+
+            const simdpp::float32<lineSize> w1   = areaInvV*Cx1;
+            const simdpp::float32<lineSize> w2   = areaInvV*Cx2;
+            const simdpp::float32<lineSize> w3   = areaInvV*Cx3;
             const simdpp::float32<lineSize> zInv = tri_v1_z*w1 + tri_v2_z*w3 + tri_v3_z*w2;
+
+            //const auto hsTest_v4u = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(
+            //    ((Cx1 > hs_eps_v) & (Cx2 > hs_eps_v) & (Cx3 > hs_eps_v)).eval().unmask()
+            //);
+            //
+            //SIMDPP_ALIGN(16) int hsTestA[4];
+            //simdpp::store(hsTestA, hsTest_v4u);
+
+            //const auto test1_mask = (zInv > zOld);
+            //const auto test2_mask = (Cx1 > hs_eps_v);
+            //const auto test3_mask = (Cx2 > hs_eps_v);
+            //const auto test4_mask = (Cx3 > hs_eps_v);
+            //const simdpp::uint32<lineSize> test1 = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(test1_mask.eval().unmask());
+            //const simdpp::uint32<lineSize> test2 = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(test2_mask.eval().unmask());
+            //const simdpp::uint32<lineSize> test3 = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(test3_mask.eval().unmask());
+            //const simdpp::uint32<lineSize> test4 = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(test4_mask.eval().unmask());
+            //
+            //const auto zTest_u = (test1 & test2) & (test3 & test4);
+            //const auto zTest   = simdpp::to_mask(zTest_u);
 
             const auto zTest   = (zInv > zOld);
             const auto zTest_u = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(zTest.eval().unmask());
@@ -347,11 +371,10 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
           simdpp::float32<4> Cx_123 = Cy_123 + Cx_abc;
           const int offsetY         = frameBuf->pitch * y1;
 
-          simdpp::prefetch_read(zbuff + frameBuf->pitch * (y1+0) + bx);
+          simdpp::prefetch_read(zbuff + offsetY + bx);
           if(y1+1 <= maxy2 && y1+1 != lineSize)
             simdpp::prefetch_read(zbuff + frameBuf->pitch * (y1+1) + bx);
 
-          #pragma unroll (lineSize)
           for (int ix = 0; ix < lineSize; ix++)
           {
             const auto vInside_123 = simdpp::bit_cast< simdpp::uint32<4>, simdpp::float32<4> >(
