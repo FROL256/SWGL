@@ -323,6 +323,9 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
             const simdpp::float32<lineSize> w3   = areaInvV*Cx3;
             const simdpp::float32<lineSize> zInv = tri_v1_z*w1 + tri_v2_z*w3 + tri_v3_z*w2;
 
+            // #TODO: try half space test with scalar code and then loadt result to vector;
+            // #TODO: we need to understand if this is a reason for cracks ...
+
             //const auto hsTest_v4u = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(
             //    ((Cx1 > hs_eps_v) & (Cx2 > hs_eps_v) & (Cx3 > hs_eps_v)).eval().unmask()
             //);

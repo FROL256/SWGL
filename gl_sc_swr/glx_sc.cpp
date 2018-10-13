@@ -149,13 +149,7 @@ void SWGL_Context::CopyToScreeen()
       int offset1 = (m_height - y - 1) * pitch;
 
       for (int x = 0; x < m_width; x++)
-      {
-        int oldPx = m_pixels2[offset1 + x];
-        // int red   = (oldPx & 0x000000FF);
-        // int green = (oldPx & 0x0000FF00) >> 8;
-        // int blue  = (oldPx & 0x00FF0000) >> 16;
-        m_pixels[offset0 + x] = oldPx; // (blue << 16) | (green << 8) | (red);
-      }
+        m_pixels[offset0 + x] = m_pixels2[offset1 + x];
     }
   }
 

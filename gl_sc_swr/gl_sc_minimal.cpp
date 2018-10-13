@@ -95,7 +95,7 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
 
   if((mask & GL_COLOR_BUFFER_BIT) != 0 && (mask & GL_DEPTH_BUFFER_BIT) != 0)
   {
-    const int size     = a_pContext->m_width*a_pContext->m_height;
+    const int size     = (a_pContext->m_width + FB_BILLET_SIZE)*a_pContext->m_height;
     const uint32_t val = a_pContext->input.clearColor1u;
     const float vald   = 1.0f - a_pContext->input.clearDepth;
 

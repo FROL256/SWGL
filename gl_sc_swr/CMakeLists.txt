@@ -3,9 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 project(swgl)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
 
-#set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
@@ -38,7 +37,7 @@ set(SOURCE_LIB
         SSE1Impl.h
         SWGL_TiledFrameBuffer.h
         TimerLinux.cpp
-        RasterOperations.h PureCppBlock2x2.h PureCppBlock2x2.cpp PureCppBlock.h SimdCppBlockLine.h)
+        RasterOperations.h PureCppBlock2x2.h PureCppBlock2x2.cpp PureCppBlock.h SimdCppBlockLine.h SimdCpp1.h SimdCpp1.cpp)
 
 include_directories("..")
 
