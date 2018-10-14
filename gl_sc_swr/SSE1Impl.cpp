@@ -9,9 +9,9 @@
 #undef max
 #endif
 
-// #NOTE: _mm_maskmoveu_si128
-
 using TriangleLocal = HWImpl_SSE1::TriangleType;
+
+using namespace cvex;
 
 void HWImpl_SSE1::memset32(int32_t* a_data, int32_t a_val, int32_t numElements)
 {
@@ -80,55 +80,58 @@ static inline vfloat4 mul_matrix_vector(const vfloat4 cols[4], const vfloat4 v)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-static inline __m128  swglVertexShaderTransformSSE(const __m128 worlViewProjCols[4], __m128 a_pos) // pre (pBatch != nullptr)
+static inline vfloat4  swglVertexShaderTransformSSE(const vfloat4 worlViewProjCols[4], vfloat4 a_pos) // pre (pBatch != nullptr)
 {
-  const __m128 cs   = mul_matrix_vector(worlViewProjCols, a_pos);
+  const vfloat4 cs   = mul_matrix_vector(worlViewProjCols, a_pos);
 
-  const __m128 w    = _mm_shuffle_ps(cs, cs, _MM_SHUFFLE(3, 3, 3, 3));
-  const __m128 invW = _mm_rcp_ps(w);
+  const vfloat4 w    = splat_3(cs);
+  const vfloat4 invW = rcp_e(w);
 
-  const __m128 w2   = _mm_mul_ss(w, invW);                              // [1.0f, w, w, w]
-  const __m128 cs1  = _mm_shuffle_ps(cs, w2, _MM_SHUFFLE(1, 0, 1, 0));  // [cs.x, cs.y, 1.0f, w]
+  const vfloat4 w2   = w*invW; // [1.0f, w, w, w]
+  const vfloat4 cs1  = _mm_shuffle_ps(cs, w2, _MM_SHUFFLE(1, 0, 1, 0));  // [cs.x, cs.y, 1.0f, w] ////////////// #TODO: change implementation
 
-  return _mm_mul_ps(cs1, invW);  // float4(clipSpace.x*invW, clipSpace.y*invW, invW, 1.0f); <-- (clipSpace.x, clipSpace.y, 1.0f, w)
+  return cs1*invW;  // float4(clipSpace.x*invW, clipSpace.y*invW, invW, 1.0f); <-- (clipSpace.x, clipSpace.y, 1.0f, w)
 }
 
 
-static inline __m128 swglClipSpaceToScreenSpaceTransformSSE(__m128 a_pos, const __m128 viewportf) // pre (g_pContext != nullptr)
+static inline vfloat4 swglClipSpaceToScreenSpaceTransformSSE(const vfloat4 a_pos, const vfloat4 viewportf) // pre (g_pContext != nullptr)
 {
-  const __m128 xyuu = _mm_add_ps(_mm_mul_ps(a_pos, const_half_one), const_half_one);
-  const __m128 vpzw = _mm_shuffle_ps(viewportf, viewportf, _MM_SHUFFLE(3, 2, 3, 2));
-  const __m128 ss   = _mm_add_ps(_mm_sub_ps(viewportf, const_half_one), _mm_mul_ps(xyuu, vpzw));
+  const vfloat4 xyuu = a_pos*const_half_one + const_half_one;
+  const vfloat4 vpzw = _mm_shuffle_ps(viewportf, viewportf, _MM_SHUFFLE(3, 2, 3, 2));              ////////////// #TODO: change implementation
+  const vfloat4 ss   = viewportf - const_half_one + xyuu*vpzw;
 
-  return _mm_shuffle_ps(ss, a_pos, _MM_SHUFFLE(3, 2, 1, 0));
+  return _mm_shuffle_ps(ss, a_pos, _MM_SHUFFLE(3, 2, 1, 0));                                       ////////////// #TODO: change implementation
 }
 
 
 void HWImpl_SSE1::VertexShader(const float* v_in4f, float* v_out4f, int a_numVert,
                                const float viewportData[4], const float a_worldViewProjMatrix[16])
 {
-  _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);
+  set_ftz();
 
-  const float4   viewportf(viewportData[0], viewportData[1], viewportData[2], viewportData[3]);
   const float4x4 worldViewProjMatrix(a_worldViewProjMatrix);
-
   const auto& m = worldViewProjMatrix;
 
-  __m128  worlViewProjCols[4];
-  for (int col = 0; col < 4; col++)
-    worlViewProjCols[col] = _mm_set_ps(m.M(col, 3), m.M(col, 2), m.M(col, 1), m.M(col, 0));
+  vfloat4  worlViewProjCols[4] = { load_u(&a_worldViewProjMatrix[0]),
+                                   load_u(&a_worldViewProjMatrix[4]),
+                                   load_u(&a_worldViewProjMatrix[8]),
+                                   load_u(&a_worldViewProjMatrix[12])};
 
-  const __m128 viewportv = _mm_set_ps(viewportf.w, viewportf.z, viewportf.y, viewportf.x);
+  transpose4(worlViewProjCols[0],
+             worlViewProjCols[1],
+             worlViewProjCols[2],
+             worlViewProjCols[3]);
+
+  const vfloat4 viewportv = load_u(viewportData); //_mm_set_ps(viewportf.w, viewportf.z, viewportf.y, viewportf.x);
 
   for (int i = 0; i < a_numVert; i++)
   {
-    const __m128 oldVal = _mm_load_ps(v_in4f + i * 4);
+    const vfloat4 oldVal = load(v_in4f + i * 4);
 
-    const __m128 vClipSpace   = swglVertexShaderTransformSSE(worlViewProjCols, oldVal);
-    const __m128 vScreenSpace = swglClipSpaceToScreenSpaceTransformSSE(vClipSpace, viewportv);
+    const vfloat4 vClipSpace   = swglVertexShaderTransformSSE(worlViewProjCols, oldVal);
+    const vfloat4 vScreenSpace = swglClipSpaceToScreenSpaceTransformSSE(vClipSpace, viewportv);
 
-    _mm_store_ps(v_out4f + i * 4, vScreenSpace);
+    store(v_out4f + i * 4, vScreenSpace);
   }
 
 }
@@ -138,26 +141,20 @@ void HWImpl_SSE1::VertexShader(const float* v_in4f, float* v_out4f, int a_numVer
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static inline __m128 colorSwap(const __m128 a_col)
+static inline vfloat4 colorSwap(const vfloat4 a_col)
 {
-  return _mm_shuffle_ps(a_col, a_col, _MM_SHUFFLE(3, 0, 1, 2));
+  return _mm_shuffle_ps(a_col, a_col, _MM_SHUFFLE(3, 0, 1, 2));                                         ////////////// #TODO: change implementation
 }
 
-static inline __m128 edgeFunction2(__m128 a, __m128 b, __m128 c) // actuattly just a mixed product ... :)
+static inline vfloat4 edgeFunction2(vfloat4 a, vfloat4 b, vfloat4 c) // actuattly just a mixed product ... :)
 {
-  __m128 ay = _mm_shuffle_ps(a, a, _MM_SHUFFLE(1, 1, 1, 1));
-  __m128 by = _mm_shuffle_ps(b, b, _MM_SHUFFLE(1, 1, 1, 1));
-  __m128 cy = _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1));
+  const vfloat4 ay = splat_1(a);
+  const vfloat4 by = splat_1(b);
+  const vfloat4 cy = splat_1(c);
 
-   return _mm_sub_ss(_mm_mul_ss(_mm_sub_ss(c,a),   _mm_sub_ss(by,ay)),
-                     _mm_mul_ss(_mm_sub_ss(cy,ay), _mm_sub_ss(b,a)));
+  return sub_s(mul_s(c-a,   by-ay),
+               mul_s(cy-ay, b-a));
 }
-
-// static inline __m128 abs_ps(__m128 x)
-// {
-//   static const __m128 sign_mask = _mm_set1_ps(-0.f); // -0.f = 1 << 31
-//   return _mm_andnot_ps(sign_mask, x);
-// }
 
 
 void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, int i1, int i2, int i3,
@@ -167,41 +164,32 @@ void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBa
   const float* vcol = (const float*)pBatch->vertColor.data();
   const float* vtex = (const float*)pBatch->vertTexCoord.data();
 
-  const __m128 v1  = _mm_load_ps(vpos + i1 * 4);
-  const __m128 v2  = _mm_load_ps(vpos + i2 * 4);
-  const __m128 v3  = _mm_load_ps(vpos + i3 * 4);
-                   
-  const __m128 c1  = colorSwap(_mm_load_ps(vcol + i1 * 4));
-  const __m128 c2  = colorSwap(_mm_load_ps(vcol + i2 * 4));
-  const __m128 c3  = colorSwap(_mm_load_ps(vcol + i3 * 4));
-
-  const __m128 tx1 = _mm_loadu_ps(vtex + i1 * 2);
-  const __m128 tx2 = _mm_loadu_ps(vtex + i2 * 2);
-  const __m128 tx3 = _mm_loadu_ps(vtex + i3 * 2);
+  const vfloat4 v1  = load(vpos + i1 * 4);
+  const vfloat4 v2  = load(vpos + i2 * 4);
+  const vfloat4 v3  = load(vpos + i3 * 4);
 
   t1->v1 = v1;
   t1->v2 = v2;
   t1->v3 = v3;
 
-  t1->c1 = c1;
-  t1->c2 = c2;
-  t1->c3 = c3;
+  const vfloat4 bbMin = min( min(v1,v2), v3);
+  const vfloat4 bbMax = max( max(v1,v2), v3);
 
-  t1->t1 = tx1;
-  t1->t2 = tx2;
-  t1->t3 = tx3;
+  const vint4 bbMinI  = to_vint(bbMin);
+  const vint4 bbMaxI  = to_vint(bbMax);
 
-  const __m128 bbMin   = _mm_min_ps(_mm_min_ps(v1,v2), v3);
-  const __m128 bbMax   = _mm_max_ps(_mm_max_ps(v1,v2), v3);
+  t1->bb_iminX = extract_0(bbMinI);
+  t1->bb_imaxX = extract_0(bbMaxI);
+  t1->bb_iminY = extract_1(bbMinI);
+  t1->bb_imaxY = extract_1(bbMaxI);
 
-  const __m128i bbMinI = _mm_cvtps_epi32(bbMin);
-  const __m128i bbMaxI = _mm_cvtps_epi32(bbMax);
+  vfloat4 c1  = colorSwap(load(vcol + i1 * 4));
+  vfloat4 c2  = colorSwap(load(vcol + i2 * 4));
+  vfloat4 c3  = colorSwap(load(vcol + i3 * 4));
 
-  t1->bb_iminX = _mm_cvtsi128_si32(bbMinI);
-  t1->bb_imaxX = _mm_cvtsi128_si32(bbMaxI);
-
-  t1->bb_iminY = _mm_cvtsi128_si32(_mm_shuffle_epi32(bbMinI, _MM_SHUFFLE(0,0,1,1)));
-  t1->bb_imaxY = _mm_cvtsi128_si32(_mm_shuffle_epi32(bbMaxI, _MM_SHUFFLE(0,0,1,1)));
+  const vfloat4 tx1 = load_u(vtex + i1 * 2);
+  const vfloat4 tx2 = load_u(vtex + i2 * 2);
+  const vfloat4 tx3 = load_u(vtex + i3 * 2);
 
   const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 
@@ -209,26 +197,28 @@ void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBa
   {
     const SWGL_TextureStorage& tex = a_pContext->m_textures[pBatch->state.slot_GL_TEXTURE_2D];
 
+    const vfloat4 vtexwh00 = {(float)tex.w, (float)tex.h, 0.0f, 0.0f};
+
     t1->texS.pitch = tex.pitch;   // tex.w; // !!! this is for textures with billet
     t1->texS.w     = tex.w;       // tex.w; // !!! this is for textures with billet
     t1->texS.h     = tex.h;
     t1->texS.data  = tex.texdata; // &tex.data[0]; // !!! this is for textures with billet
-    t1->tex_txwh   = _mm_set_ps(0, 0, (float)tex.w, (float)tex.h);                           // #TODO: opt float conversion
+    t1->tex_txwh   = vtexwh00;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////// FUCKING FUCK! FUCK LEGACY STATES! FUCK OPENGL!
     if (tex.modulateMode == GL_REPLACE) // don't apply vertex color, just take color from texture
     {
       if (tex.format == GL_RGBA)
       {
-        t1->c1 = const_1111;
-        t1->c2 = const_1111;
-        t1->c3 = const_1111;
+        c1 = const_1111;
+        c2 = const_1111;
+        c3 = const_1111;
       }
       else if (tex.format == GL_ALPHA)
       {
-        t1->c1 = setWtoOne(t1->c1);
-        t1->c2 = setWtoOne(t1->c2);
-        t1->c3 = setWtoOne(t1->c3);
+        c1 = setWtoOne(c1);
+        c2 = setWtoOne(c2);
+        c3 = setWtoOne(c3);
       }
     }
   }
@@ -238,17 +228,27 @@ void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBa
 
   if (pBatch->state.depthTestEnabled)
   {
-    __m128 invZ1 = _mm_shuffle_ps(v1, v1, _MM_SHUFFLE(2, 2, 2, 2)); // _mm_set_ps(t1->v1.z, t1->v1.z, t1->v1.z, t1->v1.z);
-    __m128 invZ2 = _mm_shuffle_ps(v2, v2, _MM_SHUFFLE(2, 2, 2, 2)); // _mm_set_ps(t1->v2.z, t1->v2.z, t1->v2.z, t1->v2.z);
-    __m128 invZ3 = _mm_shuffle_ps(v3, v3, _MM_SHUFFLE(2, 2, 2, 2)); // _mm_set_ps(t1->v3.z, t1->v3.z, t1->v3.z, t1->v3.z);
+    const vfloat4 invZ1 = splat_2(v1);
+    const vfloat4 invZ2 = splat_2(v2);
+    const vfloat4 invZ3 = splat_2(v3);
 
-    t1->c1 = _mm_mul_ps(t1->c1, invZ1);
-    t1->c2 = _mm_mul_ps(t1->c2, invZ2);
-    t1->c3 = _mm_mul_ps(t1->c3, invZ3);
+    t1->c1 = c1*invZ1;
+    t1->c2 = c2*invZ2;
+    t1->c3 = c3*invZ3;
 
-    t1->t1 = _mm_mul_ps(t1->t1, invZ1);
-    t1->t2 = _mm_mul_ps(t1->t2, invZ2);
-    t1->t3 = _mm_mul_ps(t1->t3, invZ3);
+    t1->t1 = tx1*invZ1;
+    t1->t2 = tx2*invZ2;
+    t1->t3 = tx3*invZ3;
+  }
+  else
+  {
+    t1->c1 = c1;
+    t1->c2 = c2;
+    t1->c3 = c3;
+
+    t1->t1 = tx1;
+    t1->t2 = tx2;
+    t1->t3 = tx3;
   }
 
 #endif
@@ -460,7 +460,7 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const __m128 vCy   = _mm_add_ps(vC, _mm_sub_ps(_mm_mul_ps(vDx, vMinY), _mm_mul_ps(vDy, vMinX)));
 
   const __m128 triAreaInv  = _mm_rcp_ss(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
-  const __m128 triAreaInvV = _mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
+  const __m128 triAreaInvV = splat_0(triAreaInv);
 
   __m128 Cy = vCy;
 
@@ -516,7 +516,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   const __m128 vCy   = _mm_add_ps(vC, _mm_sub_ps(_mm_mul_ps(vDx, vMinY), _mm_mul_ps(vDy, vMinX)));
 
   const __m128 triAreaInv  = _mm_rcp_ss(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
-  const __m128 triAreaInvV = _mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
+  const __m128 triAreaInvV = splat_0(triAreaInv); //_mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
 
   const __m128 v1xv2xZ = _mm_shuffle_ps(tri.v1, tri.v2,   _MM_SHUFFLE(2, 2, 2, 2));
   const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));

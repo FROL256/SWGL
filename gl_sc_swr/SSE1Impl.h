@@ -12,6 +12,9 @@
 struct SWGL_Context;
 struct Batch;
 
+using cvex::vfloat4;
+using cvex::vint4;
+
 struct HWImpl_SSE1
 {
   struct ALIGNED(16) TriangleDataSSE
