@@ -260,161 +260,130 @@ void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBa
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-inline __m128 CalcWeights(const __m128 psXY)
-{
-  const __m128 psXYfloor = _mm_floor_ps(psXY); // use this line for if you have SSE4
-  //__m128 psXYfloor = _mm_cvtepi32_ps(_mm_cvtps_epi32(psXY));
-  const __m128 psXYfrac = _mm_sub_ps(psXY, psXYfloor);            // = frac(psXY)
-
-  const __m128 psXYfrac1 = _mm_sub_ps(const_1111, psXYfrac);       // ? ? (1-y) (1-x)
-  const __m128 w_x       = _mm_unpacklo_ps(psXYfrac1, psXYfrac);   // ? ?     x (1-x)
-  const __m128 w_x2      = _mm_movelh_ps(w_x, w_x);                // x (1-x) x (1-x)
-  const __m128 w_y       = _mm_shuffle_ps(psXYfrac1, psXYfrac, _MM_SHUFFLE(1, 1, 1, 1)); // y y (1-y) (1-y)
-
-  return _mm_mul_ps(w_x2, w_y);  // complete weight vector
-}
-
-inline __m128 read_imagef_sse(const int* data, const int w, const int h, const int pitch, const __m128 wh, const __m128 tc)
-{
-  const __m128  ffxy = _mm_min_ps(_mm_max_ps(_mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one), const_0000), _mm_sub_ps(wh, const_1111));
-  //const __m128  ffxy = _mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one);
-  const __m128i iixy = _mm_cvtps_epi32(ffxy);
-
-  int px = _mm_cvtsi128_si32(iixy);
-  int py = _mm_cvtsi128_si32(_mm_shuffle_epi32(iixy, _MM_SHUFFLE(1, 1, 1, 1)));
-
-  const int* p0 = data + px + py * pitch; // pointer to first pixel
-
-  // Load the data (2 pixels in one load)
-  const __m128i p12 = _mm_loadl_epi64((const __m128i*)&p0[0 * pitch]);
-  const __m128i p34 = _mm_loadl_epi64((const __m128i*)&p0[1 * pitch]);
-
-  __m128 weight = CalcWeights(ffxy);
-
-  // convert RGBA RGBA RGBA RGAB to RRRR GGGG BBBB AAAA (AoS to SoA)
-  const __m128i p1234 = _mm_unpacklo_epi8(p12, p34);
-  const __m128i p34xx = _mm_unpackhi_epi64(p1234, _mm_setzero_si128());
-  const __m128i p1234_8bit = _mm_unpacklo_epi8(p1234, p34xx);
-
-  // extend to 16bit 
-  const __m128i pRG = _mm_unpacklo_epi8(p1234_8bit, _mm_setzero_si128());
-  const __m128i pBA = _mm_unpackhi_epi8(p1234_8bit, _mm_setzero_si128());
-
-  // convert weights to integer
-  weight = _mm_mul_ps(weight, const_256);
-  __m128i weighti = _mm_cvtps_epi32(weight); // w4 w3 w2 w1
-  weighti = _mm_packs_epi32(weighti, weighti); // 32->2x16bit
-
-  //outRG = [w1*R1 + w2*R2 | w3*R3 + w4*R4 | w1*G1 + w2*G2 | w3*G3 + w4*G4]
-  const __m128i outRG = _mm_madd_epi16(pRG, weighti);
-  //outBA = [w1*B1 + w2*B2 | w3*B3 + w4*B4 | w1*A1 + w2*A2 | w3*A3 + w4*A4]
-  const __m128i outBA = _mm_madd_epi16(pBA, weighti);
-
-  const __m128i color255  = _mm_srli_epi32(_mm_hadd_epi32(outRG, outBA), 8);
-  const __m128  finColor  = _mm_mul_ps(const_255_inv, _mm_cvtepi32_ps(color255));
-
-  return _mm_shuffle_ps(finColor, finColor, _MM_SHUFFLE(3, 0, 1, 2)); // swap red and blue
-}
-
-
-inline static __m128 wrapTexCoord(const __m128 a_texCoord)
-{
-  const __m128 texCoord2   = _mm_sub_ps(a_texCoord, _mm_floor_ps(a_texCoord));
-  const __m128 a_texCoord3 = _mm_add_ps(texCoord2, const_1111);
-  const __m128 lessMask    = _mm_cmplt_ps(texCoord2, _mm_setzero_ps());
-
-  return _mm_or_ps(_mm_and_ps(lessMask, a_texCoord3), _mm_andnot_ps(lessMask, texCoord2));
-}
-
-inline __m128 tex2D_sse(const TexSampler& sampler, const __m128 texCoord, const __m128 txwh)
-{
-  return read_imagef_sse(sampler.data, sampler.w, sampler.h, sampler.pitch, txwh, wrapTexCoord(texCoord));
-}
+// inline vfloat4 CalcWeights(const vfloat4 psXY)
+// {
+//   const vfloat4 psXYfrac = psXY - cvex::floor(psXY);
+//
+//   const vfloat4 psXYfrac1 = const_1111 - psXYfrac;                                        // ? ? (1-y) (1-x)
+//   const vfloat4 w_x       = _mm_unpacklo_ps(psXYfrac1, psXYfrac);                         // ? ?     x (1-x) //#TODO: change implementation!!!
+//   const vfloat4 w_x2      = _mm_movelh_ps(w_x, w_x);                                      // x (1-x) x (1-x) //#TODO: change implementation!!!
+//   const vfloat4 w_y       = _mm_shuffle_ps(psXYfrac1, psXYfrac, _MM_SHUFFLE(1, 1, 1, 1)); // y y (1-y) (1-y) //#TODO: change implementation!!!
+//
+//   return w_x2*w_y;  // complete weight vector
+// }
+//
+// inline __m128 read_imagef_sse(const int* data, const int w, const int h, const int pitch, const __m128 wh, const __m128 tc)
+// {
+//   const __m128  ffxy = _mm_min_ps(_mm_max_ps(_mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one), const_0000), _mm_sub_ps(wh, const_1111));
+//   //const __m128  ffxy = _mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one);
+//   const __m128i iixy = _mm_cvtps_epi32(ffxy);
+//
+//   int px = _mm_cvtsi128_si32(iixy);
+//   int py = _mm_cvtsi128_si32(_mm_shuffle_epi32(iixy, _MM_SHUFFLE(1, 1, 1, 1)));
+//
+//   const int* p0 = data + px + py * pitch; // pointer to first pixel
+//
+//   // Load the data (2 pixels in one load)
+//   const __m128i p12 = _mm_loadl_epi64((const __m128i*)&p0[0 * pitch]);
+//   const __m128i p34 = _mm_loadl_epi64((const __m128i*)&p0[1 * pitch]);
+//
+//   __m128 weight = CalcWeights(ffxy);
+//
+//   // convert RGBA RGBA RGBA RGAB to RRRR GGGG BBBB AAAA (AoS to SoA)
+//   const __m128i p1234 = _mm_unpacklo_epi8(p12, p34);
+//   const __m128i p34xx = _mm_unpackhi_epi64(p1234, _mm_setzero_si128());
+//   const __m128i p1234_8bit = _mm_unpacklo_epi8(p1234, p34xx);
+//
+//   // extend to 16bit
+//   const __m128i pRG = _mm_unpacklo_epi8(p1234_8bit, _mm_setzero_si128());
+//   const __m128i pBA = _mm_unpackhi_epi8(p1234_8bit, _mm_setzero_si128());
+//
+//   // convert weights to integer
+//   weight = _mm_mul_ps(weight, const_256);
+//   __m128i weighti = _mm_cvtps_epi32(weight); // w4 w3 w2 w1
+//   weighti = _mm_packs_epi32(weighti, weighti); // 32->2x16bit
+//
+//   //outRG = [w1*R1 + w2*R2 | w3*R3 + w4*R4 | w1*G1 + w2*G2 | w3*G3 + w4*G4]
+//   const __m128i outRG = _mm_madd_epi16(pRG, weighti);
+//   //outBA = [w1*B1 + w2*B2 | w3*B3 + w4*B4 | w1*A1 + w2*A2 | w3*A3 + w4*A4]
+//   const __m128i outBA = _mm_madd_epi16(pBA, weighti);
+//
+//   const __m128i color255  = _mm_srli_epi32(_mm_hadd_epi32(outRG, outBA), 8);
+//   const __m128  finColor  = _mm_mul_ps(const_255_inv, _mm_cvtepi32_ps(color255));
+//
+//   return _mm_shuffle_ps(finColor, finColor, _MM_SHUFFLE(3, 0, 1, 2)); // swap red and blue
+// }
+//
+//
+// inline static __m128 wrapTexCoord(const __m128 a_texCoord)
+// {
+//   const __m128 texCoord2   = _mm_sub_ps(a_texCoord, _mm_floor_ps(a_texCoord));
+//   const __m128 a_texCoord3 = _mm_add_ps(texCoord2, const_1111);
+//   const __m128 lessMask    = _mm_cmplt_ps(texCoord2, _mm_setzero_ps());
+//
+//   return _mm_or_ps(_mm_and_ps(lessMask, a_texCoord3), _mm_andnot_ps(lessMask, texCoord2));
+// }
+//
+// inline __m128 tex2D_sse(const TexSampler& sampler, const __m128 texCoord, const __m128 txwh)
+// {
+//   return read_imagef_sse(sampler.data, sampler.w, sampler.h, sampler.pitch, txwh, wrapTexCoord(texCoord));
+// }
 
 struct Colored2D
 {
-  static inline __m128 DrawPixel(const TriangleLocal& tri, const __m128& w)
+  static inline vfloat4 DrawPixel(const TriangleLocal& tri, const vfloat4& w)
   {
-    const __m128 cc1 = _mm_mul_ps(tri.c1, _mm_shuffle_ps(w, w, _MM_SHUFFLE(0, 0, 0, 0)));
-    const __m128 cc2 = _mm_mul_ps(tri.c3, _mm_shuffle_ps(w, w, _MM_SHUFFLE(1, 1, 1, 1)));
-    const __m128 cc3 = _mm_mul_ps(tri.c2, _mm_shuffle_ps(w, w, _MM_SHUFFLE(2, 2, 2, 2)));
-
-    return _mm_add_ps(cc1, _mm_add_ps(cc2, cc3));  // RealColorToUint32_BGRA_SIMD(clr);
+    return tri.c1*splat_0(w) + tri.c3*splat_1(w) + tri.c2*splat_2(w);
   }
 
 };
 
 struct Colored3D
 {
-  static inline __m128 DrawPixel(const TriangleLocal& tri, const __m128& w, const __m128& zInv)
+  static inline vfloat4 DrawPixel(const TriangleLocal& tri, const vfloat4& w, const vfloat4& zInv)
   {
-    const __m128 cc1 = _mm_mul_ps(tri.c1, _mm_shuffle_ps(w, w, _MM_SHUFFLE(0, 0, 0, 0)));
-    const __m128 cc2 = _mm_mul_ps(tri.c3, _mm_shuffle_ps(w, w, _MM_SHUFFLE(1, 1, 1, 1)));
-    const __m128 cc3 = _mm_mul_ps(tri.c2, _mm_shuffle_ps(w, w, _MM_SHUFFLE(2, 2, 2, 2)));
-
-    __m128 clr = _mm_add_ps(cc1, _mm_add_ps(cc2, cc3));
+    vfloat4 clr = tri.c1*splat_0(w) + tri.c3*splat_1(w) + tri.c2*splat_2(w);
 
   #ifdef PERSP_CORRECT
-    const __m128 z1 = _mm_rcp_ss(zInv);
-    const __m128 z = _mm_shuffle_ps(z1, z1, _MM_SHUFFLE(0, 0, 0, 0));
-    clr = _mm_mul_ps(clr, z);
+    const vfloat4 z1 = rcp_s(zInv);
+    const vfloat4 z  = splat_0(z1);
+    clr = clr* z;
   #endif
 
-    return clr; // RealColorToUint32_BGRA_SIMD(clr);
+    return clr;
   }
 
 };
 
 struct Textured3D
 {
-  static inline __m128 DrawPixel(const TriangleLocal& tri, const __m128& w, const __m128& zInv)
+  static inline vfloat4 DrawPixel(const TriangleLocal& tri, const vfloat4& w, const vfloat4& zInv)
   {
-    const __m128 w0 = _mm_shuffle_ps(w, w, _MM_SHUFFLE(0, 0, 0, 0));
-    const __m128 w1 = _mm_shuffle_ps(w, w, _MM_SHUFFLE(1, 1, 1, 1));
-    const __m128 w2 = _mm_shuffle_ps(w, w, _MM_SHUFFLE(2, 2, 2, 2));
+    const vfloat4 w0 = splat_0(w);
+    const vfloat4 w1 = splat_1(w);
+    const vfloat4 w2 = splat_2(w);
 
-    const __m128 cc1 = _mm_mul_ps(tri.c1, w0);
-    const __m128 cc2 = _mm_mul_ps(tri.c3, w1);
-    const __m128 cc3 = _mm_mul_ps(tri.c2, w2);
+    const vfloat4 cc1 = tri.c1*w0;
+    const vfloat4 cc2 = tri.c3*w1;
+    const vfloat4 cc3 = tri.c2*w2;
 
-    __m128 clr = _mm_add_ps(cc1, _mm_add_ps(cc2, cc3));
+    vfloat4 clr = cc1 + cc2 + cc3;
 
-    const __m128 t1 = _mm_mul_ps(tri.t1, w0);
-    const __m128 t2 = _mm_mul_ps(tri.t3, w1);
-    const __m128 t3 = _mm_mul_ps(tri.t2, w2);
-
-    __m128 tc = _mm_add_ps(t1, _mm_add_ps(t2, t3));
+    vfloat4 tc = tri.t1*w0 + tri.t3*w1 + tri.t2*w2;
 
   #ifdef PERSP_CORRECT
-    const __m128 z1 = _mm_rcp_ss(zInv);
-    const __m128 z = _mm_shuffle_ps(z1, z1, _MM_SHUFFLE(0, 0, 0, 0));
-    clr = _mm_mul_ps(clr, z);
-    tc  = _mm_mul_ps(tc, z);
+    const vfloat4 z1 = rcp_s(zInv);
+    const vfloat4 z  = splat_0(z1); // _mm_shuffle_ps(z1, z1, _MM_SHUFFLE(0, 0, 0, 0));
+    clr = clr*z;
+    tc  = tc*z;
   #endif
 
-    const __m128 texColor = tex2D_sse(tri.texS, tc, tri.tex_txwh);
-
-    return _mm_mul_ps(clr, texColor);
+    //const __m128 texColor = tex2D_sse(tri.texS, tc, tri.tex_txwh);
+    const vfloat4 texColor = {1.0f, 1.0f, 1.0f, 1.0f};
+    return clr*texColor;
   }
 
 };
-
-/*
-   const __m128 v2xv3xX = _mm_shuffle_ps(v2, v3, _MM_SHUFFLE(0, 0, 0, 0));
-   const __m128 v2v3xxX = _mm_shuffle_ps(v2xv3xX, v2xv3xX, _MM_SHUFFLE(0, 0, 2, 0));
-   const __m128 v1v3v2X = _mm_shuffle_ps(v2v3xxX, v1, _MM_SHUFFLE(0, 0, 1, 0));      // got _mm_set_ps(0.0f, v1.x, v3.x, v2.x);
-   const __m128 v2v1v3X = _mm_shuffle_ps(v1v3v2X, v1v3v2X, _MM_SHUFFLE(0, 0, 2, 1)); // got _mm_set_ps(0.0f, v1.y, v3.y, v2.y) from _mm_set_ps(0.0f, v1.x, v3.x, v2.x);
-   
-   const __m128 v2xv3xY = _mm_shuffle_ps(v2, v3, _MM_SHUFFLE(1, 1, 1, 1));
-   const __m128 v2v3xxY = _mm_shuffle_ps(v2xv3xY, v2xv3xY, _MM_SHUFFLE(0, 0, 2, 0));
-   const __m128 v1v3v2Y = _mm_shuffle_ps(v2v3xxY, v1, _MM_SHUFFLE(1, 1, 1, 1));      // got _mm_set_ps(0.0f, v1.y, v3.y, v2.y);
-   const __m128 v2v1v3Y = _mm_shuffle_ps(v1v3v2Y, v1v3v2Y, _MM_SHUFFLE(0, 0, 2, 1)); // got _mm_set_ps(0.0f, v2.y, v1.y, v3.y) from _mm_set_ps(0.0f, v2.y, v1.y, v3.y);
-   
-   const __m128 v1xv2xZ = _mm_shuffle_ps(v1, v2, _MM_SHUFFLE(2, 2, 2, 2));
-   const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
-   const __m128 v1v3v2Z = _mm_shuffle_ps(v1v2xxZ, v3, _MM_SHUFFLE(2, 2, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
- 
- */
 
 inline static __m128 GetColX(const __m128 v1, const __m128 v2, const __m128 v3)
 {
@@ -442,45 +411,53 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
+  int*     cbuff = frameBuf->cbuffer;
+  float*   zbuff = frameBuf->zbuffer;
+
+  const vfloat4 vTileMinX = to_vfloat(make_vint4(tileMinX, tileMinX, tileMinX, 0));
+  const vfloat4 vTileMinY = to_vfloat(make_vint4(tileMinY, tileMinY, tileMinY, 0));
+
+  vfloat4 vx = tri.v3;
+  vfloat4 vy = tri.v2;
+  vfloat4 vz = tri.v1;
+  vfloat4 vw = {0.0f,0.0f,0.0f,0.0f};
+  transpose4(vx,vy,vz,vw);
+  vx = vx - vTileMinX;
+  vy = vy - vTileMinX;
+
+  const vfloat4 vMinX = to_vfloat(make_vint4(minx, minx, minx, 0));
+  const vfloat4 vMinY = to_vfloat(make_vint4(miny, miny, miny, 0));
+
+  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1));
+  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1));
+
+  const vfloat4 vC    = vDy*vx - vDx*vy;
+  const vfloat4 vCy   = vC + vDx*vMinY - vDy*vMinX;
+
+  const vfloat4 triAreaInv  = rcp_s(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
+  const vfloat4 triAreaInvV = splat_0(triAreaInv); //_mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
+
   int* colorBuffer = frameBuf->cbuffer + miny * frameBuf->pitch;
 
-  const __m128 vTileMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinX, tileMinX, tileMinX));  
-  const __m128 vTileMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinY, tileMinY, tileMinY)); 
-
-  const __m128 vx = _mm_sub_ps( GetColX(tri.v3, tri.v2, tri.v1), vTileMinX); // same as _mm_sub_ps(_mm_set_ps(0.0f, tri.v1.m128_f32[0], tri.v2.m128_f32[0], tri.v3.m128_f32[0]), vTileMinX);
-  const __m128 vy = _mm_sub_ps( GetColY(tri.v3, tri.v2, tri.v1), vTileMinY); // smae as _mm_sub_ps(_mm_set_ps(0.0f, tri.v1.m128_f32[1], tri.v2.m128_f32[1], tri.v3.m128_f32[1]), vTileMinY);
-
-  const __m128 vMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, minx, minx, minx));                                          
-  const __m128 vMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, miny, miny, miny));                                              
-
-  const __m128 vDx   = _mm_sub_ps(vx, _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1)));
-  const __m128 vDy   = _mm_sub_ps(vy, _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1)));
-
-  const __m128 vC    = _mm_sub_ps(_mm_mul_ps(vDy, vx), _mm_mul_ps(vDx, vy));
-  const __m128 vCy   = _mm_add_ps(vC, _mm_sub_ps(_mm_mul_ps(vDx, vMinY), _mm_mul_ps(vDy, vMinX)));
-
-  const __m128 triAreaInv  = _mm_rcp_ss(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
-  const __m128 triAreaInvV = splat_0(triAreaInv);
-
-  __m128 Cy = vCy;
+  vfloat4 Cy = vCy;
 
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
   {
-    __m128 Cx = Cy;
+    vfloat4 Cx = Cy;
 
     for (int x = minx; x <= maxx; x++)
     {
       if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
       {
-        const __m128 w = _mm_mul_ps(triAreaInvV, Cx);
+        const vfloat4 w = triAreaInvV*Cx;
         colorBuffer[x] = RealColorToUint32_BGRA_SIMD(ROP::DrawPixel(tri, w));
       }
 
-      Cx = _mm_sub_ps(Cx, vDy);
+      Cx = Cx - vDy;
     }
 
-    Cy = _mm_add_ps(Cy, vDx);
+    Cy = Cy + vDx;
 
     colorBuffer += frameBuf->pitch;
   }
@@ -499,38 +476,42 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   int*     cbuff = frameBuf->cbuffer;
   float*   zbuff = frameBuf->zbuffer;
 
+  const vfloat4 vTileMinX = to_vfloat(make_vint4(tileMinX, tileMinX, tileMinX, 0));
+  const vfloat4 vTileMinY = to_vfloat(make_vint4(tileMinY, tileMinY, tileMinY, 0));
 
-  const __m128 vTileMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinX, tileMinX, tileMinX));  
-  const __m128 vTileMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, tileMinY, tileMinY, tileMinY)); 
+  vfloat4 vx = tri.v3;
+  vfloat4 vy = tri.v2;
+  vfloat4 vz = tri.v1;
+  vfloat4 vw = {0.0f,0.0f,0.0f,0.0f};
+  transpose4(vx,vy,vz,vw);
+  vx = vx - vTileMinX;
+  vy = vy - vTileMinX;
 
-  const __m128 vx    = _mm_sub_ps( GetColX(tri.v3, tri.v2, tri.v1), vTileMinX);
-  const __m128 vy    = _mm_sub_ps( GetColY(tri.v3, tri.v2, tri.v1), vTileMinY);
+  const vfloat4 vMinX = to_vfloat(make_vint4(minx, minx, minx, 0));
+  const vfloat4 vMinY = to_vfloat(make_vint4(miny, miny, miny, 0));
 
-  const __m128 vMinX = _mm_cvtepi32_ps(_mm_set_epi32(0, minx, minx, minx));                                          
-  const __m128 vMinY = _mm_cvtepi32_ps(_mm_set_epi32(0, miny, miny, miny));                                              
+  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1));
+  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1));
 
-  const __m128 vDx   = _mm_sub_ps(vx, _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1)));
-  const __m128 vDy   = _mm_sub_ps(vy, _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1)));
+  const vfloat4 vC    = vDy*vx - vDx*vy;
+  const vfloat4 vCy   = vC + vDx*vMinY - vDy*vMinX;
 
-  const __m128 vC    = _mm_sub_ps(_mm_mul_ps(vDy, vx), _mm_mul_ps(vDx, vy));
-  const __m128 vCy   = _mm_add_ps(vC, _mm_sub_ps(_mm_mul_ps(vDx, vMinY), _mm_mul_ps(vDy, vMinX)));
+  const vfloat4 triAreaInv  = rcp_s(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
+  const vfloat4 triAreaInvV = splat_0(triAreaInv); //_mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
 
-  const __m128 triAreaInv  = _mm_rcp_ss(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
-  const __m128 triAreaInvV = splat_0(triAreaInv); //_mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
+  const vfloat4 v1xv2xZ = _mm_shuffle_ps(tri.v1, tri.v2,   _MM_SHUFFLE(2, 2, 2, 2));
+  const vfloat4 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
+  const vfloat4 v3v2v1Z = _mm_shuffle_ps(v1v2xxZ, tri.v3,  _MM_SHUFFLE(2, 2, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
+  const vfloat4 vertZ   = _mm_shuffle_ps(v3v2v1Z, v3v2v1Z, _MM_SHUFFLE(3, 1, 2, 0));
 
-  const __m128 v1xv2xZ = _mm_shuffle_ps(tri.v1, tri.v2,   _MM_SHUFFLE(2, 2, 2, 2));
-  const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
-  const __m128 v3v2v1Z = _mm_shuffle_ps(v1v2xxZ, tri.v3,  _MM_SHUFFLE(2, 2, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
-  const __m128 vertZ   = _mm_shuffle_ps(v3v2v1Z, v3v2v1Z, _MM_SHUFFLE(3, 1, 2, 0));
-
-  __m128 Cy = vCy;
+  vfloat4 Cy = vCy;
 
   int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
   {
-    __m128 Cx = Cy;
+    vfloat4 Cx = Cy;
 
     //if(y != maxy)
     //  _mm_prefetch (zbuff + offset + frameBuf->pitch, _MM_HINT_T0);
@@ -539,9 +520,9 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
     {
       if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
       {
-        const __m128 w        = _mm_mul_ps(triAreaInvV, Cx);
-        const __m128 zInvV    = _mm_dp_ps(w, vertZ, 0x7f);
-        const __m128 zBuffVal = _mm_load_ss(zbuff + offset + x);
+        const vfloat4 w        = triAreaInvV*Cx;
+        const vfloat4 zInvV    = _mm_dp_ps(w, vertZ, 0x7f);
+        const vfloat4 zBuffVal = _mm_load_ss(zbuff + offset + x);
 
         if (_mm_movemask_ps(_mm_cmpgt_ss(zInvV, zBuffVal)) & 1)
         {
@@ -551,10 +532,10 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 
       }
 
-      Cx = _mm_sub_ps(Cx, vDy);
+      Cx = Cx - vDy;
     }
 
-    Cy = _mm_add_ps(Cy, vDx);
+    Cy = Cy + vDx;
 
     offset += frameBuf->pitch;
   }

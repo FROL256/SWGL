@@ -63,6 +63,9 @@ namespace cvex
   static inline vint4   as_vint(const vfloat4 a_val) { return _mm_castps_si128(a_val); }
 
   static inline vint4   to_vint(const vfloat4 a_val) { return _mm_cvtps_epi32(a_val);}
+  static inline vfloat4 to_vfloat(const vint4 a_val) { return _mm_cvtepi32_ps(a_val);}
+
+  static inline vfloat4 floor(const vfloat4 a_val) { return _mm_floor_ps(a_val); }
 
   static inline vfloat4 min(const vfloat4 a, const vfloat4 b) {return _mm_min_ps(a, b);}
   static inline vfloat4 max(const vfloat4 a, const vfloat4 b) {return _mm_max_ps(a, b);}
@@ -87,7 +90,6 @@ namespace cvex
     a2 = as_vfloat(_mm_unpacklo_epi64(b1, b3));
     a3 = as_vfloat(_mm_unpackhi_epi64(b1, b3));
   }
-
 
   inline static int RealColorToUint32_BGRA_SIMD(const vfloat4 rel_col)
   {
