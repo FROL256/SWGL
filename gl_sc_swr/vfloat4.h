@@ -28,11 +28,13 @@ namespace cvex
 
   static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);}
 
-  static inline void store(float *data, vfloat4 a_val)   { _mm_store_ps(data, a_val); }
+  static inline void store(float *data, vfloat4 a_val)   { _mm_store_ps(data, a_val);  }
   static inline void store_u(float *data, vfloat4 a_val) { _mm_storeu_ps(data, a_val); }
+  static inline void store_s(float *data, vfloat4 a_val) { _mm_store_ss(data, a_val);  } // store single ...
 
-  static inline vfloat4 load(float *data)   { return _mm_load_ps(data); }
+  static inline vfloat4 load(float *data)   { return _mm_load_ps(data);  }
   static inline vfloat4 load_u(float *data) { return _mm_loadu_ps(data); }
+  static inline vfloat4 load_s(float *data) { return _mm_load_ss(data);  }
 
   // due to _mm_***_ss is the x64 only feature, when using these functions you must guarantee that
   // only first vector component is used further. Other components are undefined!

@@ -385,22 +385,6 @@ struct Textured3D
 
 };
 
-inline static __m128 GetColX(const __m128 v1, const __m128 v2, const __m128 v3)
-{
-  const __m128 v1xv2xZ = _mm_shuffle_ps(v1, v2,           _MM_SHUFFLE(0, 0, 0, 0));
-  const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
-  const __m128 v1v3v2Z = _mm_shuffle_ps(v1v2xxZ, v3,      _MM_SHUFFLE(0, 0, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
-  return v1v3v2Z;
-}
-
-inline static __m128 GetColY(const __m128 v1, const __m128 v2, const __m128 v3)
-{
-  const __m128 v1xv2xZ = _mm_shuffle_ps(v1, v2,           _MM_SHUFFLE(1, 1, 1, 1));
-  const __m128 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
-  const __m128 v1v3v2Z = _mm_shuffle_ps(v1v2xxZ, v3,      _MM_SHUFFLE(1, 1, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
-  return v1v3v2Z;
-}
-
 
 template<typename ROP>
 void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int tileMinY, FrameBuffer* frameBuf)
@@ -428,8 +412,8 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const vfloat4 vMinX = to_vfloat(make_vint4(minx, minx, minx, 0));
   const vfloat4 vMinY = to_vfloat(make_vint4(miny, miny, miny, 0));
 
-  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1));
-  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1));
+  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
+  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
 
   const vfloat4 vC    = vDy*vx - vDx*vy;
   const vfloat4 vCy   = vC + vDx*vMinY - vDy*vMinX;
@@ -490,19 +474,16 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   const vfloat4 vMinX = to_vfloat(make_vint4(minx, minx, minx, 0));
   const vfloat4 vMinY = to_vfloat(make_vint4(miny, miny, miny, 0));
 
-  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1));
-  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1));
+  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
+  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
 
   const vfloat4 vC    = vDy*vx - vDx*vy;
   const vfloat4 vCy   = vC + vDx*vMinY - vDy*vMinX;
 
   const vfloat4 triAreaInv  = rcp_s(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
-  const vfloat4 triAreaInvV = splat_0(triAreaInv); //_mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
+  const vfloat4 triAreaInvV = splat_0(triAreaInv);
 
-  const vfloat4 v1xv2xZ = _mm_shuffle_ps(tri.v1, tri.v2,   _MM_SHUFFLE(2, 2, 2, 2));
-  const vfloat4 v1v2xxZ = _mm_shuffle_ps(v1xv2xZ, v1xv2xZ, _MM_SHUFFLE(0, 0, 2, 0));
-  const vfloat4 v3v2v1Z = _mm_shuffle_ps(v1v2xxZ, tri.v3,  _MM_SHUFFLE(2, 2, 1, 0));      // got _mm_set_ps(0.0f, v3.z, v2.z, v1.z);
-  const vfloat4 vertZ   = _mm_shuffle_ps(v3v2v1Z, v3v2v1Z, _MM_SHUFFLE(3, 1, 2, 0));
+  const vfloat4 vertZ       = _mm_shuffle_ps(vz, vz, _MM_SHUFFLE(0, 1, 0, 2)); // #TODO: change implementation!!!
 
   vfloat4 Cy = vCy;
 
@@ -527,7 +508,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
         if (_mm_movemask_ps(_mm_cmpgt_ss(zInvV, zBuffVal)) & 1)
         {
           cbuff[offset + x] = RealColorToUint32_BGRA_SIMD(ROP::DrawPixel(tri, w, zInvV));
-          _mm_store_ss(zbuff + offset + x, zInvV);
+          store_s(zbuff + offset + x, zInvV);
         }
 
       }
