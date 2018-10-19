@@ -88,7 +88,7 @@ static inline vfloat4  swglVertexShaderTransformSSE(const vfloat4 worlViewProjCo
   const vfloat4 invW = rcp_e(w);
 
   const vfloat4 w2   = w*invW; // [1.0f, w, w, w]
-  const vfloat4 cs1  = _mm_shuffle_ps(cs, w2, _MM_SHUFFLE(1, 0, 1, 0));  // [cs.x, cs.y, 1.0f, w] ////////////// #TODO: change implementation
+  const vfloat4 cs1  = shuffle2_xy_xy(cs, w2);
 
   return cs1*invW;  // float4(clipSpace.x*invW, clipSpace.y*invW, invW, 1.0f); <-- (clipSpace.x, clipSpace.y, 1.0f, w)
 }
@@ -97,10 +97,10 @@ static inline vfloat4  swglVertexShaderTransformSSE(const vfloat4 worlViewProjCo
 static inline vfloat4 swglClipSpaceToScreenSpaceTransformSSE(const vfloat4 a_pos, const vfloat4 viewportf) // pre (g_pContext != nullptr)
 {
   const vfloat4 xyuu = a_pos*const_half_one + const_half_one;
-  const vfloat4 vpzw = _mm_shuffle_ps(viewportf, viewportf, _MM_SHUFFLE(3, 2, 3, 2));              ////////////// #TODO: change implementation
+  const vfloat4 vpzw = shuffle_zwzw(viewportf);
   const vfloat4 ss   = viewportf - const_half_one + xyuu*vpzw;
 
-  return _mm_shuffle_ps(ss, a_pos, _MM_SHUFFLE(3, 2, 1, 0));                                       ////////////// #TODO: change implementation
+  return shuffle2_xy_zw(ss, a_pos);
 }
 
 
@@ -122,7 +122,7 @@ void HWImpl_SSE1::VertexShader(const float* v_in4f, float* v_out4f, int a_numVer
              worlViewProjCols[2],
              worlViewProjCols[3]);
 
-  const vfloat4 viewportv = load_u(viewportData); //_mm_set_ps(viewportf.w, viewportf.z, viewportf.y, viewportf.x);
+  const vfloat4 viewportv = load_u(viewportData);
 
   for (int i = 0; i < a_numVert; i++)
   {
@@ -418,8 +418,8 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const vfloat4 vC    = vDy*vx - vDx*vy;
   const vfloat4 vCy   = vC + vDx*vMinY - vDy*vMinX;
 
-  const vfloat4 triAreaInv  = rcp_s(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
-  const vfloat4 triAreaInvV = splat_0(triAreaInv); //_mm_shuffle_ps(triAreaInv, triAreaInv, _MM_SHUFFLE(0, 0, 0, 0));
+  const vfloat4 triAreaInv  = rcp_s(edgeFunction2(tri.v1, tri.v3, tri.v2));
+  const vfloat4 triAreaInvV = splat_0(triAreaInv);
 
   int* colorBuffer = frameBuf->cbuffer + miny * frameBuf->pitch;
 
@@ -432,10 +432,10 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
 
     for (int x = minx; x <= maxx; x++)
     {
-      if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
+      if(cmpgt_all_xyz(Cx, g_epsE3))
       {
         const vfloat4 w = triAreaInvV*Cx;
-        colorBuffer[x] = RealColorToUint32_BGRA_SIMD(ROP::DrawPixel(tri, w));
+        colorBuffer[x] = color_compress_bgra(ROP::DrawPixel(tri, w));
       }
 
       Cx = Cx - vDy;
@@ -498,18 +498,17 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 
     for (int x = minx; x <= maxx; x++)
     {
-      if ((_mm_movemask_ps(_mm_cmpgt_ps(Cx, g_epsE3)) & 7) == 7)
+      if(cmpgt_all_xyz(Cx, g_epsE3))
       {
         const vfloat4 w        = triAreaInvV*Cx;
-        const vfloat4 zInvV    = _mm_dp_ps(w, vertZ, 0x7f);
-        const vfloat4 zBuffVal = _mm_load_ss(zbuff + offset + x);
+        const vfloat4 zInvV    = dot3(w, vertZ);
+        const vfloat4 zBuffVal = load_s(zbuff + offset + x);
 
-        if (_mm_movemask_ps(_mm_cmpgt_ss(zInvV, zBuffVal)) & 1)
+        if (cmpgt_all_x(zInvV, zBuffVal))
         {
-          cbuff[offset + x] = RealColorToUint32_BGRA_SIMD(ROP::DrawPixel(tri, w, zInvV));
+          cbuff[offset + x] = color_compress_bgra(ROP::DrawPixel(tri, w, zInvV));
           store_s(zbuff + offset + x, zInvV);
         }
-
       }
 
       Cx = Cx - vDy;
@@ -525,7 +524,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 void HWImpl_SSE1::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleLocal& tri, int tileMinX, int tileMinY,
                                     FrameBuffer* frameBuf)
 {
-  _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);
+  set_ftz();
 
   switch (a_ropT)
   {
