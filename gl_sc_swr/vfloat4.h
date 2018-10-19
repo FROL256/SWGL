@@ -36,6 +36,7 @@ namespace cvex
   static inline vfloat4 load_u(float *data) { return _mm_loadu_ps(data); }
   static inline vfloat4 load_s(float *data) { return _mm_load_ss(data);  }
 
+  // it is not recommended to use these functions because they are not general but hw specific
   // due to _mm_***_ss is the x64 only feature, when using these functions you must guarantee that
   // only first vector component is used further. Other components are undefined!
   //
@@ -49,6 +50,10 @@ namespace cvex
   static inline int extract_1(const vint4 a_val)    { return _mm_cvtsi128_si32( _mm_shuffle_epi32(a_val, _MM_SHUFFLE(1,1,1,1)) ); }
   static inline int extract_2(const vint4 a_val)    { return _mm_cvtsi128_si32( _mm_shuffle_epi32(a_val, _MM_SHUFFLE(2,2,2,2)) ); }
   static inline int extract_3(const vint4 a_val)    { return _mm_cvtsi128_si32( _mm_shuffle_epi32(a_val, _MM_SHUFFLE(3,3,3,3)) ); }
+
+  static inline vfloat4 shuffle_zyxw(vfloat4 a_src) { return _mm_shuffle_ps(a_src, a_src, _MM_SHUFFLE(3, 0, 1, 2)); }
+  static inline vfloat4 shuffle_yzxw(vfloat4 a_src) { return _mm_shuffle_ps(a_src, a_src, _MM_SHUFFLE(3, 0, 2, 1)); }
+  static inline vfloat4 shuffle_zxyw(vfloat4 a_src) { return _mm_shuffle_ps(a_src, a_src, _MM_SHUFFLE(3, 1, 0, 2)); }
 
   static inline void stream(void *data, vint4 a_val) { _mm_stream_si128((vint4 *) data, a_val); }
 

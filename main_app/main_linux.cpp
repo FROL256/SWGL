@@ -21,7 +21,7 @@
 #include <iostream>
 
 #include "../gl_sc_swr/Timer.h"
-
+#include "../gl_sc_swr/vfloat4.h"
 
 
 void InfoGL() // check custome extentions here
@@ -86,6 +86,14 @@ void ExposeFunc()
       frameCounter = 0;
       g_timer.start();
     }
+
+    cvex::vfloat4 src = {1.0f, 2.0f, 3.0f, 4.0f};
+
+    cvex::vfloat4 shf1 = _mm_shuffle_ps(src, src, _MM_SHUFFLE(3, 0, 1, 2)); // shuffle_zyxw
+    cvex::vfloat4 shf2 = _mm_shuffle_ps(src, src, _MM_SHUFFLE(3, 0, 2, 1)); // shuffle_yzxw
+    cvex::vfloat4 shf3 = _mm_shuffle_ps(src, src, _MM_SHUFFLE(3, 1, 0, 2)); // shuffle_zxyw
+
+    int a = 2;
 
     try
     {

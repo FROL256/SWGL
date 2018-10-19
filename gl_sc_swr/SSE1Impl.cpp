@@ -143,7 +143,7 @@ void HWImpl_SSE1::VertexShader(const float* v_in4f, float* v_out4f, int a_numVer
 
 static inline vfloat4 colorSwap(const vfloat4 a_col)
 {
-  return _mm_shuffle_ps(a_col, a_col, _MM_SHUFFLE(3, 0, 1, 2));                                         ////////////// #TODO: change implementation
+  return shuffle_zyxw(a_col);
 }
 
 static inline vfloat4 edgeFunction2(vfloat4 a, vfloat4 b, vfloat4 c) // actuattly just a mixed product ... :)
@@ -373,7 +373,7 @@ struct Textured3D
 
   #ifdef PERSP_CORRECT
     const vfloat4 z1 = rcp_s(zInv);
-    const vfloat4 z  = splat_0(z1); // _mm_shuffle_ps(z1, z1, _MM_SHUFFLE(0, 0, 0, 0));
+    const vfloat4 z  = splat_0(z1);
     clr = clr*z;
     tc  = tc*z;
   #endif
@@ -412,8 +412,8 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   const vfloat4 vMinX = to_vfloat(make_vint4(minx, minx, minx, 0));
   const vfloat4 vMinY = to_vfloat(make_vint4(miny, miny, miny, 0));
 
-  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
-  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
+  const vfloat4 vDx   = vx - shuffle_yzxw(vx);
+  const vfloat4 vDy   = vy - shuffle_yzxw(vy);
 
   const vfloat4 vC    = vDy*vx - vDx*vy;
   const vfloat4 vCy   = vC + vDx*vMinY - vDy*vMinX;
@@ -474,16 +474,15 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   const vfloat4 vMinX = to_vfloat(make_vint4(minx, minx, minx, 0));
   const vfloat4 vMinY = to_vfloat(make_vint4(miny, miny, miny, 0));
 
-  const vfloat4 vDx   = vx - _mm_shuffle_ps(vx, vx, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
-  const vfloat4 vDy   = vy - _mm_shuffle_ps(vy, vy, _MM_SHUFFLE(0, 0, 2, 1)); // #TODO: change implementation!!!
+  const vfloat4 vDx   = vx - shuffle_yzxw(vx);
+  const vfloat4 vDy   = vy - shuffle_yzxw(vy);
 
   const vfloat4 vC    = vDy*vx - vDx*vy;
   const vfloat4 vCy   = vC + vDx*vMinY - vDy*vMinX;
 
   const vfloat4 triAreaInv  = rcp_s(edgeFunction2(tri.v1, tri.v3, tri.v2)); // const float areaInv = 1.0f / fabs(Dy31*Dx12 - Dx31*Dy12);
   const vfloat4 triAreaInvV = splat_0(triAreaInv);
-
-  const vfloat4 vertZ       = _mm_shuffle_ps(vz, vz, _MM_SHUFFLE(0, 1, 0, 2)); // #TODO: change implementation!!!
+  const vfloat4 vertZ       = shuffle_zxyw(vz);
 
   vfloat4 Cy = vCy;
 
