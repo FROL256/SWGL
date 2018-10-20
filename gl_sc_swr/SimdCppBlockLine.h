@@ -415,6 +415,20 @@ void RasterizeTriHalfSpace3D_BlockLine(const TriangleType& tri, int tileMinX, in
 }
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static inline void Splat4XYZ2(const cvex::vfloat4 in_val,
+                              cvex::vfloat4& out_X, cvex::vfloat4& out_Y, cvex::vfloat4& out_Z)
+{
+  out_X = cvex::splat_0(in_val);
+  out_Y = cvex::splat_1(in_val);
+  out_Z = cvex::splat_2(in_val);
+}
+
+
 template<typename ImplType> // const int lineSize, typename ROP, typename SROP
 void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri, int tileMinX, int tileMinY,
                                         FrameBuffer* frameBuf)
@@ -426,6 +440,7 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
   typedef typename ImplType::vf4 vf4;
   typedef typename ImplType::vi4 vi4;
   typedef typename ImplType::vfn vfn;
+  typedef typename ImplType::vin vin;
   typedef typename ImplType::TriangleT TriangleType;
 
   ////#MUST define ImplType::splat_n
@@ -458,11 +473,11 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
 
   //#TODO: if (lineSize == 4) => special case !!!
   //
-  SIMDPP_ALIGN(16) float Dx12_Dx23_Dx31[4];
-  SIMDPP_ALIGN(16) float Dy12_Dy23_Dy31[4];
+  ALIGN(16) float Dx12_Dx23_Dx31[4];
+  ALIGN(16) float Dy12_Dy23_Dy31[4];
 
-  simdpp::store(Dx12_Dx23_Dx31, Dx_12_23_31);
-  simdpp::store(Dy12_Dy23_Dy31, Dy_12_23_31);
+  cvex::store(Dx12_Dx23_Dx31, Dx_12_23_31);
+  cvex::store(Dy12_Dy23_Dy31, Dy_12_23_31);
 
   const float areaInv = 1.0f / fabs(Dy12_Dy23_Dy31[2]*Dx12_Dx23_Dx31[0] - Dx12_Dx23_Dx31[2]*Dy12_Dy23_Dy31[0]);
 
@@ -491,7 +506,7 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
   int*   cbuff = frameBuf->cbuffer;
   float* zbuff = frameBuf->zbuffer;
 
-  SIMDPP_ALIGN(16) float tri_V1V3V2Z[4] = {tri.v1.z, tri.v3.z, tri.v2.z, 0.0f};
+  ALIGN(16) float tri_V1V3V2Z[4] = {tri.v1.z, tri.v3.z, tri.v2.z, 0.0f};
 
   // Scan through bounding rectangle
   for (int by = miny; by <= maxy; by += lineSize)
@@ -500,15 +515,13 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
 
     for (int bx = minx; bx <= maxx; bx+= lineSize)
     {
-      const vf4 Cx1_v = cvex::splat_0(Cx_abc) + col0; // ((const simdpp::float32<4>)simdpp::load(Cx1_va));
-      const vf4 Cx2_v = cvex::splat_1(Cx_abc) + col1; // ((const simdpp::float32<4>)simdpp::load(Cx2_va));
-      const vf4 Cx3_v = cvex::splat_2(Cx_abc) + col2; // ((const simdpp::float32<4>)simdpp::load(Cx3_va));
+      const vf4 Cx1_v = cvex::splat_0(Cx_abc) + col0;
+      const vf4 Cx2_v = cvex::splat_1(Cx_abc) + col1;
+      const vf4 Cx3_v = cvex::splat_2(Cx_abc) + col2;
 
-      const auto vInside_v4u = simdpp::bit_cast< simdpp::uint32<4>, simdpp::float32<4> >(
-          ( (Cx1_v > hs_eps_v) & (Cx2_v > hs_eps_v) & (Cx3_v > hs_eps_v) ).eval().unmask()
-      );
+      const auto vInside_v4u = ( (Cx1_v > hs_eps_v) & (Cx2_v > hs_eps_v) & (Cx3_v > hs_eps_v) );
 
-      if(simdpp::reduce_and(vInside_v4u) != 0) // render fully covered block
+      if(cvex::cmp_test_all(vInside_v4u) != 0) // render fully covered block
       {
         // store all pixels
         //
@@ -517,59 +530,55 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
         {
           const int y1 = by + iy;
 
-          if(y1+1 <= maxy && y1+1 != lineSize)
-          {
-            const int offset1 = frameBuf->pitch * (y1+1) + bx;
-            simdpp::prefetch_read(cbuff + offset1);
-            simdpp::prefetch_read(zbuff + offset1);
-          }
+          //if(y1+1 <= maxy && y1+1 != lineSize)
+          //{
+          //  const int offset1 = frameBuf->pitch * (y1+1) + bx;
+          //  simdpp::prefetch_read(cbuff + offset1);
+          //  simdpp::prefetch_read(zbuff + offset1);
+          //}
 
           if(y1 <= maxy)
           {
-            const simdpp::float32<lineSize> pixOffsY = simdpp::to_float32(((simdpp::int32<lineSize>)simdpp::splat(iy)));
-            const simdpp::float32<lineSize> pixOffsX = PixOffsetX<lineSize>();
+            const vfn pixOffsY = cvex::to_vfloat(cvex::splat_1to4(iy));
+            const vfn pixOffsX = PixOffsetX<lineSize>();
 
             const int offset = frameBuf->pitch * y1 + bx;
-            const simdpp::float32<lineSize> zOld = simdpp::load_u(zbuff + offset);
+            const vfn zOld   = cvex::load_u(zbuff + offset);
 
-            simdpp::float32<lineSize> Cx1, Cx2, Cx3;
+            vfn Cx1, Cx2, Cx3;
             {
-              Splat4XYZ<lineSize>(Cx_abc, Cx1, Cx2, Cx3);
+              Splat4XYZ2(Cx_abc, Cx1, Cx2, Cx3);
               Cx1 = Cx1 + Dx12v * pixOffsY - Dy12v * pixOffsX;
               Cx2 = Cx2 + Dx23v * pixOffsY - Dy23v * pixOffsX;
               Cx3 = Cx3 + Dx31v * pixOffsY - Dy31v * pixOffsX;
             }
 
-            const simdpp::float32<lineSize> w1   = areaInvV*Cx1;
-            const simdpp::float32<lineSize> w2   = areaInvV*Cx2;
-            const simdpp::float32<lineSize> w3   = areaInvV*Cx3;
-            const simdpp::float32<lineSize> zInv = tri_v1_z*w1 + tri_v2_z*w3 + tri_v3_z*w2;
+            const vfn w1   = areaInvV*Cx1;
+            const vfn w2   = areaInvV*Cx2;
+            const vfn w3   = areaInvV*Cx3;
+            const vfn zInv = tri_v1_z*w1 + tri_v2_z*w3 + tri_v3_z*w2;
 
-            const auto zTest   = (zInv > zOld);
-            const auto zTest_u = simdpp::bit_cast< simdpp::uint32<lineSize>, simdpp::float32<lineSize> >(zTest.eval().unmask());
+            const auto zTest = (zInv > zOld);
 
-            if (simdpp::reduce_or(zTest_u) != 0)
+            if (cvex::cmp_test_any(zTest))
             {
               const auto color   = ROP::DrawPixel(tri, w1, w3, w2, zInv);
               const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
 
-              const simdpp::uint32<lineSize> colorOld = simdpp::load_u(cbuff + offset);
+              const vin colorOld = cvex::load_u(cbuff + offset);
 
-              simdpp::store_u(cbuff + offset, simdpp::blend(pixData, colorOld, zTest));
-              simdpp::store_u(zbuff + offset, simdpp::blend(zInv,    zOld,     zTest));
+              cvex::store_u(cbuff + offset, cvex::blend(pixData, colorOld, zTest));
+              cvex::store_u(zbuff + offset, cvex::blend(zInv,    zOld,     zTest));
             }
-
-            //if(lineSize == 8)
-            //  _mm256_zeroupper();
 
           } //  end if(y1 <= maxy)
 
         } // end for (int iy = 0; iy < lineSize; iy++)
       }
-      else if (simdpp::reduce_or(vInside_v4u) != 0) // render partially covered block
+      else if (cvex::cmp_test_any(vInside_v4u)) // render partially covered block
       {
-        simdpp::float32<4> Cy_123 = simdpp::make_float(0.0f, 0.0f, 0.0f, 10000000.0f); // set last component to 10 to be always gt than hs_eps_v.w
-        const simdpp::float32<4> areaInvV4 = simdpp::splat(areaInv);
+        vf4 Cy_123 = {0.0f, 0.0f, 0.0f, 10000000.0f}; // set last component to 10 to be always gt than hs_eps_v.w
+        const vf4 areaInvV4 = cvex::splat_1to4(areaInv);
 
         const int maxx2 = std::min(maxx, bx+lineSize-1);
         const int maxy2 = std::min(maxy, by+lineSize-1);
@@ -577,32 +586,30 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
         for (int iy = 0; iy < lineSize; iy++)
         {
           const int          y1     = by + iy;
-          simdpp::float32<4> Cx_123 = Cy_123 + Cx_abc;
           const int offsetY         = frameBuf->pitch * y1;
+          auto               Cx_123 = Cy_123 + Cx_abc;
 
-          simdpp::prefetch_read(zbuff + offsetY + bx);
-          if(y1+1 <= maxy2 && y1+1 != lineSize)
-            simdpp::prefetch_read(zbuff + frameBuf->pitch * (y1+1) + bx);
+          //simdpp::prefetch_read(zbuff + offsetY + bx);
+          //if(y1+1 <= maxy2 && y1+1 != lineSize)
+          //  simdpp::prefetch_read(zbuff + frameBuf->pitch * (y1+1) + bx);
 
           for (int ix = 0; ix < lineSize; ix++)
           {
-            const auto vInside_123 = simdpp::bit_cast< simdpp::uint32<4>, simdpp::float32<4> >(
-                ((Cx_123 > hs_eps_v)).eval().unmask()
-            );
+            const auto vInside_123 = (Cx_123 > hs_eps_v);
 
             const int x1 = bx + ix;
-            if (x1 <= maxx2 && y1 <= maxy2 && (simdpp::reduce_and(vInside_123) != 0))
+            if (x1 <= maxx2 && y1 <= maxy2 && cvex::cmp_test_all(vInside_123))
             {
-              const simdpp::float32<4> w1234 = areaInvV4*Cx_123;
-              const simdpp::float32<4> triZ  = simdpp::load(tri_V1V3V2Z);
+              const vf4 w1234 = areaInvV4*Cx_123;
+              const vf4 triZ  = cvex::load(tri_V1V3V2Z);
 
-              const float zInv = simdpp::reduce_add(w1234*triZ);
+              const float zInv = cvex::dot3(w1234,triZ);
               const float zOld = zbuff[offsetY + x1];
 
               if(zInv > zOld)
               {
-                const simdpp::float32<4> color2  = SROP::DrawPixel(tri, w1234, simdpp::splat(zInv));
-                cbuff[offsetY + x1] = RealColorToUint32_BGRA_SIMD(color2);
+                const vf4 color2    = SROP::DrawPixel(tri, w1234, cvex::splat_1to4(zInv));
+                cbuff[offsetY + x1] = cvex::color_compress_bgra(color2);
                 zbuff[offsetY + x1] = zInv;
               }
             }

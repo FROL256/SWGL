@@ -37,6 +37,7 @@ namespace cvex
 
   static inline vfloat4 load(float *data)   { return _mm_load_ps(data);  }
   static inline vfloat4 load_u(float *data) { return _mm_loadu_ps(data); }
+  static inline vint4   load_u(int *data)   { return _mm_castps_si128(_mm_loadu_ps((float*)data)); }
   static inline vfloat4 load_s(float *data) { return _mm_load_ss(data);  }
 
   static inline int extract_0(const vint4 a_val)    { return _mm_cvtsi128_si32(a_val); }
@@ -115,9 +116,13 @@ namespace cvex
   static inline bool cmpgt_all_xyz (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) & 7)  == 7; }
   static inline bool cmpgt_all_x   (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ss(a, b)) & 1)  == 1; }
 
+  static inline bool cmp_test_all(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) == 15; }
+  static inline bool cmp_test_any(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) != 0; }
+
+
   // it is not recommended to use these functions because they are not general, but more hw specific
-  // due to _mm_***_ss is the x64 only feature, when using these functions you must guarantee that
-  // only first vector component is used further. Other components are undefined!
+  // due to _mm_***_ss is the x64 only feature, so, when using these functions you must guarantee that
+  // only first vector component must be used further. Other components are undefined!
   //
   static inline vfloat4 add_s(vfloat4 a, vfloat4 b) { return _mm_add_ss(a,b); } // #NOTE: assume you will never use .yzw coordinates!; only .x is valid!
   static inline vfloat4 sub_s(vfloat4 a, vfloat4 b) { return _mm_sub_ss(a,b); } // #NOTE: assume you will never use .yzw coordinates!; only .x is valid!
