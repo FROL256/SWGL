@@ -12,6 +12,7 @@
 
 #include "HWAbstractionLayer.h"
 
+
 SWGL_Context* g_pContext = nullptr;
 
 
@@ -99,11 +100,37 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
     const uint32_t val = a_pContext->input.clearColor1u;
     const float vald   = 1.0f - a_pContext->input.clearDepth;
 
-    for (int i = 0; i < size; i++)
+    cvex::vfloat4 depthVal4 = {vald, vald, vald, vald};
+    cvex::vint4   colorVal4 = cvex::make_vint4(val,val,val,val);
+
+    cvex::vfloat4* depth = (cvex::vfloat4*)a_pContext->m_zbuffer;
+    cvex::vint4*   color = (cvex::vint4*)a_pContext->m_pixels2;
+
+    uint64_t addr1 = reinterpret_cast<uint64_t>(depth);
+    uint64_t addr2 = reinterpret_cast<uint64_t>(color);
+
+    if(addr1%16 == 0 && addr2%16 == 0)
     {
-      a_pContext->m_pixels2[i] = val;
-      a_pContext->m_zbuffer[i] = vald;
+      for (int i = 0; i < size/4; i++)
+      {
+        cvex::store((float*)(depth+i), depthVal4);
+        cvex::store((int*)  (color+i), colorVal4);
+      }
     }
+    else
+    {
+      for (int i = 0; i < size/4; i++)
+      {
+        cvex::store_u((float*)(depth+i), depthVal4);
+        cvex::store_u((int*)  (color+i), colorVal4);
+      }
+    }
+
+    //for (int i = 0; i < size; i++)
+    //{
+    //  a_pContext->m_pixels2[i] = val;
+    //  a_pContext->m_zbuffer[i] = vald;
+    //}
   }
   else
   {
@@ -133,74 +160,6 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
     memset(a_pContext->m_sbuffer, val, size*sizeof(uint8_t));
   }
 }
-
-#ifdef ENABLE_SSE
-
-void swglFastClear(SWGL_Context* a_pContext, GLbitfield mask)
-{
-  const bool clearColor    = ( (mask & GL_COLOR_BUFFER_BIT)   != 0 );
-  const bool clearDepth    = ( (mask & GL_DEPTH_BUFFER_BIT)   != 0 );
-  const bool clearStencil  = ( (mask & GL_STENCIL_BUFFER_BIT) != 0 );
-
-  const uint32_t valCol    = a_pContext->input.clearColor1u;
-  const float    valDepth  = 1.0f - a_pContext->input.clearDepth;
-  const uint8_t valStencil = a_pContext->input.clearStencil & 0x000000FF;
-
-  const int size  = a_pContext->m_width*a_pContext->m_height;
-  const int size2 = (a_pContext->m_width*a_pContext->m_height) / 4;
-
-  if (size % 4 != 0)
-  {
-    swglSlowClear(a_pContext, mask);
-    return;
-  }
-
-  const __m128i  colorV    = _mm_set1_epi32(valCol);
-  const __m128   depthV    = _mm_set_ps1(valDepth);
-  const uint32_t stencilV  = (valStencil << 24) | (valStencil << 16) | (valStencil << 8) | (valStencil);
-
-  __m128i* cbuff = (__m128i*)a_pContext->m_pixels2;
-  float*   dbuff = a_pContext->m_zbuffer;
-  int*     sbuff = (int*)a_pContext->m_sbuffer;
-
-  if (clearColor && clearDepth && clearStencil)
-  {
-    for (int i = 0; i < size2; i ++)
-    {
-      _mm_store_si128(cbuff + i, colorV);
-      _mm_store_ps(dbuff + i * 4, depthV);
-      sbuff[i] = stencilV;
-    }
-  }
-  else if (clearColor && clearDepth)
-  {
-    for (int i = 0; i < size2; i++)
-    {
-      _mm_store_si128(cbuff + i, colorV);
-      _mm_store_ps(dbuff + i * 4, depthV);
-    }
-  }
-  else if (clearColor && clearStencil)
-  {
-    for (int i = 0; i < size2; i++)
-    {
-      _mm_store_si128(cbuff + i, colorV);
-      sbuff[i] = stencilV;
-    }
-  }
-  else if (clearColor)
-  {
-    for (int i = 0; i < size2; i++)
-      _mm_store_si128(cbuff + i, colorV);
-  }
-  else
-  {
-    swglSlowClear(a_pContext, mask);
-  }
-
-}
-
-#endif
 
 GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used tiled
 {

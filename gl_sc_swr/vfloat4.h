@@ -28,9 +28,12 @@ namespace cvex
 
   static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);}
 
-  static inline void store(float *data, vfloat4 a_val)   { _mm_store_ps(data, a_val);  }
-  static inline void store_u(float *data, vfloat4 a_val) { _mm_storeu_ps(data, a_val); }
-  static inline void store_s(float *data, vfloat4 a_val) { _mm_store_ss(data, a_val);  } // store single ...
+  static inline void store(float* data, vfloat4 a_val)   { _mm_store_ps(data, a_val);  }
+  static inline void store(int*   data, vint4 a_val)     { _mm_store_ps((float*)data, _mm_castsi128_ps(a_val));  }
+
+  static inline void store_u(float* data, vfloat4 a_val) { _mm_storeu_ps(data, a_val); }
+  static inline void store_u(int*   data,  vint4 a_val)  { _mm_storeu_ps((float*)data, _mm_castsi128_ps(a_val)); }
+  static inline void store_s(float* data, vfloat4 a_val) { _mm_store_ss(data, a_val);  } // store single ...
 
   static inline vfloat4 load(float *data)   { return _mm_load_ps(data);  }
   static inline vfloat4 load_u(float *data) { return _mm_loadu_ps(data); }
@@ -45,7 +48,6 @@ namespace cvex
   static inline vfloat4 shuffle_yzxw(vfloat4 a_src) { return _mm_shuffle_ps(a_src, a_src, _MM_SHUFFLE(3, 0, 2, 1)); }
   static inline vfloat4 shuffle_zxyw(vfloat4 a_src) { return _mm_shuffle_ps(a_src, a_src, _MM_SHUFFLE(3, 1, 0, 2)); }
   static inline vfloat4 shuffle_zwzw(vfloat4 a_src) { return _mm_shuffle_ps(a_src, a_src, _MM_SHUFFLE(3, 2, 3, 2)); }
-
 
   static inline void stream(void *data, vint4 a_val) { _mm_stream_si128((vint4 *) data, a_val); }
 
