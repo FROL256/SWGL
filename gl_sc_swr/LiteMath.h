@@ -5,12 +5,6 @@
 
 #include "config.h"
 
-#ifdef ENABLE_SSE
-  #include <xmmintrin.h> // SSE
-  #include <emmintrin.h> // SSE2
-  #include <smmintrin.h> // SSE4.1
-#endif
-
 #ifdef min
 #undef min
 #endif
