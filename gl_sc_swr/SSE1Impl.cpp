@@ -501,7 +501,7 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
       if(cmpgt_all_xyz(Cx, g_epsE3))
       {
         const vfloat4 w        = triAreaInvV*Cx;
-        const vfloat4 zInvV    = dot3(w, vertZ);
+        const vfloat4 zInvV    = dot3v(w, vertZ);
         const vfloat4 zBuffVal = load_s(zbuff + offset + x);
 
         if (cmpgt_all_x(zInvV, zBuffVal))

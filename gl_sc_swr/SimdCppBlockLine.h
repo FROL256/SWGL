@@ -434,7 +434,7 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
                                         FrameBuffer* frameBuf)
 {
   constexpr int lineSize = ImplType::n;
-  typedef typename ImplType::ROP  ROP;
+  //typedef typename ImplType::ROP  ROP;
   typedef typename ImplType::SROP SROP;
 
   typedef typename ImplType::vf4 vf4;
@@ -519,7 +519,7 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
       const vf4 Cx2_v = cvex::splat_1(Cx_abc) + col1;
       const vf4 Cx3_v = cvex::splat_2(Cx_abc) + col2;
 
-      const auto vInside_v4u = ( (Cx1_v > hs_eps_v) & (Cx2_v > hs_eps_v) & (Cx3_v > hs_eps_v) );
+      const vi4 vInside_v4u = ( (Cx1_v > hs_eps_v) & (Cx2_v > hs_eps_v) & (Cx3_v > hs_eps_v) );
 
       if(cvex::cmp_test_all(vInside_v4u) != 0) // render fully covered block
       {
@@ -558,13 +558,14 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
             const vfn w3   = areaInvV*Cx3;
             const vfn zInv = tri_v1_z*w1 + tri_v2_z*w3 + tri_v3_z*w2;
 
-            const auto zTest = (zInv > zOld);
+            const vin zTest = (zInv > zOld);
 
             if (cvex::cmp_test_any(zTest))
             {
-              const auto color   = ROP::DrawPixel(tri, w1, w3, w2, zInv);
-              const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
+              //const auto color   = ROP::DrawPixel(tri, w1, w3, w2, zInv);
+              //const auto pixData = VROP<lineSize, TriangleType>::RealColorToUint32_BGRA(color);
 
+              const vin pixData  = cvex::splat_1to4(int(0xFFFFFFFF));
               const vin colorOld = cvex::load_u(cbuff + offset);
 
               cvex::store_u(cbuff + offset, cvex::blend(pixData, colorOld, zTest));
@@ -595,7 +596,7 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
 
           for (int ix = 0; ix < lineSize; ix++)
           {
-            const auto vInside_123 = (Cx_123 > hs_eps_v);
+            const vi4 vInside_123 = (Cx_123 > hs_eps_v);
 
             const int x1 = bx + ix;
             if (x1 <= maxx2 && y1 <= maxy2 && cvex::cmp_test_all(vInside_123))
@@ -603,14 +604,14 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
               const vf4 w1234 = areaInvV4*Cx_123;
               const vf4 triZ  = cvex::load(tri_V1V3V2Z);
 
-              const float zInv = cvex::dot3(w1234,triZ);
-              const float zOld = zbuff[offsetY + x1];
+              const float zInv2 = cvex::dot3f(w1234,triZ);
+              const float zOld2 = zbuff[offsetY + x1];
 
-              if(zInv > zOld)
+              if(zInv2 > zOld2)
               {
-                const vf4 color2    = SROP::DrawPixel(tri, w1234, cvex::splat_1to4(zInv));
+                const vf4 color2    = SROP::DrawPixel(tri, w1234, cvex::splat_1to4(zInv2));
                 cbuff[offsetY + x1] = cvex::color_compress_bgra(color2);
-                zbuff[offsetY + x1] = zInv;
+                zbuff[offsetY + x1] = zInv2;
               }
             }
 

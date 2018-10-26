@@ -419,10 +419,31 @@ using Colored2D_S   = SROP<TriangleLocal>::Colored2D;
 using Colored3D_S   = SROP<TriangleLocal>::Colored3D;
 
 
+struct VROP_4x1_3D
+{
+  constexpr static int n = 4;
+
+  //typedef typename CVex_Colored3D_1x4  ROP;
+  using SROP = Colored3D_S;
+
+  using vf4  = cvex::vfloat4;
+  using vi4  = cvex::vint4;
+
+  using vfn  = cvex::vfloat4;
+  using vin  = cvex::vint4;
+
+  using TriangleT = TriangleLocal;
+
+  static inline vfn splat_n(float x) { return cvex::splat_1to4(x); }
+  static inline vin splat_n(int   x) { return cvex::splat_1to4(x); }
+};
+
+//constexpr int lineSize = ImplType::n;
+
 void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                            FrameBuffer* frameBuf)
 {
-
+  /*
   switch (a_ropT)
   {
     case ROP_Colored2D:
@@ -457,11 +478,9 @@ void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, cons
                                                                                      frameBuf);
       break;
   };
+  */
 
-  // test splat for different vector size --> (!!!) this does not works !!!! FUCK!
-  //
-  //const simdpp::float32<4> from = simdpp::make_float(1,2,3,4);
-  //const simdpp::float32<8> to   = simdpp::splat<0>(from);
-  //const simdpp::float32<4> test = {1.0f, 2.0f, 3.0f, 4.0f};
+  RasterizeTriHalfSpace3D_BlockLine2<VROP_4x1_3D>(tri, tileMinX, tileMinY,
+                                                  frameBuf);
 
 }

@@ -81,6 +81,12 @@ namespace cvex
                      _mm_andnot_ps(as_vfloat(mask), b));
   }
 
+  static inline vint4 blend(const vint4 a, const vint4 b, const vint4 mask)
+  {
+    return as_vint(_mm_or_ps(_mm_and_ps   (as_vfloat(mask), as_vfloat(a)),
+                             _mm_andnot_ps(as_vfloat(mask), as_vfloat(b))));
+  }
+
   static inline void transpose4(vfloat4& a0, vfloat4& a1, vfloat4& a2, vfloat4& a3)
   {
     const vint4 b0 = _mm_unpacklo_epi32(as_vint(a0), as_vint(a1));
@@ -110,7 +116,8 @@ namespace cvex
   static inline vfloat4 shuffle2_xy_xy(const vfloat4 a, const vfloat4 b) { return _mm_shuffle_ps(a, b, _MM_SHUFFLE(1, 0, 1, 0)); }
   static inline vfloat4 shuffle2_xy_zw(const vfloat4 a, const vfloat4 b) { return _mm_shuffle_ps(a, b, _MM_SHUFFLE(3, 2, 1, 0)); }
 
-  static inline vfloat4 dot3(const vfloat4 a, const vfloat4 b) { return _mm_dp_ps(a, b, 0x7f); }
+  static inline vfloat4 dot3v(const vfloat4 a, const vfloat4 b) { return _mm_dp_ps(a, b, 0x7f); }
+  static inline float   dot3f(const vfloat4 a, const vfloat4 b) { return _mm_cvtss_f32(_mm_dp_ps(a, b, 0x7f)); }
 
   //static inline bool cmpgt_all_xyzw(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) & 15) == 15; } // #TODO: UNTESTED!
   static inline bool cmpgt_all_xyz (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) & 7)  == 7; }
@@ -118,6 +125,8 @@ namespace cvex
 
   static inline bool cmp_test_all(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) == 15; }
   static inline bool cmp_test_any(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) != 0; }
+  static inline bool cmp_test_all(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) == 15; }
+  static inline bool cmp_test_any(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) != 0; }
 
 
   // it is not recommended to use these functions because they are not general, but more hw specific
