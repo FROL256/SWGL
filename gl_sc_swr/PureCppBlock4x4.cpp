@@ -419,23 +419,67 @@ using Colored2D_S   = SROP<TriangleLocal>::Colored2D;
 using Colored3D_S   = SROP<TriangleLocal>::Colored3D;
 
 
-struct VROP_4x1_3D
+struct VROP_3D_4x1
 {
   constexpr static int n = 4;
-
-  //typedef typename CVex_Colored3D_1x4  ROP;
-  using SROP = Colored3D_S;
-
-  using vf4  = cvex::vfloat4;
-  using vi4  = cvex::vint4;
-
-  using vfn  = cvex::vfloat4;
-  using vin  = cvex::vint4;
-
+  using vec4f     = cvex::vfloat4;
+  using vec4i     = cvex::vint4;
+  using vecnf     = cvex::vfloat4;
+  using vecni     = cvex::vint4;
   using TriangleT = TriangleLocal;
 
-  static inline vfn splat_n(float x) { return cvex::splat_1to4(x); }
-  static inline vin splat_n(int   x) { return cvex::splat_1to4(x); }
+  static inline vecnf splat_n(float x) { return cvex::splat_1to4(x); }
+  static inline vecni splat_n(int   x) { return cvex::splat_1to4(x); }
+
+
+  SIMDPP_ALIGN(64) struct vec4
+  {
+    vecnf x,y,z,w;
+  };
+
+  static inline vec4 splat_v4(const float4& v)
+  {
+    vec4 res;
+    res.x = splat_n(v.x);
+    res.y = splat_n(v.y);
+    res.z = splat_n(v.z);
+    res.w = splat_n(v.w);
+    return res;
+  }
+
+  inline static vec4 DrawPixel(const TriangleT& tri,
+                               const vecnf& w0, const vecnf& w1, const vecnf& w2, const vecnf& zInv)
+  {
+    const vecnf z     = cvex::rcp_e(zInv);
+
+    const auto tri_c1 = splat_v4(tri.c1);
+    const auto tri_c2 = splat_v4(tri.c2);
+    const auto tri_c3 = splat_v4(tri.c3);
+
+    vec4 res;
+    res.x = ( tri_c1.x*w0 + tri_c2.x*w1 + tri_c3.x*w2 )*z;
+    res.y = ( tri_c1.y*w0 + tri_c2.y*w1 + tri_c3.y*w2 )*z;
+    res.z = ( tri_c1.z*w0 + tri_c2.z*w1 + tri_c3.z*w2 )*z;
+    res.w = ( tri_c1.w*w0 + tri_c2.w*w1 + tri_c3.w*w2 )*z;
+    return res;
+  }
+
+  static inline vecni RealColorToUint32_BGRA(const vec4& rc)
+  {
+    const vecnf const_255 = cvex::splat_1to4(255.0f);
+    const vecnf r = rc.x*const_255;
+    const vecnf g = rc.y*const_255;
+    const vecnf b = rc.z*const_255;
+    const vecnf a = rc.w*const_255;
+
+    const auto red   = cvex::to_vint(r);
+    const auto green = cvex::to_vint(g);
+    const auto blue  = cvex::to_vint(b);
+    const auto alpha = cvex::to_vint(a);
+
+    return (blue << 16) | (green << 8) | (red << 0) | (alpha << 24);
+  }
+
 };
 
 //constexpr int lineSize = ImplType::n;
@@ -443,7 +487,7 @@ struct VROP_4x1_3D
 void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                            FrameBuffer* frameBuf)
 {
-  /*
+
   switch (a_ropT)
   {
     case ROP_Colored2D:
@@ -478,9 +522,9 @@ void HWImplBlockLine4x4::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, cons
                                                                                      frameBuf);
       break;
   };
-  */
 
-  RasterizeTriHalfSpace3D_BlockLine2<VROP_4x1_3D>(tri, tileMinX, tileMinY,
-                                                  frameBuf);
+
+  //RasterizeTriHalfSpace3D_BlockLine2<VROP_3D_4x1, Colored3D_S>(tri, tileMinX, tileMinY,
+  //                                                             frameBuf);
 
 }

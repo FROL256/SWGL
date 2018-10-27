@@ -111,6 +111,12 @@ namespace cvex
     return _mm_cvtsi128_si32(out2);
   }
 
+  static inline bool cmp_test_all(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) == 15; }
+  static inline bool cmp_test_any(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) != 0; }
+  static inline bool cmp_test_all(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) == 15; }
+  static inline bool cmp_test_any(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) != 0; }
+
+
   // it is strongly not recommended to use these functions because their general implementation could be slow
   //
   static inline vfloat4 shuffle2_xy_xy(const vfloat4 a, const vfloat4 b) { return _mm_shuffle_ps(a, b, _MM_SHUFFLE(1, 0, 1, 0)); }
@@ -122,12 +128,6 @@ namespace cvex
   //static inline bool cmpgt_all_xyzw(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) & 15) == 15; } // #TODO: UNTESTED!
   static inline bool cmpgt_all_xyz (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) & 7)  == 7; }
   static inline bool cmpgt_all_x   (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ss(a, b)) & 1)  == 1; }
-
-  static inline bool cmp_test_all(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) == 15; }
-  static inline bool cmp_test_any(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) != 0; }
-  static inline bool cmp_test_all(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) == 15; }
-  static inline bool cmp_test_any(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) != 0; }
-
 
   // it is not recommended to use these functions because they are not general, but more hw specific
   // due to _mm_***_ss is the x64 only feature, so, when using these functions you must guarantee that
