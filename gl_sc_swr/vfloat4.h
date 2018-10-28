@@ -104,7 +104,7 @@ namespace cvex
   {
     static const vfloat4 const_255 = {255.0f, 255.0f, 255.0f, 255.0f};
 
-    const __m128i rgba = _mm_cvtps_epi32(_mm_mul_ps(rel_col, const_255));
+    const __m128i rgba = _mm_cvtps_epi32(_mm_mul_ps(cvex::shuffle_zyxw(rel_col), const_255));
     const __m128i out  = _mm_packus_epi32(rgba, _mm_setzero_si128());
     const __m128i out2 = _mm_packus_epi16(out, _mm_setzero_si128());
 

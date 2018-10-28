@@ -78,7 +78,7 @@ struct VROP_2D_CVEX<4>
       const vfloat c2 = cvex::load((const float*)&tri.c2);
       const vfloat c3 = cvex::load((const float*)&tri.c3);
       const vfloat c  = c1*w1 + c2*w2 + c3*(1.0f - w1 - w2);
-      return cvex::color_compress_bgra(cvex::shuffle_zyxw(c));
+      return cvex::color_compress_bgra(c);
     }
 
   };
