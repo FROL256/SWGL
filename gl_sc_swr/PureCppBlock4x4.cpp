@@ -437,47 +437,23 @@ struct VROP_3D_4x1
     vecnf x,y,z,w;
   };
 
-  static inline vec4 splat_v4(const float4& v)
+
+  inline static vecni DrawPixel(const TriangleT& tri,
+                                const vecnf& w0, const vecnf& w1, const vecnf& w2, const vecnf& zInv)
   {
-    vec4 res;
-    res.x = splat_n(v.x);
-    res.y = splat_n(v.y);
-    res.z = splat_n(v.z);
-    res.w = splat_n(v.w);
-    return res;
-  }
+    const vecnf z = cvex::rcp_e(zInv);
 
-  inline static vec4 DrawPixel(const TriangleT& tri,
-                               const vecnf& w0, const vecnf& w1, const vecnf& w2, const vecnf& zInv)
-  {
-    const vecnf z     = cvex::rcp_e(zInv);
+    const vecnf rcx = ( splat_n(tri.c1.x)*w0 + splat_n(tri.c2.x)*w1 + splat_n(tri.c3.x)*w2 )*z;
+    const vecnf rcy = ( splat_n(tri.c1.y)*w0 + splat_n(tri.c2.y)*w1 + splat_n(tri.c3.y)*w2 )*z;
+    const vecnf rcz = ( splat_n(tri.c1.z)*w0 + splat_n(tri.c2.z)*w1 + splat_n(tri.c3.z)*w2 )*z;
+    const vecnf rcw = ( splat_n(tri.c1.w)*w0 + splat_n(tri.c2.w)*w1 + splat_n(tri.c3.w)*w2 )*z;
 
-    const auto tri_c1 = splat_v4(tri.c1);
-    const auto tri_c2 = splat_v4(tri.c2);
-    const auto tri_c3 = splat_v4(tri.c3);
-
-    vec4 res;
-    res.x = ( tri_c1.x*w0 + tri_c2.x*w1 + tri_c3.x*w2 )*z;
-    res.y = ( tri_c1.y*w0 + tri_c2.y*w1 + tri_c3.y*w2 )*z;
-    res.z = ( tri_c1.z*w0 + tri_c2.z*w1 + tri_c3.z*w2 )*z;
-    res.w = ( tri_c1.w*w0 + tri_c2.w*w1 + tri_c3.w*w2 )*z;
-    return res;
-  }
-
-  static inline vecni RealColorToUint32_BGRA(const vec4& rc)
-  {
     const vecnf const_255 = cvex::splat_1to4(255.0f);
-    const vecnf r = rc.x*const_255;
-    const vecnf g = rc.y*const_255;
-    const vecnf b = rc.z*const_255;
-    const vecnf a = rc.w*const_255;
 
-    const auto red   = cvex::to_vint(r);
-    const auto green = cvex::to_vint(g);
-    const auto blue  = cvex::to_vint(b);
-    const auto alpha = cvex::to_vint(a);
-
-    return (blue << 16) | (green << 8) | (red << 0) | (alpha << 24);
+    return (cvex::to_vint(rcz*const_255) << 0)  |
+           (cvex::to_vint(rcy*const_255) << 8)  |
+           (cvex::to_vint(rcx*const_255) << 16) |
+           (cvex::to_vint(rcw*const_255) << 24);
   }
 
 };

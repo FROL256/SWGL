@@ -560,9 +560,9 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
 
             if (cvex::cmp_test_any(zTest))
             {
-              const auto color   = ImplType::DrawPixel(tri, w1, w3, w2, zInv);
-              const auto pixData = ImplType::RealColorToUint32_BGRA(color);
-
+              //const auto color   = ImplType::DrawPixel(tri, w1, w3, w2, zInv);
+              //const auto pixData = ImplType::RealColorToUint32_BGRA(color);
+              const auto pixData = ImplType::DrawPixel(tri, w1, w3, w2, zInv);
               //const vi_n pixData  = cvex::splat_1to4(int(0xFFFFFFFF));
               const vi_n colorOld = cvex::load_u(cbuff + offset);
 
@@ -608,7 +608,7 @@ void RasterizeTriHalfSpace3D_BlockLine2(const typename ImplType::TriangleT& tri,
               if(zInv2 > zOld2)
               {
                 const vf_4 color2   = SROP::DrawPixel(tri, w1234, cvex::splat_1to4(zInv2));
-                cbuff[offsetY + x1] = cvex::color_compress_bgra(color2);
+                cbuff[offsetY + x1] = cvex::color_compress_bgra(cvex::shuffle_zyxw(color2));
                 zbuff[offsetY + x1] = zInv2;
               }
             }

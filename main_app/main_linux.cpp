@@ -96,11 +96,11 @@ void ExposeFunc()
     try
     {
       //test01_colored_triangle();
-      //demo01_colored_triangle(angle1);
+      demo01_colored_triangle(angle1);
       //test02_nehe_lesson1_simplified();
 
       //demo04_pyramid_and_cube_3d(wa.width, wa.height, 10.0f, 13.0f);
-      demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
+      //demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
       //demo03_many_small_dynamic_triangles();
       //demo14_transparent_cube(wa.width, wa.height, angle1, angle2);
       //demo19_cubes(wa.width, wa.height, angle1, angle2);
