@@ -22,7 +22,7 @@
 //typedef HWImplBlock4x4 HWImpl;
 //typedef HWImplBlockLine4x4 HWImpl;
 
-typedef HWImplBlock4x4_Fixp HWImpl;
+typedef HWImplBlockLine4x4_FixpRast HWImpl;
 
 
 using Triangle = HWImpl::TriangleType;

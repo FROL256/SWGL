@@ -16,7 +16,7 @@ struct HWImplBlockLine4x4 : public HWImplementationPureCpp
 };
 
 
-struct HWImplBlock4x4_Fixp : public HWImplementationPureCpp
+struct HWImplBlockLine4x4_FixpRast : public HWImplementationPureCpp
 {
   static void RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                 FrameBuffer* frameBuf);
