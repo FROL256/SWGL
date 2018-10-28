@@ -31,29 +31,26 @@ struct VROP_2D_CVEX<4>
   struct Colored2D
   {
     enum {n = 4};
-    using vfloat = cvex::vfloat4;
-    using vint   = cvex::vint4;
 
-    static inline vint Line(const TriangleLocal& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float a_areaInv)
+    static inline cvex::vint4 Line(const TriangleLocal& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv)
     {
-      const vfloat areaInv = cvex::splat_1to4(a_areaInv);
-      const vfloat w1      = areaInv*cvex::to_vfloat( cvex::make_vint4(CX1, CX1-FDY12, CX1 - 2*FDY12,CX1 - 3*FDY12) );
-      const vfloat w2      = areaInv*cvex::to_vfloat( cvex::make_vint4(CX2, CX2-FDY23, CX2 - 2*FDY23,CX2 - 3*FDY23) );
-      const vfloat w3      = (c_one - w1 - w2);
+      const auto w1 = areaInv*cvex::to_vfloat( cvex::make_vint4(CX1, CX1-FDY12, CX1 - 2*FDY12,CX1 - 3*FDY12) );
+      const auto w2 = areaInv*cvex::to_vfloat( cvex::make_vint4(CX2, CX2-FDY23, CX2 - 2*FDY23,CX2 - 3*FDY23) );
+      const auto w3 = (c_one - w1 - w2);
 
-      //const vfloat c1 = cvex::load((const float*)&tri.c1);
-      //const vfloat c2 = cvex::load((const float*)&tri.c2);
-      //const vfloat c3 = cvex::load((const float*)&tri.c3);
-      //
-      //const vfloat r = cvex::splat_0(c1)*w1 + cvex::splat_0(c2)*w2 + cvex::splat_0(c3)*w3;
-      //const vfloat g = cvex::splat_1(c1)*w1 + cvex::splat_1(c2)*w2 + cvex::splat_1(c3)*w3;
-      //const vfloat b = cvex::splat_2(c1)*w1 + cvex::splat_2(c2)*w2 + cvex::splat_2(c3)*w3;
-      //const vfloat a = cvex::splat_3(c1)*w1 + cvex::splat_3(c2)*w2 + cvex::splat_3(c3)*w3;
+      //const auto c1 = cvex::load((const float*)&tri.c1);
+      //const auto c2 = cvex::load((const float*)&tri.c2);
+      //const auto c3 = cvex::load((const float*)&tri.c3);
 
-      const vfloat r = tri.c1.x*w1 + tri.c2.x*w2 + tri.c3.x*w3;
-      const vfloat g = tri.c1.y*w1 + tri.c2.y*w2 + tri.c3.y*w3;
-      const vfloat b = tri.c1.z*w1 + tri.c2.z*w2 + tri.c3.z*w3;
-      const vfloat a = tri.c1.w*w1 + tri.c2.w*w2 + tri.c3.w*w3;
+      //const auto r = cvex::splat_0(c1)*w1 + cvex::splat_0(c2)*w2 + cvex::splat_0(c3)*w3;
+      //const auto g = cvex::splat_1(c1)*w1 + cvex::splat_1(c2)*w2 + cvex::splat_1(c3)*w3;
+      //const auto b = cvex::splat_2(c1)*w1 + cvex::splat_2(c2)*w2 + cvex::splat_2(c3)*w3;
+      //const auto a = cvex::splat_3(c1)*w1 + cvex::splat_3(c2)*w2 + cvex::splat_3(c3)*w3;
+
+      const auto r = tri.c1.x*w1 + tri.c2.x*w2 + tri.c3.x*w3;
+      const auto g = tri.c1.y*w1 + tri.c2.y*w2 + tri.c3.y*w3;
+      const auto b = tri.c1.z*w1 + tri.c2.z*w2 + tri.c3.z*w3;
+      const auto a = tri.c1.w*w1 + tri.c2.w*w2 + tri.c3.w*w3;
 
       return (cvex::to_vint(r*c_255) << 16) | // BGRA
              (cvex::to_vint(g*c_255) << 8)  |
@@ -61,7 +58,7 @@ struct VROP_2D_CVEX<4>
              (cvex::to_vint(a*c_255) << 24);
     }
 
-    static inline store_u(int* buffer, vint a_color)
+    static inline void store_u(int* buffer, cvex::vint4 a_color)
     {
       cvex::store_u(buffer, a_color);
     }
@@ -74,10 +71,10 @@ struct VROP_2D_CVEX<4>
       // const float4 c = tri.c1*w1 + tri.c2*w2 + tri.c3*(1.0f - w1 - w2);
       // return RealColorToUint32_BGRA(c);
 
-      const vfloat c1 = cvex::load((const float*)&tri.c1);
-      const vfloat c2 = cvex::load((const float*)&tri.c2);
-      const vfloat c3 = cvex::load((const float*)&tri.c3);
-      const vfloat c  = c1*w1 + c2*w2 + c3*(1.0f - w1 - w2);
+      const cvex::vfloat4 c1 = cvex::load((const float*)&tri.c1);
+      const cvex::vfloat4 c2 = cvex::load((const float*)&tri.c2);
+      const cvex::vfloat4 c3 = cvex::load((const float*)&tri.c3);
+      const cvex::vfloat4 c  = c1*w1 + c2*w2 + c3*(1.0f - w1 - w2);
       return cvex::color_compress_bgra(c);
     }
 
