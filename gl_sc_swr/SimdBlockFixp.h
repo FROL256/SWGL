@@ -154,10 +154,12 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const Triangle& tri, int tileMinX, in
 }
 
 
-template<typename Triangle, int blockSize>
+template<typename Triangle, typename ROP>
 void RasterizeTriHalfSpaceBlockFixp2D(const Triangle &tri, int tileMinX, int tileMinY,
                                       FrameBuffer *frameBuf)
 {
+  constexpr int blockSize = ROP::n;
+  typedef typename ROP::vint vint;
 
   // 28.4 fixed-point coordinates
   const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
@@ -252,22 +254,8 @@ void RasterizeTriHalfSpaceBlockFixp2D(const Triangle &tri, int tileMinX, int til
 
         for (int iy = 0; iy < blockSize; iy++)
         {
-          int CX1 = CY1;
-          int CX2 = CY2;
-          int CX3 = CY3;
-
-          for (int ix = x; ix < x + blockSize; ix++)
-          {
-            const float w1 = areaInv*float(CX1);
-            const float w2 = areaInv*float(CX3);
-
-            const float4 c = tri.c1*w1 + tri.c2*w2 + tri.c3*(1.0f - w1 - w2);
-            buffer[ix] = RealColorToUint32_BGRA(c);
-
-            CX1 -= FDY12;
-            CX2 -= FDY23;
-            CX3 -= FDY31;
-          }
+          auto pixLine = ROP::BlockLine(tri, CY1, CY3, FDY12, FDY31, areaInv);
+          cvex::store_u(buffer + x, pixLine);
 
           CY1 += FDX12;
           CY2 += FDX23;
