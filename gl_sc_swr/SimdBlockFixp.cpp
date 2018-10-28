@@ -71,8 +71,14 @@ struct VROP_2D_CVEX<4>
       const float w1 = areaInv*float(CX1);
       const float w2 = areaInv*float(CX2);
 
-      const float4 c = tri.c1*w1 + tri.c2*w2 + tri.c3*(1.0f - w1 - w2);
-      return RealColorToUint32_BGRA(c);
+      // const float4 c = tri.c1*w1 + tri.c2*w2 + tri.c3*(1.0f - w1 - w2);
+      // return RealColorToUint32_BGRA(c);
+
+      const vfloat c1 = cvex::load((const float*)&tri.c1);
+      const vfloat c2 = cvex::load((const float*)&tri.c2);
+      const vfloat c3 = cvex::load((const float*)&tri.c3);
+      const vfloat c  = c1*w1 + c2*w2 + c3*(1.0f - w1 - w2);
+      return cvex::color_compress_bgra(cvex::shuffle_zyxw(c));
     }
 
   };
