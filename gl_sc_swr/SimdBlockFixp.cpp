@@ -18,6 +18,6 @@ using TriangleLocal = HWImplementationPureCpp::TriangleType;
 void HWImplBlock4x4_Fixp::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                             FrameBuffer* frameBuf)
 {
-  RasterizeTriHalfSpaceBlockOrientedFixp<TriangleType,4>(tri, tileMinX, tileMinY,
-                                                         frameBuf);
+  RasterizeTriHalfSpaceBlockFixp<TriangleType,4>(tri, tileMinX, tileMinY,
+                                                 frameBuf);
 }

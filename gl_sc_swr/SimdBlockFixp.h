@@ -8,23 +8,15 @@
 #include "TriRaster.h"
 #include "RasterOperations.h"
 
-inline int imax(int a, int b) { return (a > b) ? a : b; }
-inline int imin(int a, int b) { return (a < b) ? a : b; }
-inline int iround(float f)    { return (int)f; }
+static inline int imax(int a, int b) { return (a > b) ? a : b; }
+static inline int imin(int a, int b) { return (a < b) ? a : b; }
 
-inline int imax(int a, int b, int c)
-{
-  return imax(a, imax(b, c));
-}
+static inline int iround(float f) { return (int)f; }
 
-inline int imin(int a, int b, int c)
-{
-  return imin(a, imin(b, c));
-}
 
 template<typename Triangle, int blockSize>
-void RasterizeTriHalfSpaceBlockOrientedFixp(const Triangle& tri, int tileMinX, int tileMinY,
-                                            FrameBuffer* frameBuf)
+void RasterizeTriHalfSpaceBlockFixp(const Triangle& tri, int tileMinX, int tileMinY,
+                                    FrameBuffer* frameBuf)
 {
 
   // 28.4 fixed-point coordinates
@@ -55,14 +47,10 @@ void RasterizeTriHalfSpaceBlockOrientedFixp(const Triangle& tri, int tileMinX, i
   const int FDY31 = DY31 << 4;
 
   // Bounding rectangle
-  int minx = (imin(X1, X2, X3) + 0xF) >> 4;
-  int maxx = (imax(X1, X2, X3) + 0xF) >> 4;
-  int miny = (imin(Y1, Y2, Y3) + 0xF) >> 4;
-  int maxy = (imax(Y1, Y2, Y3) + 0xF) >> 4;
-
-  // Start in corner of 8x8 block
-  minx &= ~(blockSize - 1);
-  miny &= ~(blockSize - 1);
+  const int minx = ( imax(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
+  const int miny = ( imax(tri.bb_iminY - tileMinY, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
+  const int maxx = ( imin(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
+  const int maxy = ( imin(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
 
   const int pitch  = frameBuf->pitch;
   int* colorBuffer = frameBuf->cbuffer + miny * pitch;
