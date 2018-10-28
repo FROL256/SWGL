@@ -5,11 +5,9 @@
 #ifndef TEST_GL_TOP_SIMDBLOCKFIXP_H
 #define TEST_GL_TOP_SIMDBLOCKFIXP_H
 
-
 static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
-
-static inline int iround(float f) { return (int)f; }
+static inline int iround(float f)    { return (int)f; }
 
 
 template<typename Triangle, int blockSize>
