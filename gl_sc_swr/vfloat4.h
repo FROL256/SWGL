@@ -35,10 +35,12 @@ namespace cvex
   static inline void store_u(int*   data,  vint4 a_val)  { _mm_storeu_ps((float*)data, _mm_castsi128_ps(a_val)); }
   static inline void store_s(float* data, vfloat4 a_val) { _mm_store_ss(data, a_val);  } // store single ...
 
-  static inline vfloat4 load(float *data)   { return _mm_load_ps(data);  }
-  static inline vfloat4 load_u(float *data) { return _mm_loadu_ps(data); }
-  static inline vint4   load_u(int *data)   { return _mm_castps_si128(_mm_loadu_ps((float*)data)); }
-  static inline vfloat4 load_s(float *data) { return _mm_load_ss(data);  }
+  static inline auto load  (float *data) -> vfloat4 { return _mm_load_ps(data);  }
+  static inline auto load  (int *data)   -> vint4   { return _mm_castps_si128(_mm_load_ps((float*)data));  }
+
+  static inline auto load_u(float *data) -> vfloat4 { return _mm_loadu_ps(data); }
+  static inline auto load_u(int *data)   -> vint4   { return _mm_castps_si128(_mm_loadu_ps((float*)data)); }
+  static inline auto load_s(float *data) -> vfloat4 { return _mm_load_ss(data);  }
 
   static inline int extract_0(const vint4 a_val)    { return _mm_cvtsi128_si32(a_val); }
   static inline int extract_1(const vint4 a_val)    { return _mm_cvtsi128_si32( _mm_shuffle_epi32(a_val, _MM_SHUFFLE(1,1,1,1)) ); }
@@ -52,8 +54,8 @@ namespace cvex
 
   static inline void stream(void *data, vint4 a_val) { _mm_stream_si128((vint4 *) data, a_val); }
 
-  static inline vint4   splat_1to4(const int i)   { return _mm_set_epi32(i, i, i, i); }
-  static inline vfloat4 splat_1to4(const float i) { return _mm_set_ps   (i, i, i, i); }
+  static inline auto splat(const int i)   -> vint4   { return _mm_set_epi32(i, i, i, i); }
+  static inline auto splat(const float i) -> vfloat4 { return _mm_set_ps   (i, i, i, i); }
 
   static inline vfloat4 splat_0(const vfloat4 v) { return _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0)); }
   static inline vfloat4 splat_1(const vfloat4 v) { return _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1)); }
@@ -65,8 +67,8 @@ namespace cvex
   static inline vfloat4 as_vfloat(const vint4 a_val) { return _mm_castsi128_ps(a_val); }
   static inline vint4   as_vint(const vfloat4 a_val) { return _mm_castps_si128(a_val); }
 
-  static inline vint4   to_vint(const vfloat4 a_val) { return _mm_cvtps_epi32(a_val);}
-  static inline vfloat4 to_vfloat(const vint4 a_val) { return _mm_cvtepi32_ps(a_val);}
+  static inline vint4   to_int32(const vfloat4 a_val) { return _mm_cvtps_epi32(a_val);}
+  static inline vfloat4 to_float32(const vint4 a_val) { return _mm_cvtepi32_ps(a_val);}
 
   static inline vfloat4 floor(const vfloat4 a_val) { return _mm_floor_ps(a_val); }
 
@@ -111,10 +113,13 @@ namespace cvex
     return _mm_cvtsi128_si32(out2);
   }
 
-  static inline bool cmp_test_all(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) == 15; }
-  static inline bool cmp_test_any(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) != 0; }
-  static inline bool cmp_test_all(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) == 15; }
-  static inline bool cmp_test_any(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) != 0; }
+  static inline vint4 cmp_gt_asint(const vfloat4 a, const vfloat4 b) { return (a > b); }
+  static inline bool test_bits_any(const vint4 a) { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) != 0; }
+
+  static inline bool test_all(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) == 15; }
+  static inline bool test_any(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) != 0; }
+  static inline bool test_all(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) == 15; }
+  static inline bool test_any(const vint4 a)   { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) != 0; }
 
 
   // it is strongly not recommended to use these functions because their general implementation could be slow

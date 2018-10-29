@@ -7,7 +7,6 @@
 #endif
 
 #include <algorithm>
-#include "HW_ROP_CVEX.h"
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 

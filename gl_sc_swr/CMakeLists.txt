@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops")
 
 set(SOURCE_LIB
         alloc16.h
@@ -36,10 +36,10 @@ set(SOURCE_LIB
         HWSSE1Impl.h
         SWGL_TiledFrameBuffer.h
         TimerLinux.cpp
-        HW_ROP_CVEX.h
+        HW_VROP.h
         vfloat4.h vfloat8.h
         TriRasterHalfSpaceBlockLineFixp.h
-        HWBlockLine4x4.cpp HW_ROP_SIMDPP.h)
+        HWBlockLine4x4.cpp HWBlockLine4x4_SIMDPP.cpp)
 
 include_directories("..")
 

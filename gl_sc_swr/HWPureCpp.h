@@ -2,9 +2,7 @@
 
 #include <cstdint>
 #include "LiteMath.h"
-#include "TriRaster.h"        
-
-#include "HW_ROP_CVEX.h"
+#include "TriRaster.h"
 
 struct SWGL_Context;
 struct Batch;
