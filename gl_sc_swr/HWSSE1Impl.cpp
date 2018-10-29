@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <algorithm>
 
-#include "SSE1Impl.h"
+#include "HWSSE1Impl.h"
 #include "swgl.h"
 
 #ifdef WIN32

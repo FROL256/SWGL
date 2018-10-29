@@ -29,7 +29,6 @@ struct int2
   int x, y;
 };
 
-
 struct float2
 {
   float2() :x(0), y(0){}

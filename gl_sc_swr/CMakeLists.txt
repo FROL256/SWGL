@@ -13,36 +13,33 @@ set(SOURCE_LIB
         gl_sc.h
         gl_std.h
         HWAbstractionLayer.h
-        PureCpp.cpp
+        HWPureCpp.cpp
         swgl.cpp
         TexSampler.h
         TriRaster.h
         BatchExport.cpp
         gl_sc_minimal.cpp
         LiteMath.h
-        PureCpp.h
+        HWPureCpp.h
         swgl.h
         tri_raster_shared.h
         gl_sc_standart.cpp
         glx_sc.cpp
-        PureCppBlock4x4.cpp
-        SSE1Impl.cpp
+        HWSSE1Impl.cpp
         SWGL_TiledFrameBuffer.cpp
         Timer.h
         config.h
         gl_standart.cpp
         glx_sc.h
         pugiconfig.hpp
-        PureCppBlock4x4.h
-        SSE1Impl.h
+        HWBlockLine4x4.h
+        HWSSE1Impl.h
         SWGL_TiledFrameBuffer.h
         TimerLinux.cpp
-        RasterOperations.h
-        PureCppBlock2x2.h PureCppBlock2x2.cpp
-        PureCppBlock.h SimdCppBlockLine.h SimdCpp1.h SimdCpp1.cpp
+        HW_ROP_CVEX.h
         vfloat4.h vfloat8.h
         TriRasterHalfSpaceBlockLineFixp.h
-        SimdBlockLine4x4.cpp)
+        HWBlockLine4x4.cpp HW_ROP_SIMDPP.h)
 
 include_directories("..")
 

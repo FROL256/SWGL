@@ -7,7 +7,7 @@
 #endif
 
 #include <algorithm>
-#include "RasterOperations.h"
+#include "HW_ROP_CVEX.h"
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 

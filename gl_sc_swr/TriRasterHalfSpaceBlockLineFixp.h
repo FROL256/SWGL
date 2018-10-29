@@ -150,11 +150,12 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const Triangle& tri, int tileMinX, in
 }
 
 
-template<typename Triangle, typename ROP>
-void RasterizeTriHalfSpaceBlockLineFixp2D(const Triangle &tri, int tileMinX, int tileMinY,
+template<typename ROP>
+void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
                                           FrameBuffer *frameBuf)
 {
   constexpr int blockSize = ROP::n;
+  typedef typename ROP::Triangle Triangle;
 
   // 28.4 fixed-point coordinates
   const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
@@ -249,8 +250,8 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const Triangle &tri, int tileMinX, int
 
         for (int iy = 0; iy < blockSize; iy++)
         {
-          auto pixLine = ROP::Line(tri, CY1, CY3, FDY12, FDY31, areaInv);
-                         ROP::store_u(buffer + x, pixLine);
+          ROP::Line(tri, CY1, CY3, FDY12, FDY31, areaInv,
+                    buffer + x);
 
           CY1 += FDX12;
           CY2 += FDX23;
@@ -295,11 +296,12 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const Triangle &tri, int tileMinX, int
 
 }
 
-template<typename Triangle, typename ROP>
-void RasterizeTriHalfSpaceBlockLineFixp3D(const Triangle &tri, int tileMinX, int tileMinY,
+template<typename ROP>
+void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
                                           FrameBuffer *frameBuf)
 {
   constexpr int blockSize = ROP::n;
+  typedef typename ROP::Triangle Triangle;
 
   // 28.4 fixed-point coordinates
   const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
