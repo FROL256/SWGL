@@ -64,7 +64,7 @@ using ROP_SIMDPP_3D = VROP<TriangleLocal, simdpp::float32x4, simdpp::int32x4, 4>
 void HWImplBlockLine4x4_SIMDPP::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                                   FrameBuffer* frameBuf)
 {
-
+  //cvex::set_ftz();
 
   switch (a_ropT)
   {

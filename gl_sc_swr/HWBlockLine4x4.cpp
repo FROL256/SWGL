@@ -36,6 +36,7 @@ using ROP_CVEX_3D = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Colored3
 void HWImplBlockLine4x4_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                                 FrameBuffer* frameBuf)
 {
+  cvex::set_ftz();
 
   switch (a_ropT)
   {

@@ -35,12 +35,12 @@ namespace cvex
   static inline void store_u(int*   data,  vint4 a_val)  { _mm_storeu_ps((float*)data, _mm_castsi128_ps(a_val)); }
   static inline void store_s(float* data, vfloat4 a_val) { _mm_store_ss(data, a_val);  } // store single ...
 
-  static inline auto load  (float *data) -> vfloat4 { return _mm_load_ps(data);  }
-  static inline auto load  (int *data)   -> vint4   { return _mm_castps_si128(_mm_load_ps((float*)data));  }
+  static inline auto load  (const float *data) -> vfloat4 { return _mm_load_ps(data);  }
+  static inline auto load  (const int *data)   -> vint4   { return _mm_castps_si128(_mm_load_ps((float*)data));  }
 
-  static inline auto load_u(float *data) -> vfloat4 { return _mm_loadu_ps(data); }
-  static inline auto load_u(int *data)   -> vint4   { return _mm_castps_si128(_mm_loadu_ps((float*)data)); }
-  static inline auto load_s(float *data) -> vfloat4 { return _mm_load_ss(data);  }
+  static inline auto load_u(const float *data) -> vfloat4 { return _mm_loadu_ps(data); }
+  static inline auto load_u(const int *data)   -> vint4   { return _mm_castps_si128(_mm_loadu_ps((float*)data)); }
+  static inline auto load_s(const float *data) -> vfloat4 { return _mm_load_ss(data);  }
 
   static inline int extract_0(const vint4 a_val)    { return _mm_cvtsi128_si32(a_val); }
   static inline int extract_1(const vint4 a_val)    { return _mm_cvtsi128_si32( _mm_shuffle_epi32(a_val, _MM_SHUFFLE(1,1,1,1)) ); }
