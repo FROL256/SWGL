@@ -29,7 +29,6 @@ using cvex::store_u;
 using cvex::rcp_e;
 using cvex::blend;
 using cvex::test_bits_any;
-using cvex::cmp_gt_asint;
 
 using ROP_CVEX_2D = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Colored2D;
 using ROP_CVEX_3D = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Colored3D;

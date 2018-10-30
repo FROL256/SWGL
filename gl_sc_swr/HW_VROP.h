@@ -10,6 +10,41 @@
 #pragma GCC optimize ("unroll-loops")
 #endif
 
+template<typename vint, int n>
+struct LineOffs
+{
+  static inline vint w(const int CX1, const int FDY12)
+  {
+    ALIGNED(n*4) int w1i[n];
+
+    #pragma GCC ivdep
+    for(int i=0;i<n;i++)
+      w1i[i] = CX1 - i*FDY12;
+
+    return (vint)load(w1i);
+  }
+};
+
+// template<typename vint>
+// struct LineOffs<vint, 4>
+// {
+//   static inline vint w(const int CX1, const int FDY12)
+//   {
+//     return vint{CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3};
+//   }
+// };
+//
+// template<typename vint>
+// struct LineOffs<vint, 8>
+// {
+//   static inline vint w(const int CX1, const int FDY12)
+//   {
+//     return vint{CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3, CX1 - FDY12*4, CX1 - FDY12*5, CX1 - FDY12*6, CX1 - FDY12*7};
+//   }
+// };
+
+
+
 
 template<typename TriangleT, typename vfloat, typename vint, int width>
 struct VROP
@@ -25,21 +60,11 @@ struct VROP
     static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
                             int* pLineColor)
     {
-      ALIGNED(n*4) int w1i[n];
-      ALIGNED(n*4) int w2i[n];
-
-      #pragma GCC ivdep
-      for(int i=0;i<n;i++)
-      {
-        w1i[i] = CX1 - i*FDY12;
-        w2i[i] = CX2 - i*FDY23;
-      }
-
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
-      const vfloat w1 = areaInv*to_float32( (vint)load(w1i) );
-      const vfloat w2 = areaInv*to_float32( (vint)load(w2i) );
+      const vfloat w1 = areaInv*to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
+      const vfloat w2 = areaInv*to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat r = tri.c1.x*w1 + tri.c2.x*w2 + tri.c3.x*w3;
@@ -75,26 +100,16 @@ struct VROP
     static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
                             int* pLineColor, float* pLineDepth)
     {
-      ALIGNED(n*4) int w1i[n];
-      ALIGNED(n*4) int w2i[n];
-
-      #pragma GCC ivdep
-      for(int i=0;i<n;i++)
-      {
-        w1i[i] = CX1 - i*FDY12;
-        w2i[i] = CX2 - i*FDY23;
-      }
-
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
-      const vfloat w1 = areaInv* to_float32( (vint)load(w1i) );
-      const vfloat w2 = areaInv* to_float32( (vint)load(w2i) );
+      const vfloat w1 = areaInv* to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
+      const vfloat w2 = areaInv* to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
       const vfloat zOld  = load_u(pLineDepth);
-      const vint   zTest = cmp_gt_asint(zInv, zOld);
+      const vint   zTest = (zInv > zOld);
 
       if(test_bits_any(zTest))
       {

@@ -40,8 +40,6 @@ namespace cvex
     return ((mask & a) | (~mask & b));
   }
 
-  static inline vint4 cmp_gt_asint(vfloat4 a, vfloat4 b) { return (a > b); }
-
   static inline bool test_bits_any(const vint4 a) { return (a[0] != 0 && a[1] != 0 && a[2] != 0 && a[3] != 0); }
 
   void set_ftz() {}

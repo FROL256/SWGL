@@ -3,7 +3,7 @@
 //
 // This library is created as lightweight and more optimised replacement for famous libsimdpp
 // In the case if no implementation for tarhet architecture presents, you should include
-// file (vfloat4_simdpp.h) that defines all operations and types via libsimdpp ...
+// file (vfloat4_your_arch.h) that defines all operations and types via orger implementation
 // so it can work ok different platforms anyway
 
 #ifndef TEST_GL_TOP_VFLOAT4_H
@@ -113,7 +113,6 @@ namespace cvex
     return _mm_cvtsi128_si32(out2);
   }
 
-  static inline vint4 cmp_gt_asint(const vfloat4 a, const vfloat4 b) { return (a > b); }
   static inline bool test_bits_any(const vint4 a) { return (_mm_movemask_ps(_mm_castsi128_ps(a)) & 15) != 0; }
 
   static inline bool test_all(const vfloat4 a) { return (_mm_movemask_ps(a) & 15) == 15; }
