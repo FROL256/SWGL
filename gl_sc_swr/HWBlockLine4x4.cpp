@@ -16,6 +16,9 @@
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
+#include "vfloat4_x64.h"
+//#include "vfloat4_gcc.h"
+
 using cvex::load;
 using cvex::splat;
 using cvex::to_float32;
@@ -23,7 +26,6 @@ using cvex::to_int32;
 
 using cvex::load_u;
 using cvex::store_u;
-using cvex::test_any;
 using cvex::rcp_e;
 using cvex::blend;
 using cvex::test_bits_any;

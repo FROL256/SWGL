@@ -4,7 +4,7 @@
 #ifndef TEST_GL_TOP_VFLOAT8_H
 #define TEST_GL_TOP_VFLOAT8_H
 
-#include "vfloat4.h"
+#include "vfloat4_x64.h"
 
 #include  <immintrin.h>
 

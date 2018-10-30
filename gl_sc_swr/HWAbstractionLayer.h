@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include "LiteMath.h"
-#include "vfloat4.h"
 #include "TriRaster.h"        
 
 #include "HWPureCpp.h"

@@ -5,7 +5,6 @@
 #ifndef TEST_GL_TOP_RASTEROPERATIONS_H
 #define TEST_GL_TOP_RASTEROPERATIONS_H
 
-#include "vfloat4.h"
 
 #ifndef WIN32
 #pragma GCC optimize ("unroll-loops")

@@ -1,16 +1,15 @@
 #pragma once
 
+#include "vfloat4_x64.h"
+
 #include <cstdint>
 #include "LiteMath.h"
 
-#include "TriRaster.h"        
-
-#include <xmmintrin.h> // SSE
-#include <emmintrin.h> // SSE2
-#include <smmintrin.h> // SSE4.1
+#include "TriRaster.h"
 
 struct SWGL_Context;
 struct Batch;
+
 
 using cvex::vfloat4;
 using cvex::vint4;

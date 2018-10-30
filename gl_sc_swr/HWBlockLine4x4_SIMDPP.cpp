@@ -97,6 +97,7 @@ void HWImplBlockLine4x4_SIMDPP::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bop
                                                              frameBuf);
       break;
   };
+
 }
 
 
