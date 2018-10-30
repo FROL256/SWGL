@@ -42,6 +42,8 @@ namespace cvex
 
   static inline bool test_bits_any(const vint4 a) { return (a[0] != 0 && a[1] != 0 && a[2] != 0 && a[3] != 0); }
 
+  static inline vint4 make_vint(const int a, const int b, const int c, const int d) { return vint4{a,b,c,d}; }
+
   void set_ftz() {}
 };
 

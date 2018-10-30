@@ -62,7 +62,7 @@ namespace cvex
   static inline vfloat4 splat_2(const vfloat4 v) { return _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2)); }
   static inline vfloat4 splat_3(const vfloat4 v) { return _mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 3, 3, 3)); }
 
-  static inline vint4 make_vint4(const int a, const int b, const int c, const int d) { return _mm_set_epi32(d, c, b, a); }
+  static inline vint4 make_vint(const int a, const int b, const int c, const int d) { return _mm_set_epi32(d, c, b, a); }
 
   static inline vfloat4 as_vfloat(const vint4 a_val) { return _mm_castsi128_ps(a_val); }
   static inline vint4   as_vint(const vfloat4 a_val) { return _mm_castps_si128(a_val); }

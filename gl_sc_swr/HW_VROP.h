@@ -25,23 +25,23 @@ struct LineOffs
   }
 };
 
-// template<typename vint>
-// struct LineOffs<vint, 4>
-// {
-//   static inline vint w(const int CX1, const int FDY12)
-//   {
-//     return vint{CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3};
-//   }
-// };
-//
-// template<typename vint>
-// struct LineOffs<vint, 8>
-// {
-//   static inline vint w(const int CX1, const int FDY12)
-//   {
-//     return vint{CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3, CX1 - FDY12*4, CX1 - FDY12*5, CX1 - FDY12*6, CX1 - FDY12*7};
-//   }
-// };
+template<typename vint>
+struct LineOffs<vint, 4>
+{
+  static inline vint w(const int CX1, const int FDY12)
+  {
+    return make_vint(CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3);
+  }
+};
+
+template<typename vint>
+struct LineOffs<vint, 8>
+{
+  static inline vint w(const int CX1, const int FDY12)
+  {
+    return make_vint(CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3, CX1 - FDY12*4, CX1 - FDY12*5, CX1 - FDY12*6, CX1 - FDY12*7);
+  }
+};
 
 
 
@@ -237,7 +237,7 @@ struct VROP<TriangleT, cvex::vfloat4, cvex::vint4,4>
                             int* pLineColor, float* pLineDepth)
     {
       const auto w1 = areaInv* cvex::to_float32(cvex::make_vint4(CX1, CX1 - FDY12, CX1 - 2 * FDY12, CX1 - 3 * FDY12));
-      const auto w2 = areaInv* cvex::to_float32(cvex::make_vint4(CX2, CX2 - FDY23, CX2 - 2 * FDY23, CX2 - 3 * FDY23));
+      const auto w2 = areaInv* cvex::to_float32(cvex::make_vint(CX2, CX2 - FDY23, CX2 - 2 * FDY23, CX2 - 3 * FDY23));
       const auto w3 = (c_one - w1 - w2);
 
       const auto zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;

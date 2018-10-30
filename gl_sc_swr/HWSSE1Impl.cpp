@@ -61,7 +61,7 @@ static const vfloat4 const_0000      = {0.0f, 0.0f, 0.0f, 0.0f};
 static const vfloat4 const_half_one  = {0.5f, 0.5f, 0.5f, 0.5f};
 static const vfloat4 g_epsE3         = {HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, HALF_SPACE_EPSILON, -10000000.0f};
 
-static const vint4 const_maskXYZ     = make_vint4(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000);
+static const vint4 const_maskXYZ     = make_vint(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000);
 
 inline static vfloat4 setWtoOne(vfloat4 a_rhs)
 {
@@ -398,8 +398,8 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   int*     cbuff = frameBuf->cbuffer;
   float*   zbuff = frameBuf->zbuffer;
 
-  const vfloat4 vTileMinX = to_float32(make_vint4(tileMinX, tileMinX, tileMinX, 0));
-  const vfloat4 vTileMinY = to_float32(make_vint4(tileMinY, tileMinY, tileMinY, 0));
+  const vfloat4 vTileMinX = to_float32(make_vint(tileMinX, tileMinX, tileMinX, 0));
+  const vfloat4 vTileMinY = to_float32(make_vint(tileMinY, tileMinY, tileMinY, 0));
 
   vfloat4 vx = tri.v3;
   vfloat4 vy = tri.v2;
@@ -409,8 +409,8 @@ void RasterizeTriHalfSpaceSimple2D(const TriangleLocal& tri, int tileMinX, int t
   vx = vx - vTileMinX;
   vy = vy - vTileMinX;
 
-  const vfloat4 vMinX = to_float32(make_vint4(minx, minx, minx, 0));
-  const vfloat4 vMinY = to_float32(make_vint4(miny, miny, miny, 0));
+  const vfloat4 vMinX = to_float32(make_vint(minx, minx, minx, 0));
+  const vfloat4 vMinY = to_float32(make_vint(miny, miny, miny, 0));
 
   const vfloat4 vDx   = vx - shuffle_yzxw(vx);
   const vfloat4 vDy   = vy - shuffle_yzxw(vy);
@@ -460,8 +460,8 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   int*     cbuff = frameBuf->cbuffer;
   float*   zbuff = frameBuf->zbuffer;
 
-  const vfloat4 vTileMinX = to_float32(make_vint4(tileMinX, tileMinX, tileMinX, 0));
-  const vfloat4 vTileMinY = to_float32(make_vint4(tileMinY, tileMinY, tileMinY, 0));
+  const vfloat4 vTileMinX = to_float32(make_vint(tileMinX, tileMinX, tileMinX, 0));
+  const vfloat4 vTileMinY = to_float32(make_vint(tileMinY, tileMinY, tileMinY, 0));
 
   vfloat4 vx = tri.v3;
   vfloat4 vy = tri.v2;
@@ -471,8 +471,8 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
   vx = vx - vTileMinX;
   vy = vy - vTileMinX;
 
-  const vfloat4 vMinX = to_float32(make_vint4(minx, minx, minx, 0));
-  const vfloat4 vMinY = to_float32(make_vint4(miny, miny, miny, 0));
+  const vfloat4 vMinX = to_float32(make_vint(minx, minx, minx, 0));
+  const vfloat4 vMinY = to_float32(make_vint(miny, miny, miny, 0));
 
   const vfloat4 vDx   = vx - shuffle_yzxw(vx);
   const vfloat4 vDy   = vy - shuffle_yzxw(vy);
