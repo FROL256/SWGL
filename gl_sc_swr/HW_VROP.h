@@ -30,6 +30,12 @@ struct LineOffs
   {
 
   }
+
+  static inline vint load1(const int* a_data, const int pitch, const vint offset)
+  {
+    vint temp = splat(0);
+    return temp;
+  }
 };
 
 template<typename vint>
@@ -75,6 +81,19 @@ struct LineOffs<vint, 4>
     a_result[1] = make_vint(d02, d12, d22, d32);
     a_result[2] = make_vint(d03, d13, d23, d33);
     a_result[3] = make_vint(d04, d14, d24, d34);
+  }
+
+  static inline vint load1(const int* a_data, const int pitch, const vint offset)
+  {
+    ALIGNED(16) int myOffsets[4];
+    store(myOffsets, offset);
+
+    const int d01 = a_data[myOffsets[0]];
+    const int d11 = a_data[myOffsets[1]];
+    const int d21 = a_data[myOffsets[2]];
+    const int d31 = a_data[myOffsets[3]];
+
+    return make_vint(d01, d11, d21, d31);
   }
 
 };
@@ -223,11 +242,6 @@ struct VROP
   static inline void ReadImage4f_Bilinear(const int* pData, const int w, const int h, int pitch, const vfloat a_texCoordX, const vfloat a_texCoordY,
                                           vfloat a_result[4])
   {
-    struct uchar4
-    {
-      unsigned char x, y, z, w;
-    };
-
     const vfloat fw = to_float32( (vint)splat(w) );
     const vfloat fh = to_float32( (vint)splat(h) );
 
@@ -297,12 +311,50 @@ struct VROP
     a_result[3] = f1_w * w1 + f2_w * w2 + f3_w * w3 + f4_w * w4;
   }
 
+  static inline void ReadImage4f_Point(const int* pData, const int w, const int h, int pitch, const vfloat a_texCoordX, const vfloat a_texCoordY,
+                                       vfloat a_result[4])
+  {
+    const vfloat zero = splat(0.0f);
+    const vfloat one  = splat(1.0f);
+    const vfloat half = splat(0.5f);
+
+    const vfloat fw = to_float32( (vint)splat(w) );
+    const vfloat fh = to_float32( (vint)splat(h) );
+
+    //const vfloat ffx = a_texCoordX*fw + half;
+    //const vfloat ffy = a_texCoordY*fh + half;
+
+    const vfloat ffx = vclamp(a_texCoordX*fw + half, zero, (fw - one) );
+    const vfloat ffy = vclamp(a_texCoordY*fh + half, zero, (fh - one) );
+
+    const vint px = to_int32(ffx);
+    const vint py = to_int32(ffy);
+
+    const vfloat mult = splat(0.003921568f); // (1.0f/255.0f);
+
+    const vint offset = (py*pitch) + px;
+    const vint ipixel = LineOffs<vint,width>::load1(pData, pitch, offset);
+
+    const vint mask_R = splat(int(0x000000FF));
+    const vint mask_G = splat(int(0x0000FF00));
+    const vint mask_B = splat(int(0x00FF0000));
+    const vint mask_A = splat(int(0xFF000000));
+
+    a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
+    a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
+    a_result[2] = mult*to_float32((ipixel & mask_B) >> 16);
+    a_result[3] = mult*to_float32((ipixel & mask_A) >> 24);
+  }
+
   static inline void Tex2DSample(const TriangleT& tri, vfloat x, vfloat y,
                                  vfloat a_res[4])
   {
     WrapTexCoord(x,y);
     ReadImage4f_Bilinear(tri.texS.data, tri.texS.w, tri.texS.h, tri.texS.pitch, x, y,
                          a_res);
+
+    //ReadImage4f_Point(tri.texS.data, tri.texS.w, tri.texS.h, tri.texS.pitch, x, y,
+    //                  a_res);
   }
 
   struct Textured2D
