@@ -60,6 +60,8 @@ void HWImplBlockLine4x4_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT,
     case ROP_TexNearest2D:
       RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D_TEX_P>(tri, tileMinX, tileMinY,
                                                               frameBuf);
+      break;
+
     case ROP_TexLinear2D:
       RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D_TEX_B>(tri, tileMinX, tileMinY,
                                                               frameBuf);
