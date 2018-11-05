@@ -72,7 +72,7 @@ struct LineOffs<vint, 4>
     a_result[0] = make_vint(d01, d11, d21, d31);
     a_result[1] = make_vint(d02, d12, d22, d32);
     a_result[2] = make_vint(d03, d13, d23, d33);
-    a_result[4] = make_vint(d04, d14, d24, d34);
+    a_result[3] = make_vint(d04, d14, d24, d34);
   }
 
 };
@@ -272,20 +272,20 @@ struct VROP
     const vfloat f1_z = mult*to_float32((ipixels[0] & mask_B) >> 16);
     const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);
 
-    const vfloat f2_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
-    const vfloat f2_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
-    const vfloat f2_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
-    const vfloat f2_w = mult*to_float32((ipixels[2] & mask_A) >> 24);
+    const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R) >> 0);
+    const vfloat f2_y = mult*to_float32((ipixels[1] & mask_G) >> 8);
+    const vfloat f2_z = mult*to_float32((ipixels[1] & mask_B) >> 16);
+    const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);
 
-    const vfloat f3_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
-    const vfloat f3_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
-    const vfloat f3_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
-    const vfloat f3_w = mult*to_float32((ipixels[3] & mask_A) >> 24);
+    const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
+    const vfloat f3_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
+    const vfloat f3_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
+    const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);
 
-    const vfloat f4_x = mult*to_float32((ipixels[4] & mask_R) >> 0);
-    const vfloat f4_y = mult*to_float32((ipixels[4] & mask_G) >> 8);
-    const vfloat f4_z = mult*to_float32((ipixels[4] & mask_B) >> 16);
-    const vfloat f4_w = mult*to_float32((ipixels[4] & mask_A) >> 24);
+    const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
+    const vfloat f4_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
+    const vfloat f4_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
+    const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);
 
     // Calculate the weighted sum of pixels (for each color channel)
     //
