@@ -75,6 +75,8 @@ namespace cvex
   static inline vfloat4 min(const vfloat4 a, const vfloat4 b) {return _mm_min_ps(a, b);}
   static inline vfloat4 max(const vfloat4 a, const vfloat4 b) {return _mm_max_ps(a, b);}
 
+  static inline vfloat4 vclamp(const vfloat4 x, const vfloat4 minVal, const vfloat4 maxVal) { return _mm_max_ps(_mm_min_ps(x, maxVal), minVal); }
+
   static inline vfloat4 rcp_e(const vfloat4 a) { return _mm_rcp_ps(a); }
 
   static inline vfloat4 blend(const vfloat4 a, const vfloat4 b, const vint4 mask)

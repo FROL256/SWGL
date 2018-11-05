@@ -44,7 +44,13 @@ namespace cvex
 
   static inline vint4 make_vint(const int a, const int b, const int c, const int d) { return vint4{a,b,c,d}; }
 
+  #ifdef __x86_64
+  #include <xmmintrin.h> // SSE
+  void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO); }
+  #else
   void set_ftz() {}
+  #endif
+
 };
 
 

@@ -31,8 +31,12 @@ using cvex::rcp_e;
 using cvex::blend;
 using cvex::test_bits_any;
 
-using ROP_CVEX_2D = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Colored2D;
-using ROP_CVEX_3D = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Colored3D;
+using cvex::vclamp;
+using cvex::store;
+
+using ROP_CVEX_2D     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Colored2D;
+using ROP_CVEX_3D     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Colored3D;
+using ROP_CVEX_2D_TEX = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4>::Textured2D;
 
 
 void HWImplBlockLine4x4_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
@@ -54,6 +58,8 @@ void HWImplBlockLine4x4_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT,
 
     case ROP_TexNearest2D:
     case ROP_TexLinear2D:
+      RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D_TEX>(tri, tileMinX, tileMinY,
+                                                            frameBuf);
       break;
 
     case ROP_TexNearest3D:
