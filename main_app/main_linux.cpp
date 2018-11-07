@@ -103,13 +103,13 @@ void ExposeFunc()
       //demo03_many_small_dynamic_triangles();
 
       //test11_alpha_tex_and_transp();
-      test12_rect_tex();
+      //test12_rect_tex();
 
       //demo14_transparent_cube(wa.width, wa.height, angle1, angle2);
-      //demo19_cubes(wa.width, wa.height, angle1, angle2);
+      //demo05_texture_3D(wa.width, wa.height, angle1, angle2);
+      demo19_cubes(wa.width, wa.height, angle1, angle2);
 
       //demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
-      //demo05_texture_3D(wa.width, wa.height, angle1, angle2);
       //demo25_teapot(wa.width, wa.height, angle1, angle2);
 
       //demo04_pyramid_and_cube_3d(wa.width, wa.height, 20, 30);

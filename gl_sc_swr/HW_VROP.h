@@ -415,7 +415,76 @@ struct VROP
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  struct Textured3D
+  {
+    enum {n = width};
+    using Triangle = TriangleT;
 
+    static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
+                            int* pLineColor, float* pLineDepth)
+    {
+      const vfloat c_one = splat(1.0f);
+      const vfloat c_255 = splat(255.0f);
+
+      const vfloat w1 = areaInv* to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
+      const vfloat w2 = areaInv* to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w3 = (c_one - w1 - w2);
+
+      const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
+      const vfloat zOld  = load_u(pLineDepth);
+      const vint   zTest = (zInv > zOld);
+
+      if(test_bits_any(zTest))
+      {
+        const auto z = rcp_e(zInv);
+
+        const auto r = (tri.c1.x * w1 + tri.c2.x * w2 + tri.c3.x * w3)*z;
+        const auto g = (tri.c1.y * w1 + tri.c2.y * w2 + tri.c3.y * w3)*z;
+        const auto b = (tri.c1.z * w1 + tri.c2.z * w2 + tri.c3.z * w3)*z;
+        const auto a = (tri.c1.w * w1 + tri.c2.w * w2 + tri.c3.w * w3)*z;
+
+        const vfloat tx = (tri.t1.x*w1 + tri.t2.x*w2 + tri.t3.x*w3)*z;
+        const vfloat ty = (tri.t1.y*w1 + tri.t2.y*w2 + tri.t3.y*w3)*z;
+
+        vfloat texColor[4];
+        Tex2DSample<bilinearIsEnabled>(tri, tx, ty, texColor);
+
+        const vint colorOld = load_u(pLineColor);
+
+        const vint colori = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
+                            (to_int32(g * texColor[1] * c_255) << 8)  |
+                            (to_int32(b * texColor[2] * c_255) << 0)  |
+                            (to_int32(a * texColor[3] * c_255) << 24);
+
+        store_u(pLineColor, blend(colori, colorOld, zTest));
+        store_u(pLineDepth, blend(zInv,   zOld,     zTest));
+      }
+    }
+
+
+    static inline void Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv,
+                             int* pPixelColor, float* pPixelDepth)
+    {
+      const float w1 = areaInv*float(CX1);
+      const float w2 = areaInv*float(CX2);
+
+      const float zInv = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*(1.0f - w1 - w2);
+      const float zOld = (*pPixelDepth);
+
+      if (zInv > zOld)
+      {
+        const float  z  = 1.0f/zInv;
+        const float w3  = (1.0f - w1 - w2);
+        const float4 c  = (tri.c1*w1 + tri.c2*w2 + tri.c3*w3)*z;
+        const float2 t  = (tri.t1*w1 + tri.t2*w2 + tri.t3*w3)*z;
+        const float4 tc = tex2D(tri.texS, t);
+
+        (*pPixelColor) = RealColorToUint32_BGRA(c*tc);
+        (*pPixelDepth) = zInv;
+      }
+    }
+
+  };
 
 };
 
