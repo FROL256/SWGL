@@ -12,7 +12,6 @@
 //@select current implementation here via typedef assigment :)
 //typedef HWImplementationPureCpp HWImpl;
 //typedef HWImpl_SSE1 HWImpl;
-
 typedef HWImplBlockLine4x4_CVEX HWImpl;
 
 using Triangle = HWImpl::TriangleType;

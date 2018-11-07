@@ -260,74 +260,71 @@ void HWImpl_SSE1::TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBa
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// inline vfloat4 CalcWeights(const vfloat4 psXY)
-// {
-//   const vfloat4 psXYfrac = psXY - cvex::floor(psXY);
-//
-//   const vfloat4 psXYfrac1 = const_1111 - psXYfrac;                                        // ? ? (1-y) (1-x)
-//   const vfloat4 w_x       = _mm_unpacklo_ps(psXYfrac1, psXYfrac);                         // ? ?     x (1-x) //#TODO: change implementation!!!
-//   const vfloat4 w_x2      = _mm_movelh_ps(w_x, w_x);                                      // x (1-x) x (1-x) //#TODO: change implementation!!!
-//   const vfloat4 w_y       = _mm_shuffle_ps(psXYfrac1, psXYfrac, _MM_SHUFFLE(1, 1, 1, 1)); // y y (1-y) (1-y) //#TODO: change implementation!!!
-//
-//   return w_x2*w_y;  // complete weight vector
-// }
-//
-// inline __m128 read_imagef_sse(const int* data, const int w, const int h, const int pitch, const __m128 wh, const __m128 tc)
-// {
-//   const __m128  ffxy = _mm_min_ps(_mm_max_ps(_mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one), const_0000), _mm_sub_ps(wh, const_1111));
-//   //const __m128  ffxy = _mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one);
-//   const __m128i iixy = _mm_cvtps_epi32(ffxy);
-//
-//   int px = _mm_cvtsi128_si32(iixy);
-//   int py = _mm_cvtsi128_si32(_mm_shuffle_epi32(iixy, _MM_SHUFFLE(1, 1, 1, 1)));
-//
-//   const int* p0 = data + px + py * pitch; // pointer to first pixel
-//
-//   // Load the data (2 pixels in one load)
-//   const __m128i p12 = _mm_loadl_epi64((const __m128i*)&p0[0 * pitch]);
-//   const __m128i p34 = _mm_loadl_epi64((const __m128i*)&p0[1 * pitch]);
-//
-//   __m128 weight = CalcWeights(ffxy);
-//
-//   // convert RGBA RGBA RGBA RGAB to RRRR GGGG BBBB AAAA (AoS to SoA)
-//   const __m128i p1234 = _mm_unpacklo_epi8(p12, p34);
-//   const __m128i p34xx = _mm_unpackhi_epi64(p1234, _mm_setzero_si128());
-//   const __m128i p1234_8bit = _mm_unpacklo_epi8(p1234, p34xx);
-//
-//   // extend to 16bit
-//   const __m128i pRG = _mm_unpacklo_epi8(p1234_8bit, _mm_setzero_si128());
-//   const __m128i pBA = _mm_unpackhi_epi8(p1234_8bit, _mm_setzero_si128());
-//
-//   // convert weights to integer
-//   weight = _mm_mul_ps(weight, const_256);
-//   __m128i weighti = _mm_cvtps_epi32(weight); // w4 w3 w2 w1
-//   weighti = _mm_packs_epi32(weighti, weighti); // 32->2x16bit
-//
-//   //outRG = [w1*R1 + w2*R2 | w3*R3 + w4*R4 | w1*G1 + w2*G2 | w3*G3 + w4*G4]
-//   const __m128i outRG = _mm_madd_epi16(pRG, weighti);
-//   //outBA = [w1*B1 + w2*B2 | w3*B3 + w4*B4 | w1*A1 + w2*A2 | w3*A3 + w4*A4]
-//   const __m128i outBA = _mm_madd_epi16(pBA, weighti);
-//
-//   const __m128i color255  = _mm_srli_epi32(_mm_hadd_epi32(outRG, outBA), 8);
-//   const __m128  finColor  = _mm_mul_ps(const_255_inv, _mm_cvtepi32_ps(color255));
-//
-//   return _mm_shuffle_ps(finColor, finColor, _MM_SHUFFLE(3, 0, 1, 2)); // swap red and blue
-// }
-//
-//
-// inline static __m128 wrapTexCoord(const __m128 a_texCoord)
-// {
-//   const __m128 texCoord2   = _mm_sub_ps(a_texCoord, _mm_floor_ps(a_texCoord));
-//   const __m128 a_texCoord3 = _mm_add_ps(texCoord2, const_1111);
-//   const __m128 lessMask    = _mm_cmplt_ps(texCoord2, _mm_setzero_ps());
-//
-//   return _mm_or_ps(_mm_and_ps(lessMask, a_texCoord3), _mm_andnot_ps(lessMask, texCoord2));
-// }
-//
-// inline __m128 tex2D_sse(const TexSampler& sampler, const __m128 texCoord, const __m128 txwh)
-// {
-//   return read_imagef_sse(sampler.data, sampler.w, sampler.h, sampler.pitch, txwh, wrapTexCoord(texCoord));
-// }
+inline vfloat4 CalcWeights(const vfloat4 psXY)
+{
+  const vfloat4 psXYfrac = psXY - cvex::floor(psXY);
+  const vfloat4 psXYfrac1 = const_1111 - psXYfrac;                                        // ? ? (1-y) (1-x)
+  const vfloat4 w_x       = _mm_unpacklo_ps(psXYfrac1, psXYfrac);                         // ? ?     x (1-x) //#TODO: change implementation!!!
+  const vfloat4 w_x2      = _mm_movelh_ps(w_x, w_x);                                      // x (1-x) x (1-x) //#TODO: change implementation!!!
+  const vfloat4 w_y       = _mm_shuffle_ps(psXYfrac1, psXYfrac, _MM_SHUFFLE(1, 1, 1, 1)); // y y (1-y) (1-y) //#TODO: change implementation!!!
+  return w_x2*w_y;  // complete weight vector
+}
+
+
+ inline __m128 read_imagef_sse(const int* data, const int w, const int h, const int pitch, const __m128 wh, const __m128 tc)
+ {
+   const __m128  ffxy = _mm_min_ps(_mm_max_ps(_mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one), const_0000), _mm_sub_ps(wh, const_1111));
+   //const __m128  ffxy = _mm_sub_ps(_mm_mul_ps(wh, tc), const_half_one);
+   const __m128i iixy = _mm_cvtps_epi32(ffxy);
+
+   int px = _mm_cvtsi128_si32(iixy);
+   int py = _mm_cvtsi128_si32(_mm_shuffle_epi32(iixy, _MM_SHUFFLE(1, 1, 1, 1)));
+
+   const int* p0 = data + px + py * pitch; // pointer to first pixel
+
+   // Load the data (2 pixels in one load)
+   const __m128i p12 = _mm_loadl_epi64((const __m128i*)&p0[0 * pitch]);
+   const __m128i p34 = _mm_loadl_epi64((const __m128i*)&p0[1 * pitch]);
+
+   __m128 weight = CalcWeights(ffxy);
+
+   // convert RGBA RGBA RGBA RGAB to RRRR GGGG BBBB AAAA (AoS to SoA)
+   const __m128i p1234 = _mm_unpacklo_epi8(p12, p34);
+   const __m128i p34xx = _mm_unpackhi_epi64(p1234, _mm_setzero_si128());
+   const __m128i p1234_8bit = _mm_unpacklo_epi8(p1234, p34xx);
+
+   // extend to 16bit
+   const __m128i pRG = _mm_unpacklo_epi8(p1234_8bit, _mm_setzero_si128());
+   const __m128i pBA = _mm_unpackhi_epi8(p1234_8bit, _mm_setzero_si128());
+
+   // convert weights to integer
+   weight = _mm_mul_ps(weight, const_256);
+   __m128i weighti = _mm_cvtps_epi32(weight); // w4 w3 w2 w1
+   weighti = _mm_packs_epi32(weighti, weighti); // 32->2x16bit
+
+   //outRG = [w1*R1 + w2*R2 | w3*R3 + w4*R4 | w1*G1 + w2*G2 | w3*G3 + w4*G4]
+   const __m128i outRG = _mm_madd_epi16(pRG, weighti);
+   //outBA = [w1*B1 + w2*B2 | w3*B3 + w4*B4 | w1*A1 + w2*A2 | w3*A3 + w4*A4]
+   const __m128i outBA = _mm_madd_epi16(pBA, weighti);
+
+   const __m128i color255  = _mm_srli_epi32(_mm_hadd_epi32(outRG, outBA), 8);
+   const __m128  finColor  = _mm_mul_ps(const_255_inv, _mm_cvtepi32_ps(color255));
+
+   return _mm_shuffle_ps(finColor, finColor, _MM_SHUFFLE(3, 0, 1, 2)); // swap red and blue
+ }
+
+inline static __m128 wrapTexCoord(const __m128 a_texCoord)
+{
+  const __m128 texCoord2   = _mm_sub_ps(a_texCoord, _mm_floor_ps(a_texCoord));
+  const __m128 a_texCoord3 = _mm_add_ps(texCoord2, const_1111);
+  const __m128 lessMask    = _mm_cmplt_ps(texCoord2, _mm_setzero_ps());
+  return _mm_or_ps(_mm_and_ps(lessMask, a_texCoord3), _mm_andnot_ps(lessMask, texCoord2));
+}
+
+inline __m128 tex2D_sse(const TexSampler& sampler, const __m128 texCoord, const __m128 txwh)
+{
+  return read_imagef_sse(sampler.data, sampler.w, sampler.h, sampler.pitch, txwh, wrapTexCoord(texCoord));
+}
 
 struct Colored2D
 {
@@ -378,8 +375,8 @@ struct Textured3D
     tc  = tc*z;
   #endif
 
-    //const __m128 texColor = tex2D_sse(tri.texS, tc, tri.tex_txwh);
-    const vfloat4 texColor = {1.0f, 1.0f, 1.0f, 1.0f};
+    const __m128 texColor = tex2D_sse(tri.texS, tc, tri.tex_txwh);
+    //const vfloat4 texColor = {1.0f, 1.0f, 1.0f, 1.0f};
     return clr*texColor;
   }
 
