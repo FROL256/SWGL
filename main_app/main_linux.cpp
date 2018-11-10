@@ -100,6 +100,7 @@ void ExposeFunc()
 
       //demo04_pyramid_and_cube_3d(wa.width, wa.height, 10.0f, 13.0f);
       //demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
+      //demo14_transparent_cube(wa.width, wa.height, 10.0f, 13.0f);
       //demo03_many_small_dynamic_triangles();
 
       //test11_alpha_tex_and_transp();
