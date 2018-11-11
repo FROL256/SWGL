@@ -286,22 +286,22 @@ struct VROP
     const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R) >> 0);
     const vfloat f1_y = mult*to_float32((ipixels[0] & mask_G) >> 8);
     const vfloat f1_z = mult*to_float32((ipixels[0] & mask_B) >> 16);
-    const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);
+    const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R) >> 0);
     const vfloat f2_y = mult*to_float32((ipixels[1] & mask_G) >> 8);
     const vfloat f2_z = mult*to_float32((ipixels[1] & mask_B) >> 16);
-    const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);
+    const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
     const vfloat f3_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
     const vfloat f3_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
-    const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);
+    const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
     const vfloat f4_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
     const vfloat f4_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
-    const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);
+    const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     // Calculate the weighted sum of pixels (for each color channel)
     //
@@ -335,10 +335,10 @@ struct VROP
     const vint offset = (py*pitch) + px;
     const vint ipixel = LineOffs<vint,width>::load1(pData, pitch, offset);
 
-    const vint mask_R = splat(int(0x000000FF));
-    const vint mask_G = splat(int(0x0000FF00));
-    const vint mask_B = splat(int(0x00FF0000));
-    const vint mask_A = splat(int(0xFF000000));
+    const vint mask_R = splat(int(0x000000FF)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vint mask_G = splat(int(0x0000FF00)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vint mask_B = splat(int(0x00FF0000)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vint mask_A = splat(int(0xFF000000)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
     a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
@@ -534,10 +534,10 @@ struct VROP
 
         const vint   colorOld  = load_u(pLineColor);
 
-        const vfloat colorOldX = to_float32((colorOld & 0x00FF0000) >> 16)*inv_255;
-        const vfloat colorOldY = to_float32((colorOld & 0x0000FF00) >> 8 )*inv_255;
-        const vfloat colorOldZ = to_float32((colorOld & 0x000000FF)      )*inv_255;
-        const vfloat colorOldW = to_float32((colorOld & 0xFF000000) >> 24)*inv_255;
+        const vfloat colorOldX = to_float32((colorOld & 0x00FF0000) >> 16)*inv_255; //#TODO: must use unsigned shift !!!
+        const vfloat colorOldY = to_float32((colorOld & 0x0000FF00) >> 8 )*inv_255; //#TODO: must use unsigned shift !!!
+        const vfloat colorOldZ = to_float32((colorOld & 0x000000FF)      )*inv_255; //#TODO: must use unsigned shift !!!
+        const vfloat colorOldW = to_float32((colorOld & 0xFF000000) >> 24)*inv_255; //#TODO: must use unsigned shift !!!
 
         const vfloat one_minus_alpha = (c_one - colorNewW);
 
