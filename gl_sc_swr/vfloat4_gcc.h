@@ -44,6 +44,28 @@ namespace cvex
 
   static inline vint4 make_vint(const int a, const int b, const int c, const int d) { return vint4{a,b,c,d}; }
 
+
+  static inline vfloat4 min(const vfloat4 a, const vfloat4 b)
+  {
+    return vfloat4 { a[0] < b[0] ? a[0] : b[0],
+                     a[1] < b[1] ? a[1] : b[1],
+                     a[2] < b[2] ? a[2] : b[2],
+                     a[3] < b[3] ? a[3] : b[3] };
+  }
+
+  static inline vfloat4 max(const vfloat4 a, const vfloat4 b)
+  {
+    return vfloat4 { a[0] > b[0] ? a[0] : b[0],
+                     a[1] > b[1] ? a[1] : b[1],
+                     a[2] > b[2] ? a[2] : b[2],
+                     a[3] > b[3] ? a[3] : b[3] };
+  }
+
+  static inline vfloat4 vclamp(const vfloat4 x, const vfloat4 minVal, const vfloat4 maxVal)
+  {
+    return max(min(x, maxVal), minVal);
+  }
+
   #ifdef __x86_64
   #include <xmmintrin.h> // SSE
   void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO); }
