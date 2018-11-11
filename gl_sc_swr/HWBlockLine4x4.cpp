@@ -16,8 +16,8 @@
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
-//#include "vfloat4_x64.h"
-#include "vfloat4_gcc.h"
+#include "vfloat4_x64.h"
+//#include "vfloat4_gcc.h"
 
 using cvex::load;
 using cvex::splat;
@@ -34,14 +34,16 @@ using cvex::test_bits_any;
 using cvex::vclamp;
 using cvex::store;
 
-using ROP_CVEX_2D             = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Colored2D;
-using ROP_CVEX_3D             = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Colored3D;
+using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::FillColor;
 
-using ROP_CVEX_2D_TEX_P       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured2D;
-using ROP_CVEX_2D_TEX_B       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured2D;
+using ROP_CVEX_2D       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Colored2D;
+using ROP_CVEX_3D       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Colored3D;
 
-using ROP_CVEX_3D_TEX_P       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured3D;
-using ROP_CVEX_3D_TEX_B       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured3D;
+using ROP_CVEX_2D_TEX_P = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured2D;
+using ROP_CVEX_2D_TEX_B = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured2D;
+
+using ROP_CVEX_3D_TEX_P = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured3D;
+using ROP_CVEX_3D_TEX_B = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured3D;
 
 
 void HWImplBlockLine4x4_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
@@ -91,9 +93,10 @@ void HWImplBlockLine4x4_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT,
                                                               frameBuf);
       break;
 
+
     default :
-      RasterizeTriHalfSpaceBlockFixp2D_Fill<TriangleType, 4>(tri, tileMinX, tileMinY,
-                                                             frameBuf);
+      RasterizeTriHalfSpaceBlockFixp2D_Fill<ROP_CVEX_FILL>(tri, tileMinX, tileMinY,
+                                                           frameBuf);
       break;
   };
 

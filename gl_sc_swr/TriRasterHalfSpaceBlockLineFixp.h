@@ -10,10 +10,12 @@ static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
 
 
-template<typename Triangle, int blockSize>
-void RasterizeTriHalfSpaceBlockFixp2D_Fill(const Triangle& tri, int tileMinX, int tileMinY,
+template<typename ROP>
+void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, int tileMinX, int tileMinY,
                                            FrameBuffer* frameBuf)
 {
+  constexpr int blockSize = ROP::n;
+  typedef typename ROP::Triangle Triangle;
 
   // 28.4 fixed-point coordinates
   const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
@@ -55,6 +57,9 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const Triangle& tri, int tileMinX, in
   int C1 = DY12 * X1 - DX12 * Y1;
   int C2 = DY23 * X2 - DX23 * Y2;
   int C3 = DY31 * X3 - DX31 * Y3;
+
+  const auto triColor  = ROP::Line(tri);
+  const int  triColorS = triColor[0];
 
   // Correct for fill convention
   if (DY12 < 0 || (DY12 == 0 && DX12 > 0)) C1++;
@@ -102,11 +107,7 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const Triangle& tri, int tileMinX, in
       {
         for (int iy = 0; iy < blockSize; iy++)
         {
-          for (int ix = x; ix < x + blockSize; ix++)
-          {
-            buffer[ix] = 0x0000FF00; // Green
-          }
-
+          ROP::store_line(buffer + x, triColor);
           buffer += pitch;
         }
       }
@@ -125,9 +126,7 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const Triangle& tri, int tileMinX, in
           for (int ix = x; ix < x + blockSize; ix++)
           {
             if (CX1 > 0 && CX2 > 0 && CX3 > 0)
-            {
-              buffer[ix] = 0x000000FF; // Blue
-            }
+              buffer[ix] = triColorS;
 
             CX1 -= FDY12;
             CX2 -= FDY23;

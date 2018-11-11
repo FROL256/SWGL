@@ -113,6 +113,26 @@ struct LineOffs<vint, 8>
 template<typename TriangleT, typename vfloat, typename vint, int width, bool bilinearIsEnabled>
 struct VROP
 {
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  struct FillColor
+  {
+    enum {n = width};
+    using Triangle = TriangleT;
+
+    static inline vint Line(const TriangleT& tri)
+    {
+      const int res  = RealColorToUint32_BGRA(tri.c1);
+      return make_vint(res,res,res,res);
+      //return make_vint(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF);
+    }
+
+    static inline void store_line(int* line, vint data)
+    {
+      store_u(line, data);
+    }
+
+  };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
