@@ -54,8 +54,12 @@ namespace cvex
 
   static inline void stream(void *data, vint4 a_val) { _mm_stream_si128((vint4 *) data, a_val); }
 
-  static inline auto splat(const int i)   -> vint4   { return _mm_set_epi32(i, i, i, i); }
-  static inline auto splat(const float i) -> vfloat4 { return _mm_set_ps   (i, i, i, i); }
+  static inline auto splat(const int i)          -> vint4   { return _mm_set_epi32(i, i, i, i); }
+  static inline auto splat(const unsigned int i) -> vint4   { return _mm_set_epi32(i, i, i, i); }
+  static inline auto splat(const float i)        -> vfloat4 { return _mm_set_ps   (i, i, i, i); }
+
+  static inline vint4 shift_ll(const vint4 v, const int val) { return _mm_slli_epi32(v, val); }
+  static inline vint4 shift_rl(const vint4 v, const int val) { return _mm_srli_epi32(v, val); }
 
   static inline vfloat4 splat_0(const vfloat4 v) { return _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0)); }
   static inline vfloat4 splat_1(const vfloat4 v) { return _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1)); }
