@@ -10,7 +10,7 @@ struct HWImplBlockLine4x4_CVEX : public HWImplementationPureCpp
 };
 
 
-struct HWImplBlockLine4x4_SIMDPP : public HWImplementationPureCpp
+struct HWImplBlockLine8x8_CVEX : public HWImplementationPureCpp
 {
   static void RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
                                 FrameBuffer* frameBuf);

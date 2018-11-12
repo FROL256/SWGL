@@ -37,9 +37,9 @@ set(SOURCE_LIB
         SWGL_TiledFrameBuffer.h
         TimerLinux.cpp
         HW_VROP.h
-        vfloat4_x64.h vfloat8_x64.h
+        vfloat4_x64.h vfloat4_gcc.h vfloat8_x64.h
         TriRasterHalfSpaceBlockLineFixp.h
-        HWBlockLine4x4.cpp vfloat4_gcc.h)
+        HWBlockLine4x4.cpp HWBlockLine8x8.cpp)
 
 include_directories("..")
 

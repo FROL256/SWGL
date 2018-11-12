@@ -105,6 +105,7 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, in
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)
       {
+        
         for (int iy = 0; iy < blockSize; iy++)
         {
           ROP::store_line(buffer + x, triColor);

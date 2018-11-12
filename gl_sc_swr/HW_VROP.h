@@ -105,6 +105,87 @@ struct LineOffs<vint, 8>
   {
     return make_vint(CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3, CX1 - FDY12*4, CX1 - FDY12*5, CX1 - FDY12*6, CX1 - FDY12*7);
   }
+
+
+  static inline void load4(const int* a_data, const int pitch, const vint offset,
+                           vint a_result[4])
+  {
+    ALIGNED(32) int myOffsets[8];
+    store(myOffsets, offset);
+
+    const int* p0 = a_data + myOffsets[0];
+    const int* p1 = a_data + myOffsets[1];
+    const int* p2 = a_data + myOffsets[2];
+    const int* p3 = a_data + myOffsets[3];
+
+    const int* p4 = a_data + myOffsets[4];
+    const int* p5 = a_data + myOffsets[5];
+    const int* p6 = a_data + myOffsets[6];
+    const int* p7 = a_data + myOffsets[7];
+
+    const int d01 = p0[0 + 0 * pitch];
+    const int d02 = p0[1 + 0 * pitch];
+    const int d03 = p0[0 + 1 * pitch];
+    const int d04 = p0[1 + 1 * pitch];
+
+    const int d11 = p1[0 + 0 * pitch];
+    const int d12 = p1[1 + 0 * pitch];
+    const int d13 = p1[0 + 1 * pitch];
+    const int d14 = p1[1 + 1 * pitch];
+
+    const int d21 = p2[0 + 0 * pitch];
+    const int d22 = p2[1 + 0 * pitch];
+    const int d23 = p2[0 + 1 * pitch];
+    const int d24 = p2[1 + 1 * pitch];
+
+    const int d31 = p3[0 + 0 * pitch];
+    const int d32 = p3[1 + 0 * pitch];
+    const int d33 = p3[0 + 1 * pitch];
+    const int d34 = p3[1 + 1 * pitch];
+
+    const int d41 = p4[0 + 0 * pitch];
+    const int d42 = p4[1 + 0 * pitch];
+    const int d43 = p4[0 + 1 * pitch];
+    const int d44 = p4[1 + 1 * pitch];
+
+    const int d51 = p5[0 + 0 * pitch];
+    const int d52 = p5[1 + 0 * pitch];
+    const int d53 = p5[0 + 1 * pitch];
+    const int d54 = p5[1 + 1 * pitch];
+
+    const int d61 = p6[0 + 0 * pitch];
+    const int d62 = p6[1 + 0 * pitch];
+    const int d63 = p6[0 + 1 * pitch];
+    const int d64 = p6[1 + 1 * pitch];
+
+    const int d71 = p7[0 + 0 * pitch];
+    const int d72 = p7[1 + 0 * pitch];
+    const int d73 = p7[0 + 1 * pitch];
+    const int d74 = p7[1 + 1 * pitch];
+
+    a_result[0] = make_vint(d01, d11, d21, d31, d41, d51, d61, d71);
+    a_result[1] = make_vint(d02, d12, d22, d32, d42, d52, d62, d72);
+    a_result[2] = make_vint(d03, d13, d23, d33, d43, d53, d63, d73);
+    a_result[3] = make_vint(d04, d14, d24, d34, d44, d54, d64, d74);
+  }
+
+
+  static inline vint load1(const int* a_data, const int pitch, const vint offset)
+  {
+    ALIGNED(32) int myOffsets[8];
+    store(myOffsets, offset);
+
+    const int d01 = a_data[myOffsets[0]];
+    const int d11 = a_data[myOffsets[1]];
+    const int d21 = a_data[myOffsets[2]];
+    const int d31 = a_data[myOffsets[3]];
+    const int d41 = a_data[myOffsets[4]];
+    const int d51 = a_data[myOffsets[5]];
+    const int d61 = a_data[myOffsets[6]];
+    const int d71 = a_data[myOffsets[7]];
+
+    return make_vint(d01, d11, d21, d31, d41, d51, d61, d71);
+  }
 };
 
 
@@ -122,9 +203,7 @@ struct VROP
 
     static inline vint Line(const TriangleT& tri)
     {
-      const int res  = RealColorToUint32_BGRA(tri.c1);
-      return make_vint(res,res,res,res);
-      //return make_vint(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF);
+      return splat(RealColorToUint32_BGRA(tri.c1));
     }
 
     static inline void store_line(int* line, vint data)
