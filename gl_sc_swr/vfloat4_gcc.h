@@ -73,6 +73,9 @@ namespace cvex
   void set_ftz() {}
   #endif
 
+
+  static inline void prefetch(const float* ptr) {  __builtin_prefetch(ptr); }
+  static inline void prefetch(const int* ptr)   {  __builtin_prefetch(ptr); }
 };
 
 

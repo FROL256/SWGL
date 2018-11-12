@@ -263,6 +263,7 @@ struct VROP
     static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
                             int* pLineColor, float* pLineDepth)
     {
+      prefetch(pLineDepth);
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
@@ -276,6 +277,7 @@ struct VROP
 
       if(test_bits_any(zTest))
       {
+        prefetch(pLineColor);
         const auto z = rcp_e(zInv);
 
         const auto r = (tri.c1.x * w1 + tri.c2.x * w2 + tri.c3.x * w3)*z;
@@ -522,6 +524,8 @@ struct VROP
     static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
                             int* pLineColor, float* pLineDepth)
     {
+      prefetch(pLineDepth);
+
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
@@ -535,7 +539,8 @@ struct VROP
 
       if(test_bits_any(zTest))
       {
-        store_u(pLineDepth, blend(zInv,   zOld,     zTest));
+        store_u(pLineDepth, blend(zInv, zOld, zTest));
+        prefetch(pLineColor);
 
         const vfloat  z = rcp_e(zInv);
 

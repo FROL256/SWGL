@@ -156,6 +156,8 @@ namespace cvex
   static inline vfloat4 div_s(vfloat4 a, vfloat4 b) { return _mm_div_ss(a,b); } // #NOTE: assume you will never use .yzw coordinates!; only .x is valid!
   static inline vfloat4 rcp_s(vfloat4 a)            { return _mm_rcp_ss(a);   } // #NOTE: assume you will never use .yzw coordinates!; only .x is valid!
 
+  static inline void prefetch(const float* ptr) {  _mm_prefetch(ptr, _MM_HINT_T0); }
+  static inline void prefetch(const int* ptr)   {  _mm_prefetch(ptr, _MM_HINT_T0); }
 };
 
 #endif //TEST_GL_TOP_VFLOAT4_H

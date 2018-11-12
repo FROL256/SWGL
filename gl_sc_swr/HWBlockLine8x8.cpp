@@ -29,6 +29,7 @@ using cvex::test_bits_any;
 
 using cvex::vclamp;
 using cvex::store;
+using cvex::prefetch;
 
 using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex::vfloat8, cvex::vint8, 8, false>::FillColor;
 

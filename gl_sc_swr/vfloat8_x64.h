@@ -55,6 +55,8 @@ namespace cvex
 
   static inline vfloat8 vclamp(const vfloat8 x, const vfloat8 minVal, const vfloat8 maxVal) { return _mm256_max_ps(_mm256_min_ps(x, maxVal), minVal); }
 
+  static inline void prefetch(const float* ptr) {  _mm_prefetch(ptr, _MM_HINT_T0); }
+  static inline void prefetch(const int* ptr)   {  _mm_prefetch(ptr, _MM_HINT_T0); }
 };
 
 #endif //TEST_GL_TOP_VFLOAT8_H
