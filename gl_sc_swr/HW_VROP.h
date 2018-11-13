@@ -203,7 +203,7 @@ struct VROP
 
     static inline vint Line(const TriangleT& tri)
     {
-      return splat(RealColorToUint32_BGRA(tri.c1));
+      return splat((int)RealColorToUint32_BGRA(tri.c1));
     }
 
     static inline void store_line(int* line, vint data)
