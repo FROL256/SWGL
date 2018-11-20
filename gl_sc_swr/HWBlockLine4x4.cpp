@@ -16,8 +16,8 @@
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
-#include "vfloat4_x64.h"
-//#include "vfloat4_gcc.h"
+//#include "vfloat4_x64.h"
+#include "vfloat4_gcc.h"
 
 using cvex::load;
 using cvex::splat;

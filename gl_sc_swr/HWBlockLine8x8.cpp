@@ -12,8 +12,8 @@
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
-#include "vfloat8_x64.h"
-//#include "vfloat8_gcc.h"
+//#include "vfloat8_x64.h"
+#include "vfloat8_gcc.h"
 
 
 using cvex::load;
@@ -48,6 +48,10 @@ void HWImplBlockLine8x8_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT,
                                                 FrameBuffer* frameBuf)
 {
   cvex::set_ftz();
+
+  //RasterizeTriHalfSpaceBlockFixp2D_Fill<ROP_CVEX_FILL>(tri, tileMinX, tileMinY,
+  //                                                     frameBuf);
+  //return;
 
   switch (a_ropT)
   {

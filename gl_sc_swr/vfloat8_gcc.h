@@ -10,19 +10,18 @@ namespace cvex
   typedef int   vint8   __attribute__((vector_size(32)));
   typedef float vfloat8 __attribute__((vector_size(32)));
 
-  static inline auto load_u(const int* p)   -> vint8   { return vint8  {p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]}; }
-  static inline auto load  (const int* p)   -> vint8   { return vint8  {p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]}; } //__builtin_assume_aligned(p, 16)
-  static inline auto load_u(const float* p) -> vfloat8 { return vfloat8{p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]}; } //__builtin_assume_aligned(p, 16)
-  static inline auto load  (const float* p) -> vfloat8 { return vfloat8{p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]}; }
+  static inline vint8   load_u(const int* p)   { return vint8  {p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]}; }
+  static inline vfloat8 load_u(const float* p) { return vfloat8{p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]}; } //__builtin_assume_aligned(p, 16)
+  static inline vint8   load  (const int* p)   { return *((vint8*)p); }
+  static inline vfloat8 load  (const float* p) { return *((vfloat8*)p);}
 
   static inline void store_u(int* p,   vint8   a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
   static inline void store_u(float* p, vfloat8 a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
-  static inline void store(int* p,   vint8   a_val)   { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
-  static inline void store(float* p, vfloat8 a_val)   { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
+  static inline void store  (int* p,   vint8   a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
+  static inline void store  (float* p, vfloat8 a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
 
-
-  static inline auto splat(int x)   -> vint8   { return vint8  {x,x,x,x,x,x,x,x}; }
-  static inline auto splat(float x) -> vfloat8 { return vfloat8{x,x,x,x,x,x,x,x}; }
+  static inline vint8 splat(int x)     { return vint8  {x,x,x,x,x,x,x,x}; }
+  static inline vfloat8 splat(float x) { return vfloat8{x,x,x,x,x,x,x,x}; }
 
   static inline vfloat8 to_float32(vint8 a)    { return vfloat8{(float)a[0], (float)a[1], (float)a[2], (float)a[3], (float)a[4], (float)a[5], (float)a[6], (float)a[7]}; }
   static inline vint8   to_int32  (vfloat8 a)  { return vint8  {  (int)a[0],   (int)a[1],   (int)a[2],   (int)a[3],   (int)a[4],   (int)a[5],   (int)a[6],   (int)a[7]}; }
@@ -42,7 +41,15 @@ namespace cvex
     return ((mask & a) | (~mask & b));
   }
 
-  static inline bool test_bits_any(const vint8 a) { return (a[0] != 0 && a[1] != 0 && a[2] != 0 && a[3] != 0) && (a[4] != 0 && a[5] != 0 && a[6] != 0 && a[7] != 0); }
+  static inline bool test_bits_any(const vint8 a)
+  {
+    typedef int myvint4 __attribute__((vector_size(16)));
+
+    //return (a[0] != 0 && a[1] != 0 && a[2] != 0 && a[3] != 0) && (a[4] != 0 && a[5] != 0 && a[6] != 0 && a[7] != 0);
+    const myvint4 a4 = ( *(myvint4*)&a )  | ( *(myvint4*)&a[4] );
+    const int64_t a2 = ( *(int64_t*)&a4 ) | ( *(int64_t*)&a4[2] );
+    return (a2 != 0);
+  }
 
   static inline vint8 make_vint(const int a, const int b, const int c, const int d,
                                 const int e, const int f, const int g, const int h) { return vint8{a,b,c,d, e,f,g,h}; }
@@ -50,33 +57,18 @@ namespace cvex
 
   static inline vfloat8 min(const vfloat8 a, const vfloat8 b)
   {
-    return vfloat8 { a[0] < b[0] ? a[0] : b[0],
-                     a[1] < b[1] ? a[1] : b[1],
-                     a[2] < b[2] ? a[2] : b[2],
-                     a[3] < b[3] ? a[3] : b[3],
-                     a[4] < b[4] ? a[4] : b[4],
-                     a[5] < b[5] ? a[5] : b[5],
-                     a[6] < b[6] ? a[6] : b[6],
-                     a[7] < b[7] ? a[7] : b[7]};
+    return a < b ? a : b;
   }
 
   static inline vfloat8 max(const vfloat8 a, const vfloat8 b)
   {
-    return vfloat8 { a[0] > b[0] ? a[0] : b[0],
-                     a[1] > b[1] ? a[1] : b[1],
-                     a[2] > b[2] ? a[2] : b[2],
-                     a[3] > b[3] ? a[3] : b[3],
-                     a[4] > b[4] ? a[4] : b[4],
-                     a[5] > b[5] ? a[5] : b[5],
-                     a[6] > b[6] ? a[6] : b[6],
-                     a[7] > b[7] ? a[7] : b[7]};
+    return a > b ? a : b;
   }
 
   static inline vfloat8 vclamp(const vfloat8 x, const vfloat8 minVal, const vfloat8 maxVal)
   {
     return max(min(x, maxVal), minVal);
   }
-
 
 
 #ifdef __x86_64
