@@ -10,8 +10,11 @@ namespace cvex
   typedef int   vint4   __attribute__((vector_size(16)));
   typedef float vfloat4 __attribute__((vector_size(16)));
 
-  static inline vint4   load_u(const int* p)   { return vint4{p[0], p[1], p[2], p[3]}; }
-  static inline vfloat4 load_u(const float* p) { return vfloat4{p[0], p[1], p[2], p[3]}; }
+  typedef int   _vint4u   __attribute__((vector_size(16), aligned(1)));
+  typedef float _vfloat4u __attribute__((vector_size(16), aligned(1)));
+
+  static inline vint4   load_u(const int* p)   { return *((_vint4u*)p); }
+  static inline vfloat4 load_u(const float* p) { return *((_vfloat4u*)p); }
   static inline vint4   load  (const int* p)   { return *((vint4*)p);   }
   static inline vfloat4 load  (const float* p) { return *((vfloat4*)p); }
 
