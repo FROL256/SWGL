@@ -15,11 +15,11 @@ using TriangleLocal = HWImplementationPureCpp::TriangleType;
 //#include "vfloat8_x64.h"
 #include "vfloat8_gcc.h"
 
-
 using cvex::load;
 using cvex::splat;
 using cvex::to_float32;
 using cvex::to_int32;
+using cvex::to_uint32;
 using cvex::make_vint;
 
 using cvex::load_u;

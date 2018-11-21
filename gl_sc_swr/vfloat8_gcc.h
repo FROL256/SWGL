@@ -7,27 +7,40 @@
 
 namespace cvex
 {
-  typedef int   vint8   __attribute__((vector_size(32)));
-  typedef float vfloat8 __attribute__((vector_size(32)));
+  typedef          int   vint8   __attribute__((vector_size(32)));
+  typedef unsigned int   vuint8  __attribute__((vector_size(32)));
+  typedef          float vfloat8 __attribute__((vector_size(32)));
 
-  typedef int   _vint8u   __attribute__((vector_size(32), aligned(1)));
-  typedef float _vfloat8u __attribute__((vector_size(32), aligned(1)));
+  typedef          int   _vint8u   __attribute__((vector_size(32), aligned(1)));
+  typedef unsigned int   _vuint8u  __attribute__((vector_size(32), aligned(1)));
+  typedef          float _vfloat8u __attribute__((vector_size(32), aligned(1)));
 
   static inline vint8   load_u(const int* p)   { return *((_vint8u*)p);   }
-  static inline vfloat8 load_u(const float* p) { return *((_vfloat8u*)p); } //__builtin_assume_aligned(p, 16)
-  static inline vint8   load  (const int* p)   { return *((vint8*)p); }
-  static inline vfloat8 load  (const float* p) { return *((vfloat8*)p);}
+  static inline vfloat8 load_u(const float* p) { return *((_vfloat8u*)p); }
+
+  static inline vint8   load  (const int* p)           { return *((vint8*)p);  }
+  static inline vfloat8 load  (const float* p)         { return *((vfloat8*)p);}
+
+  static inline void store_u(unsigned int* p, vuint8 a_val)  { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
+  static inline void store_u(int* p,          vuint8 a_val)  { store_u((unsigned int*)p, a_val);}
 
   static inline void store_u(int* p,   vint8   a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
   static inline void store_u(float* p, vfloat8 a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
   static inline void store  (int* p,   vint8   a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
   static inline void store  (float* p, vfloat8 a_val) { p[0] = a_val[0]; p[1] = a_val[1]; p[2] = a_val[2]; p[3] = a_val[3]; p[4] = a_val[4]; p[5] = a_val[5]; p[6] = a_val[6]; p[7] = a_val[7]; }
 
-  static inline vint8 splat(int x)     { return vint8  {x,x,x,x,x,x,x,x}; }
-  static inline vfloat8 splat(float x) { return vfloat8{x,x,x,x,x,x,x,x}; }
+  static inline vuint8  splat(unsigned int x) { return vuint8  {x,x,x,x,x,x,x,x}; }
+  static inline vint8   splat(int x)          { return vint8   {x,x,x,x,x,x,x,x}; }
+  static inline vfloat8 splat(float x)        { return vfloat8 {x,x,x,x,x,x,x,x}; }
 
   static inline vfloat8 to_float32(vint8 a)    { return vfloat8{(float)a[0], (float)a[1], (float)a[2], (float)a[3], (float)a[4], (float)a[5], (float)a[6], (float)a[7]}; }
+  static inline vfloat8 to_float32(vuint8 a)   { return vfloat8{(float)a[0], (float)a[1], (float)a[2], (float)a[3], (float)a[4], (float)a[5], (float)a[6], (float)a[7]}; }
+
   static inline vint8   to_int32  (vfloat8 a)  { return vint8  {  (int)a[0],   (int)a[1],   (int)a[2],   (int)a[3],   (int)a[4],   (int)a[5],   (int)a[6],   (int)a[7]}; }
+  static inline vuint8  to_uint32 (vfloat8 a)  { return vuint8  {  (unsigned int)a[0], (unsigned int)a[1], (unsigned int)a[2], (unsigned int)a[3], (unsigned int)a[4], (unsigned int)a[5], (unsigned int)a[6], (unsigned int)a[7]}; }
+
+  static inline vint8   to_int32  (vuint8 a)   { return (vint8)a; }
+  static inline vuint8  to_uint32 (vint8 a)    { return (vuint8)a; }
 
   static inline vfloat8 rcp_e(vfloat8 a)       { return 1.0f/a; }
 
@@ -42,6 +55,11 @@ namespace cvex
   static inline vint8 blend(const vint8 a, const vint8 b, const vint8 mask)
   {
     return ((mask & a) | (~mask & b));
+  }
+
+  static inline vint8 blend(const vuint8 a, const vint8 b, const vint8 mask)
+  {
+    return ((mask & (vint8)a) | (~mask & b));
   }
 
   static inline bool test_bits_any(const vint8 a)
