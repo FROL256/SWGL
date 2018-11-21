@@ -379,30 +379,30 @@ struct VROP
     LineOffs<vint,width>::load4(pData, pitch, offset,
                                 ipixels);
 
-    const vint mask_R = splat(int(0x000000FF));
-    const vint mask_G = splat(int(0x0000FF00));
-    const vint mask_B = splat(int(0x00FF0000));
-    const vint mask_A = splat(int(0xFF000000));
+    const auto mask_R = splat(0x000000FF);
+    const auto mask_G = splat(0x0000FF00);
+    const auto mask_B = splat(0x00FF0000);
+    const auto mask_A = splat(0xFF000000);
 
     const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R) >> 0);
     const vfloat f1_y = mult*to_float32((ipixels[0] & mask_G) >> 8);
     const vfloat f1_z = mult*to_float32((ipixels[0] & mask_B) >> 16);
-    const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);
 
     const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R) >> 0);
     const vfloat f2_y = mult*to_float32((ipixels[1] & mask_G) >> 8);
     const vfloat f2_z = mult*to_float32((ipixels[1] & mask_B) >> 16);
-    const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);
 
     const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
     const vfloat f3_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
     const vfloat f3_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
-    const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);
 
     const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
     const vfloat f4_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
     const vfloat f4_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
-    const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);
 
     // Calculate the weighted sum of pixels (for each color channel)
     //
@@ -436,10 +436,10 @@ struct VROP
     const vint offset = (py*pitch) + px;
     const vint ipixel = LineOffs<vint,width>::load1(pData, pitch, offset);
 
-    const vint mask_R = splat(int(0x000000FF)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
-    const vint mask_G = splat(int(0x0000FF00)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
-    const vint mask_B = splat(int(0x00FF0000)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
-    const vint mask_A = splat(int(0xFF000000)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const auto mask_R = splat(0x000000FF);
+    const auto mask_G = splat(0x0000FF00);
+    const auto mask_B = splat(0x00FF0000);
+    const auto mask_A = splat(0xFF000000);
 
     a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
     a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
@@ -449,7 +449,7 @@ struct VROP
 
 
   template<bool bilinear>
-  static inline void Tex2DSample(const TriangleT& tri, vfloat x, vfloat y,
+  static inline void Tex2DSample4f(const TriangleT& tri, vfloat x, vfloat y,
                                  vfloat a_res[4])
   {
     WrapTexCoord(x,y);
@@ -464,6 +464,126 @@ struct VROP
                         a_res);
     }
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  static inline void ReadImage3f_Bilinear(const int* pData, const int w, const int h, int pitch, const vfloat a_texCoordX, const vfloat a_texCoordY,
+                                          vfloat a_result[3])
+  {
+    const vfloat fw = to_float32( (vint)splat(w) );
+    const vfloat fh = to_float32( (vint)splat(h) );
+
+    //const float ffx = a_texCoord.x*fw - 0.5f;
+    //const float ffy = a_texCoord.y*fh - 0.5f;
+
+    const vfloat zero = splat(0.0f);
+    const vfloat one  = splat(1.0f);
+    const vfloat half = splat(0.5f);
+
+    const vfloat ffx = vclamp((a_texCoordX*fw - half), zero, (fw - one) );
+    const vfloat ffy = vclamp((a_texCoordY*fh - half), zero, (fh - one) );
+
+    const vint px = to_int32(ffx);
+    const vint py = to_int32(ffy);
+
+    // Calculate the weights for each pixel
+    //
+    const vfloat fx  = ffx - to_float32(px);
+    const vfloat fy  = ffy - to_float32(py);
+    const vfloat fx1 = one - fx;
+    const vfloat fy1 = one - fy;
+
+    const vfloat w1 = fx1 * fy1;
+    const vfloat w2 = fx  * fy1;
+    const vfloat w3 = fx1 * fy;
+    const vfloat w4 = fx  * fy;
+
+    const vfloat mult = splat(0.003921568f); // (1.0f/255.0f);
+
+    const vint offset = (py*pitch) + px;
+
+    vint ipixels[4];
+    LineOffs<vint,width>::load4(pData, pitch, offset,
+                                ipixels);
+
+    const vint mask_R = splat(int(0x000000FF));
+    const vint mask_G = splat(int(0x0000FF00));
+    const vint mask_B = splat(int(0x00FF0000));
+
+    const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R) >> 0);
+    const vfloat f1_y = mult*to_float32((ipixels[0] & mask_G) >> 8);
+    const vfloat f1_z = mult*to_float32((ipixels[0] & mask_B) >> 16);
+
+    const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R) >> 0);
+    const vfloat f2_y = mult*to_float32((ipixels[1] & mask_G) >> 8);
+    const vfloat f2_z = mult*to_float32((ipixels[1] & mask_B) >> 16);
+
+    const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
+    const vfloat f3_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
+    const vfloat f3_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
+
+    const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
+    const vfloat f4_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
+    const vfloat f4_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
+
+    // Calculate the weighted sum of pixels (for each color channel)
+    //
+    a_result[0] = f1_x * w1 + f2_x * w2 + f3_x * w3 + f4_x * w4;
+    a_result[1] = f1_y * w1 + f2_y * w2 + f3_y * w3 + f4_y * w4;
+    a_result[2] = f1_z * w1 + f2_z * w2 + f3_z * w3 + f4_z * w4;
+  }
+
+  static inline void ReadImage3f_Point(const int* pData, const int w, const int h, int pitch, const vfloat a_texCoordX, const vfloat a_texCoordY,
+                                       vfloat a_result[4])
+  {
+    const vfloat zero = splat(0.0f);
+    const vfloat one  = splat(1.0f);
+    const vfloat half = splat(0.5f);
+
+    const vfloat fw = to_float32( (vint)splat(w) );
+    const vfloat fh = to_float32( (vint)splat(h) );
+
+    //const vfloat ffx = a_texCoordX*fw + half;
+    //const vfloat ffy = a_texCoordY*fh + half;
+
+    const vfloat ffx = vclamp(a_texCoordX*fw + half, zero, (fw - one) );
+    const vfloat ffy = vclamp(a_texCoordY*fh + half, zero, (fh - one) );
+
+    const vint px = to_int32(ffx);
+    const vint py = to_int32(ffy);
+
+    const vfloat mult = splat(0.003921568f); // (1.0f/255.0f);
+
+    const vint offset = (py*pitch) + px;
+    const vint ipixel = LineOffs<vint,width>::load1(pData, pitch, offset);
+
+    const vint mask_R = splat(int(0x000000FF));
+    const vint mask_G = splat(int(0x0000FF00));
+    const vint mask_B = splat(int(0x00FF0000));
+
+    a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
+    a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
+    a_result[2] = mult*to_float32((ipixel & mask_B) >> 16);
+  }
+
+
+  template<bool bilinear>
+  static inline void Tex2DSample3f(const TriangleT& tri, vfloat x, vfloat y,
+                                   vfloat a_res[3])
+  {
+    WrapTexCoord(x,y);
+    if(bilinear)        // assume compiler could optimize this
+    {
+      ReadImage3f_Bilinear(tri.texS.data, tri.texS.w, tri.texS.h, tri.texS.pitch, x, y,
+                           a_res);
+    }
+    else
+    {
+      ReadImage3f_Point(tri.texS.data, tri.texS.w, tri.texS.h, tri.texS.pitch, x, y,
+                        a_res);
+    }
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -485,18 +605,16 @@ struct VROP
       const vfloat r = (tri.c1.x*w1 + tri.c2.x*w2 + tri.c3.x*w3);
       const vfloat g = (tri.c1.y*w1 + tri.c2.y*w2 + tri.c3.y*w3);
       const vfloat b = (tri.c1.z*w1 + tri.c2.z*w2 + tri.c3.z*w3);
-      const vfloat a = (tri.c1.w*w1 + tri.c2.w*w2 + tri.c3.w*w3);
 
       const vfloat tx = tri.t1.x*w1 + tri.t2.x*w2 + tri.t3.x*w3;
       const vfloat ty = tri.t1.y*w1 + tri.t2.y*w2 + tri.t3.y*w3;
 
-      vfloat texColor[4];
-      Tex2DSample<bilinearIsEnabled>(tri, tx, ty, texColor);
+      vfloat texColor[3];
+      Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
       const vint res = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
                        (to_int32(g * texColor[1] * c_255) << 8)  |
-                       (to_int32(b * texColor[2] * c_255) << 0)  |
-                       (to_int32(a * texColor[3] * c_255) << 24);
+                       (to_int32(b * texColor[2] * c_255) << 0);
 
       store_u(pLineColor, res);
     }
@@ -547,20 +665,18 @@ struct VROP
         const vfloat  r = (tri.c1.x * w1 + tri.c2.x * w2 + tri.c3.x * w3)*z;
         const vfloat  g = (tri.c1.y * w1 + tri.c2.y * w2 + tri.c3.y * w3)*z;
         const vfloat  b = (tri.c1.z * w1 + tri.c2.z * w2 + tri.c3.z * w3)*z;
-        const vfloat  a = (tri.c1.w * w1 + tri.c2.w * w2 + tri.c3.w * w3)*z;
 
         const vfloat tx = (tri.t1.x*w1 + tri.t2.x*w2 + tri.t3.x*w3)*z;
         const vfloat ty = (tri.t1.y*w1 + tri.t2.y*w2 + tri.t3.y*w3)*z;
 
-        vfloat texColor[4];
-        Tex2DSample<bilinearIsEnabled>(tri, tx, ty, texColor);
+        vfloat texColor[3];
+        Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
         const vint colorOld = load_u(pLineColor);
 
         const vint colori = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
                             (to_int32(g * texColor[1] * c_255) << 8)  |
-                            (to_int32(b * texColor[2] * c_255) << 0)  |
-                            (to_int32(a * texColor[3] * c_255) << 24);
+                            (to_int32(b * texColor[2] * c_255) << 0);
 
         store_u(pLineColor, blend(colori, colorOld, zTest));
       }
@@ -591,6 +707,83 @@ struct VROP
 
   };
 
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  struct Textured3D_Blend
+  {
+    enum {n = width};
+    using Triangle = TriangleT;
+
+    static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
+                            int* pLineColor, float* pLineDepth)
+    {
+      prefetch(pLineDepth);
+
+      const vfloat c_one = splat(1.0f);
+      const vfloat c_255 = splat(255.0f);
+
+      const vfloat w1 = areaInv* to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
+      const vfloat w2 = areaInv* to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w3 = (c_one - w1 - w2);
+
+      const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
+      const vfloat zOld  = load_u(pLineDepth);
+      const vint   zTest = (zInv > zOld);
+
+      if(test_bits_any(zTest))
+      {
+        store_u(pLineDepth, blend(zInv, zOld, zTest));
+        prefetch(pLineColor);
+
+        const vfloat  z = rcp_e(zInv);
+
+        const vfloat  r = (tri.c1.x * w1 + tri.c2.x * w2 + tri.c3.x * w3)*z;
+        const vfloat  g = (tri.c1.y * w1 + tri.c2.y * w2 + tri.c3.y * w3)*z;
+        const vfloat  b = (tri.c1.z * w1 + tri.c2.z * w2 + tri.c3.z * w3)*z;
+        const vfloat  a = (tri.c1.w * w1 + tri.c2.w * w2 + tri.c3.w * w3)*z;
+
+        const vfloat tx = (tri.t1.x*w1 + tri.t2.x*w2 + tri.t3.x*w3)*z;
+        const vfloat ty = (tri.t1.y*w1 + tri.t2.y*w2 + tri.t3.y*w3)*z;
+
+        vfloat texColor[4];
+        Tex2DSample4f<bilinearIsEnabled>(tri, tx, ty, texColor);
+
+        const vint colorOld = load_u(pLineColor);
+
+        const auto colori = (to_uint32(r * texColor[0] * c_255) << 16) | // BGRA
+                            (to_uint32(g * texColor[1] * c_255) << 8)  |
+                            (to_uint32(b * texColor[2] * c_255) << 0)  |
+                            (to_uint32(a * texColor[3] * c_255) << 24);
+
+        store_u(pLineColor, blend(colori, colorOld, zTest));
+      }
+    }
+
+
+    static inline void Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv,
+                             int* pPixelColor, float* pPixelDepth)
+    {
+      const float w1 = areaInv*float(CX1);
+      const float w2 = areaInv*float(CX2);
+
+      const float zInv = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*(1.0f - w1 - w2);
+      const float zOld = (*pPixelDepth);
+
+      if (zInv > zOld)
+      {
+        const float  z  = 1.0f/zInv;
+        const float w3  = (1.0f - w1 - w2);
+        const float4 c  = (tri.c1*w1 + tri.c2*w2 + tri.c3*w3)*z;
+        const float2 t  = (tri.t1*w1 + tri.t2*w2 + tri.t3*w3)*z;
+        const float4 tc = tex2D(tri.texS, t);
+
+        (*pPixelColor) = RealColorToUint32_BGRA(c*tc);
+        (*pPixelDepth) = zInv;
+      }
+    }
+
+  };
 
 };
 
