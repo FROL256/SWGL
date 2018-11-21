@@ -235,10 +235,10 @@ struct VROP
       const vfloat b = tri.c1.z*w1 + tri.c2.z*w2 + tri.c3.z*w3;
       const vfloat a = tri.c1.w*w1 + tri.c2.w*w2 + tri.c3.w*w3;
 
-      const auto res = (to_uint32(r * c_255) << 16) | // BGRA
-                       (to_uint32(g * c_255) << 8)  |
-                       (to_uint32(b * c_255) << 0)  |
-                       (to_uint32(a * c_255) << 24);
+      const vint res = (to_int32(r * c_255) << 16) | // BGRA
+                       (to_int32(g * c_255) << 8)  |
+                       (to_int32(b * c_255) << 0)  |
+                       (to_int32(a * c_255) << 24);
 
       store_u(pLineColor, res);
     }
@@ -287,11 +287,18 @@ struct VROP
 
         const vint colorOld = load_u(pLineColor);
 
-        const auto colori = (to_uint32(r * c_255) << 16) | // BGRA
-                            (to_uint32(g * c_255) << 8)  |
-                            (to_uint32(b * c_255) << 0)  |
-                            (to_uint32(a * c_255) << 24);
+        //const vint colori = splat(int(0xFFFFFFFF));
 
+        //const vint ri = splat(255); // to_int32(r * c_255);
+        //const vint gi = splat(0); // to_int32(g * c_255);
+        //const vint bi = splat(255); // to_int32(b * c_255);
+        //const vint ai = splat(0); // to_int32(a * c_255);
+        //const vint colori = (ri << 16) | (gi << 8) | bi | (ai << 24);
+
+        const vint colori = (to_int32(r * c_255) << 16) | // BGRA
+                            (to_int32(g * c_255) << 8)  |
+                            (to_int32(b * c_255) << 0)  |
+                            (to_int32(a * c_255) << 24);
 
         store_u(pLineColor, blend(colori, colorOld, zTest));
         store_u(pLineDepth, blend(zInv,   zOld,     zTest));
@@ -372,30 +379,30 @@ struct VROP
     LineOffs<vint,width>::load4(pData, pitch, offset,
                                 ipixels);
 
-    const auto mask_R = splat(0x000000FF);
-    const auto mask_G = splat(0x0000FF00);
-    const auto mask_B = splat(0x00FF0000);
-    const auto mask_A = splat(0xFF000000);
+    const vint mask_R = splat(int(0x000000FF));
+    const vint mask_G = splat(int(0x0000FF00));
+    const vint mask_B = splat(int(0x00FF0000));
+    const vint mask_A = splat(int(0xFF000000));
 
     const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R) >> 0);
     const vfloat f1_y = mult*to_float32((ipixels[0] & mask_G) >> 8);
     const vfloat f1_z = mult*to_float32((ipixels[0] & mask_B) >> 16);
-    const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);
+    const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R) >> 0);
     const vfloat f2_y = mult*to_float32((ipixels[1] & mask_G) >> 8);
     const vfloat f2_z = mult*to_float32((ipixels[1] & mask_B) >> 16);
-    const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);
+    const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
     const vfloat f3_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
     const vfloat f3_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
-    const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);
+    const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
     const vfloat f4_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
     const vfloat f4_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
-    const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);
+    const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);  // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
     // Calculate the weighted sum of pixels (for each color channel)
     //
@@ -429,13 +436,13 @@ struct VROP
     const vint offset = (py*pitch) + px;
     const vint ipixel = LineOffs<vint,width>::load1(pData, pitch, offset);
 
-    const auto mask_R = splat(0x000000FF);
-    const auto mask_G = splat(0x0000FF00);
-    const auto mask_B = splat(0x00FF0000);
-    const auto mask_A = splat(0xFF000000);
+    const vint mask_R = splat(int(0x000000FF)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vint mask_G = splat(int(0x0000FF00)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vint mask_B = splat(int(0x00FF0000)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
+    const vint mask_A = splat(int(0xFF000000)); // #TODO: MUST USED UNSIGNED SHIFTS !!!
 
-    a_result[0] = mult*to_float32((ipixel & mask_R) >> 0 );
-    a_result[1] = mult*to_float32((ipixel & mask_G) >> 8 );
+    a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
+    a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
     a_result[2] = mult*to_float32((ipixel & mask_B) >> 16);
     a_result[3] = mult*to_float32((ipixel & mask_A) >> 24);
   }
@@ -486,10 +493,10 @@ struct VROP
       vfloat texColor[4];
       Tex2DSample<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-      const auto res = (to_uint32(r * texColor[0] * c_255) << 16) | // BGRA
-                       (to_uint32(g * texColor[1] * c_255) << 8)  |
-                       (to_uint32(b * texColor[2] * c_255) << 0)  |
-                       (to_uint32(a * texColor[3] * c_255) << 24);
+      const vint res = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
+                       (to_int32(g * texColor[1] * c_255) << 8)  |
+                       (to_int32(b * texColor[2] * c_255) << 0)  |
+                       (to_int32(a * texColor[3] * c_255) << 24);
 
       store_u(pLineColor, res);
     }
@@ -550,11 +557,10 @@ struct VROP
 
         const vint colorOld = load_u(pLineColor);
 
-        const auto colori = (to_uint32(r * texColor[0] * c_255) << 16) | // BGRA
-                            (to_uint32(g * texColor[1] * c_255) << 8)  |
-                            (to_uint32(b * texColor[2] * c_255) << 0)  |
-                            (to_uint32(a * texColor[3] * c_255) << 24);
-
+        const vint colori = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
+                            (to_int32(g * texColor[1] * c_255) << 8)  |
+                            (to_int32(b * texColor[2] * c_255) << 0)  |
+                            (to_int32(a * texColor[3] * c_255) << 24);
 
         store_u(pLineColor, blend(colori, colorOld, zTest));
       }

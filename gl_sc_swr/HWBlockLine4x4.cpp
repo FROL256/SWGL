@@ -35,7 +35,6 @@ using cvex::vclamp;
 using cvex::store;
 using cvex::prefetch;
 
-/*
 
 using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::FillColor;
 
@@ -107,4 +106,4 @@ void HWImplBlockLine4x4_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT,
 
 
 
-*/
+
