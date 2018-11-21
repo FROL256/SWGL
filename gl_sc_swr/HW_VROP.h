@@ -720,8 +720,9 @@ struct VROP
     {
       prefetch(pLineDepth);
 
-      const vfloat c_one = splat(1.0f);
-      const vfloat c_255 = splat(255.0f);
+      const vfloat c_one    = splat(1.0f);
+      const vfloat c_255    = splat(255.0f);
+      const vfloat c_255Inv = splat(1.0f/255.0f);
 
       const vfloat w1 = areaInv* to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
       const vfloat w2 = areaInv* to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
@@ -751,10 +752,22 @@ struct VROP
 
         const vint colorOld = load_u(pLineColor);
 
-        const auto colori = (to_uint32(r * texColor[0] * c_255) << 16) | // BGRA
-                            (to_uint32(g * texColor[1] * c_255) << 8)  |
-                            (to_uint32(b * texColor[2] * c_255) << 0)  |
-                            (to_uint32(a * texColor[3] * c_255) << 24);
+        const vfloat redOld   = to_float32( (to_uint32(colorOld) & 0x00FF0000) >> 16)*c_255Inv;
+        const vfloat greenOld = to_float32( (to_uint32(colorOld) & 0x0000FF00) >> 8 )*c_255Inv;
+        const vfloat blueOld  = to_float32( (to_uint32(colorOld) & 0x000000FF) >> 0 )*c_255Inv;
+        const vfloat alphaOld = to_float32( (to_uint32(colorOld) & 0xFF000000) >> 24)*c_255Inv;
+
+        const vfloat alpha    = (a * texColor[3]);
+
+        const vfloat redNew   = (r * texColor[0]) * alpha + (c_one - alpha)*redOld;
+        const vfloat greenNew = (g * texColor[1]) * alpha + (c_one - alpha)*greenOld;
+        const vfloat blueNew  = (b * texColor[2]) * alpha + (c_one - alpha)*blueOld;
+        const vfloat alphaNew = alpha             * alpha + (c_one - alpha)*alphaOld;
+
+        const auto colori = (to_uint32(redNew   * c_255) << 16) | // BGRA
+                            (to_uint32(greenNew * c_255) << 8)  |
+                            (to_uint32(blueNew  * c_255) << 0)  |
+                            (to_uint32(alphaNew * c_255) << 24);
 
         store_u(pLineColor, blend(colori, colorOld, zTest));
       }
@@ -778,7 +791,11 @@ struct VROP
         const float2 t  = (tri.t1*w1 + tri.t2*w2 + tri.t3*w3)*z;
         const float4 tc = tex2D(tri.texS, t);
 
-        (*pPixelColor) = RealColorToUint32_BGRA(c*tc);
+        const float4 oldColor = Uint32_BGRAToRealColor((*pPixelColor));
+        const float4 newColor = c*tc;
+        const float alpha     = newColor.w;
+
+        (*pPixelColor) = RealColorToUint32_BGRA(oldColor*(1.0f - alpha) + alpha*newColor);
         (*pPixelDepth) = zInv;
       }
     }
