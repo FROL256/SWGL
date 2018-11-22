@@ -647,8 +647,8 @@ struct VROP
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
-      const vfloat w1 = areaInv* to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
-      const vfloat w2 = areaInv* to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w1 = areaInv*to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
+      const vfloat w2 = areaInv*to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
@@ -724,8 +724,8 @@ struct VROP
       const vfloat c_255    = splat(255.0f);
       const vfloat c_255Inv = splat(1.0f/255.0f);
 
-      const vfloat w1 = areaInv* to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
-      const vfloat w2 = areaInv* to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w1 = areaInv*to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
+      const vfloat w2 = areaInv*to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
