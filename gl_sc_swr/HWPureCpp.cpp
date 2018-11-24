@@ -61,12 +61,7 @@ bool HWImplementationPureCpp::AABBTriangleOverlap(const TriangleType& a_tri, con
 
   // Deltas
   const float Dx12 = x1 - x2;
-  const float Dx23 = x2 - x3;
-  const float Dx31 = x3 - x1;
-
   const float Dy12 = y1 - y2;
-  const float Dy23 = y2 - y3;
-  const float Dy31 = y3 - y1;
 
   const bool s10 = ( Dx12 * (yy0 - y1) - Dy12 * (xx0 - x1) ) < 0.0f; 
   const bool s11 = ( Dx12 * (yy0 - y1) - Dy12 * (xx1 - x1) ) < 0.0f;
@@ -142,6 +137,9 @@ void HWImplementationPureCpp::TriangleSetUp(const SWGL_Context* a_pContext, cons
 
   t1->bb_iminY = (int)(fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f);
   t1->bb_imaxY = (int)(fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f);
+
+  // if(t1->bb_iminX < 0) t1->bb_iminX = 0;
+  // if(t1->bb_iminY < 0) t1->bb_iminY = 0;
 
   const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 

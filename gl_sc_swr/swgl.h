@@ -260,8 +260,7 @@ struct SWGL_DrawList
 
   std::vector<int>     m_tilesTriIndicesMemory; ///< N*M; M = m_tilesNumX*m_tilesNumY;
   int                  m_triTop;
-  int                  m_linTop;
-  int                  m_ptsTop;
+  int                  m_triDrn; // triangles already drawn
 
   mutable std::vector<Pipeline_State_Object> m_psoArray;
 };
@@ -378,6 +377,8 @@ struct SWGL_Context
   SWGL_FrameBuffer     m_tiledFrameBuffer;
   
   bool m_useTiledFB;
+  int  m_currTileId;
+
 
 };
 

@@ -4,9 +4,6 @@
 
 #include "config.h"
 
-#ifdef LINUX_PPC
-
-#else
 
 ////////////////////////////////////////////////////////////////////////
 extern "C"
@@ -142,7 +139,6 @@ void SWGL_Context::CopyToScreeen()
   {
     const int pitch = (m_width + FB_BILLET_SIZE);
 
-    #pragma omp parallel for
     for (int y = 0; y < m_height; y++)
     {
       int offset0 = y * m_width;
@@ -224,4 +220,4 @@ void glXSwapBuffers( Display *dpy, GLXDrawable drawable )
 
 };
 
-#endif // LINUX_PPC
+

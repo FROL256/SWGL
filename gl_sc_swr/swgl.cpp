@@ -92,7 +92,7 @@ void SWGL_Context::InitCommon()
   m_texTop       = 0;
   m_textures.resize(1024); // max 1024 tex
 
-  m_useTiledFB = false;
+  m_useTiledFB = true;
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
@@ -146,7 +146,6 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
   //currBatch->vertNorm.resize(currBatch->vertNorm.size() + count);
   currBatch->vertTexCoord.resize(currBatch->vertTexCoord.size() + count);
 
-  #pragma omp parallel for if (count - first > 4000) 
   for (int i = first; i < count; i++)
   {
     if (a_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
@@ -174,14 +173,14 @@ void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t la
         vColor.w = input.vertexColorPointer[i*input.vertColorComponents + 3];
     }
 
-    float4 vNorm = a_pContext->input.currInputNormal;
-
-    if (input.vertexNormalPointer != nullptr && input.vertexNormalPtrEnabled)
-    {
-      vNorm.x = input.vertexNormalPointer[i*input.vertNormalComponents + 0];
-      vNorm.y = input.vertexNormalPointer[i*input.vertNormalComponents + 1];
-      vNorm.z = input.vertexNormalPointer[i*input.vertNormalComponents + 2];
-    }
+//    float4 vNorm = a_pContext->input.currInputNormal;
+//
+//    if (input.vertexNormalPointer != nullptr && input.vertexNormalPtrEnabled)
+//    {
+//      vNorm.x = input.vertexNormalPointer[i*input.vertNormalComponents + 0];
+//      vNorm.y = input.vertexNormalPointer[i*input.vertNormalComponents + 1];
+//      vNorm.z = input.vertexNormalPointer[i*input.vertNormalComponents + 2];
+//    }
 
     float2 vTexCoord = a_pContext->input.currInputTexCoord[0];
 
@@ -554,8 +553,7 @@ void clampTriBBox(Triangle* t1, const FrameBuffer& frameBuff)
 void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum)
 {
   a_pDrawList->m_triTop = 0;
-  a_pDrawList->m_linTop = 0;
-  a_pDrawList->m_ptsTop = 0;
+  a_pDrawList->m_triDrn = 0;
 
   const size_t tilesNum = a_pTiledFB->tiles.size();
 
@@ -602,7 +600,6 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
   int* triIndicesMem              = &(a_pDrawList->m_tilesTriIndicesMemory[0]);
   const std::vector<int>& indices = pBatch->indices;
 
-  #pragma omp parallel for if (triNum >= 1000)
   for (int triId = 0; triId < triNum; triId++)
   {
     int i1 = indices[triId * 3 + 0];
@@ -640,7 +637,7 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
     pTri->curr_smask = pBatch->state.stencilMask;
 
     HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, pTri);
-    clampTriBBox(pTri, frameBuff);  // need this to prevent out of border
+    clampTriBBox(pTri, frameBuff);                        // need this to prevent out of border
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -660,8 +657,7 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
         const int tileMaxX = tx*BIN_SIZE + BIN_SIZE;
         const int tileMaxY = ty*BIN_SIZE + BIN_SIZE;
 
-        //auto& tile = a_pDrawList->tiles[tx][ty];
-        auto& tile = a_pTiledFB->tiles[ty*a_pTiledFB->sizeX + tx];
+        auto& tile = a_pTiledFB->tiles[ty*a_pTiledFB->sizeX + tx];  // auto& tile = a_pDrawList->tiles[tx][ty];
 
         if (HWImpl::AABBTriangleOverlap(*pTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
         {

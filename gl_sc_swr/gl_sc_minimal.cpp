@@ -12,6 +12,11 @@
 
 #include "HWAbstractionLayer.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// parallel tiles
+#include <algorithm>
+#include <future>
+#include <thread>
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// parallel tiles
 
 SWGL_Context* g_pContext = nullptr;
 
@@ -584,7 +589,6 @@ GLAPI void APIENTRY glEnableClientState(GLenum a_array)
 
 }
 
-
 GLAPI void APIENTRY glFinish(void)
 {
   if (g_pContext->logMode <= LOG_ALL)
@@ -592,6 +596,102 @@ GLAPI void APIENTRY glFinish(void)
 
   glFlush();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct TileRef
+{
+  bool operator<(TileRef a) const { return triNum < a.triNum; }
+  int tileId;
+  int triNum;
+};
+
+std::vector<TileRef> g_tileRefs;
+std::future<int>     g_threads[NUM_THREADS];
+
+int SWGL_TileRenderThread(const bool infinitLoop)
+{
+  if (g_pContext == nullptr)
+    return;
+
+  const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
+
+  while(true)
+  {
+    if(infinitLoop)
+    {
+      if (g_pContext->m_currTileId >= tilesNum) // spin lock, waiting for active tiles
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+    }
+    else
+    {
+      if (g_pContext->m_currTileId >= tilesNum)
+        break;
+    }
+
+    const int tileRefId = atomic_add(&g_pContext->m_currTileId, 1);
+
+    if(infinitLoop)
+    {
+      if (tileRefId >= tilesNum && infinitLoop)
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+    }
+    else
+    {
+      if (g_pContext->m_currTileId >= tilesNum)
+        break;
+    }
+
+    const int tileId = g_tileRefs[tileRefId].tileId;
+    auto &tile       = g_pContext->m_tiledFrameBuffer.tiles[tileId];
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// do useful work here
+    FrameBuffer fb;
+    fb.w     = BIN_SIZE;
+    fb.h     = BIN_SIZE;
+    fb.pitch = fb.w + FB_BILLET_SIZE;
+    fb.vx    = 0;
+    fb.vy    = 0;
+    fb.vw    = BIN_SIZE;
+    fb.vh    = BIN_SIZE;
+
+    fb.sbuffer = nullptr;
+    fb.zbuffer = tile.m_depth;
+    fb.cbuffer = tile.m_color;
+
+    auto* pDrawList = &g_pContext->m_drawList;
+
+    for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
+    {
+      const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
+      const auto& tri  = pDrawList->m_triMemory[triId2];
+      const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);
+
+      const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
+
+      auto stateId = swglStateIdFromPSO(pso, g_pContext, sameColor);
+
+      HWImpl::RasterizeTriangle(stateId, BlendOp_None, tri, tile.minX, tile.minY,
+                                &fb);
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// do useful work here
+
+    if(!infinitLoop)
+      break;
+  };
+
+  return 0;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 GLAPI void APIENTRY glFlush(void)
 {
@@ -606,30 +706,36 @@ GLAPI void APIENTRY glFlush(void)
   if (g_pContext->logMode <= LOG_ALL)
     *(g_pContext->m_pLog) << "glFlush()" << std::endl;
 
-  // the whole frame buffer
-  //
-  FrameBuffer frameBuff;
-
-  frameBuff.cbuffer = g_pContext->m_pixels2;
-  frameBuff.zbuffer = g_pContext->m_zbuffer;
-  frameBuff.sbuffer = g_pContext->m_sbuffer;
-  frameBuff.w       = g_pContext->m_width;
-  frameBuff.h       = g_pContext->m_height;
-  frameBuff.pitch   = frameBuff.w + FB_BILLET_SIZE;
-
-  frameBuff.vx = 0;
-  frameBuff.vy = 0;
-  frameBuff.vw = frameBuff.w;
-  frameBuff.vh = frameBuff.h;
-
   auto* pDrawList = &g_pContext->m_drawList;
 
   if (g_pContext->m_useTiledFB)
   {
-    
     const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
 
-    #pragma omp parallel for num_threads(NUM_THREADS)
+    //// sort tiles to get most heavy in the beggining of the array
+    //
+    if(g_tileRefs.size() != tilesNum)
+    {
+      g_tileRefs.resize(tilesNum);
+      g_pContext->m_currTileId = tilesNum; // signal for threads to wait ...
+      //for(int i=0;i<NUM_THREADS;i++)
+      //  g_threads[i] = std::async(std::launch::async, &SWGL_TileRenderThread, true);
+    }
+
+    for(int i=0; i<tilesNum; i++)
+    {
+      const auto& tile   = g_pContext->m_tiledFrameBuffer.tiles[i];
+      g_tileRefs[i].tileId = i;
+      g_tileRefs[i].triNum = tile.endOffs - tile.begOffs;
+    }
+
+    std::sort(g_tileRefs.rbegin(), g_tileRefs.rend());
+
+    //g_pContext->m_currTileId = 0;
+    //while(g_pContext->m_currTileId < tilesNum)
+    //  SWGL_TileRenderThread(false);
+
+
     for(int i=0; i<tilesNum; i++)
     {
       auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
@@ -638,10 +744,10 @@ GLAPI void APIENTRY glFlush(void)
       fb.w     = BIN_SIZE;
       fb.h     = BIN_SIZE;
       fb.pitch = fb.w + FB_BILLET_SIZE;
-      fb.vx = 0;
-      fb.vy = 0;
-      fb.vw = BIN_SIZE;
-      fb.vh = BIN_SIZE;
+      fb.vx    = 0;
+      fb.vy    = 0;
+      fb.vw    = BIN_SIZE;
+      fb.vh    = BIN_SIZE;
     
       fb.sbuffer = nullptr;
       fb.zbuffer = tile.m_depth;
@@ -663,7 +769,8 @@ GLAPI void APIENTRY glFlush(void)
     
     }
 
-    if (pDrawList->m_triTop != 0 || pDrawList->m_linTop != 0 || pDrawList->m_ptsTop != 0)
+
+    if (pDrawList->m_triTop != 0)
       swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
   else
