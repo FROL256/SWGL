@@ -607,7 +607,7 @@ struct TileRef
 };
 
 std::vector<TileRef> g_tileRefs;
-std::future<int>     g_threads[NUM_THREADS];
+std::thread          g_threads[NUM_THREADS];
 
 int SWGL_TileRenderThread(const bool infinitLoop)
 {
@@ -618,27 +618,13 @@ int SWGL_TileRenderThread(const bool infinitLoop)
 
   while(true)
   {
-    if(infinitLoop)
-    {
-      if (g_pContext->m_currTileId >= tilesNum) // spin lock, waiting for active tiles
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        continue;
-      }
-    }
-    else
-    {
-      if (g_pContext->m_currTileId >= tilesNum)
-        break;
-    }
-
     const int tileRefId = atomic_add(&g_pContext->m_currTileId, 1);
 
     if(infinitLoop)
     {
       if (tileRefId >= tilesNum && infinitLoop)
       {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
         continue;
       }
     }
@@ -647,6 +633,8 @@ int SWGL_TileRenderThread(const bool infinitLoop)
       if (g_pContext->m_currTileId >= tilesNum)
         break;
     }
+
+    *(g_pContext->m_pLog) << "Thread on CPU " << sched_getcpu() << std::endl;
 
     const int tileId = g_tileRefs[tileRefId].tileId;
     auto &tile       = g_pContext->m_tiledFrameBuffer.tiles[tileId];
@@ -689,7 +677,9 @@ int SWGL_TileRenderThread(const bool infinitLoop)
   return 0;
 }
 
-
+//#include <errno.h>
+//#define handle_error_en(en, msg) \
+//        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -718,8 +708,19 @@ GLAPI void APIENTRY glFlush(void)
     {
       g_tileRefs.resize(tilesNum);
       g_pContext->m_currTileId = tilesNum; // signal for threads to wait ...
-      //for(int i=0;i<NUM_THREADS;i++)
-      //  g_threads[i] = std::async(std::launch::async, &SWGL_TileRenderThread, true);
+      for(int i=0;i<NUM_THREADS;i++)
+      {
+        g_threads[i] = std::thread(&SWGL_TileRenderThread, true);
+
+        //#ifndef WIN32       ////// https://eli.thegreenplace.net/2016/c11-threads-affinity-and-hyperthreading/
+        //cpu_set_t cpuset;
+        //CPU_ZERO(&cpuset);
+        //CPU_SET(i, &cpuset);
+        //int rc = pthread_setaffinity_np(g_threads[i].native_handle(), sizeof(cpu_set_t), &cpuset);
+        ////if (rc != 0)
+        ////  handle_error_en(rc, "pthread_getaffinity_np");
+        //#endif
+      }
     }
 
     for(int i=0; i<tilesNum; i++)
@@ -731,11 +732,33 @@ GLAPI void APIENTRY glFlush(void)
 
     std::sort(g_tileRefs.rbegin(), g_tileRefs.rend());
 
-    //g_pContext->m_currTileId = 0;
-    //while(g_pContext->m_currTileId < tilesNum)
-    //  SWGL_TileRenderThread(false);
+    static bool launch = true;
+    if(launch)
+    {
+      //for(int i=0;i<NUM_THREADS;i++)
+      //{
+      //  g_threads[i] = std::thread(&SWGL_TileRenderThread, true);
+      //
+      //  #ifndef WIN32       ////// https://eli.thegreenplace.net/2016/c11-threads-affinity-and-hyperthreading/
+      //  cpu_set_t cpuset;
+      //  CPU_ZERO(&cpuset);
+      //  CPU_SET(i, &cpuset);
+      //  int rc = pthread_setaffinity_np(g_threads[i].native_handle(),
+      //                                  sizeof(cpu_set_t), &cpuset);
+      // #endif
+      //}
 
+      launch = false;
+    }
 
+    // #TODO: try http://manpages.courier-mta.org/htmlman2/sched_setaffinity.2.html
+    // https://eli.thegreenplace.net/2016/c11-threads-affinity-and-hyperthreading/
+
+    g_pContext->m_currTileId = 0;
+    while(g_pContext->m_currTileId < tilesNum)
+      SWGL_TileRenderThread(false);
+
+    /*
     for(int i=0; i<tilesNum; i++)
     {
       auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
@@ -768,7 +791,7 @@ GLAPI void APIENTRY glFlush(void)
       }
     
     }
-
+    */
 
     if (pDrawList->m_triTop != 0)
       swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
