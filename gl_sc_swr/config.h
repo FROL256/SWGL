@@ -1,5 +1,5 @@
 #pragma once
-#define NUM_THREADS 2
+#define NUM_THREADS 3
 
 //#define TEX_NEAREST
 #define FILL_COLOR_ONLY

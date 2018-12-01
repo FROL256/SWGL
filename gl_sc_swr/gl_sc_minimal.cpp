@@ -683,6 +683,7 @@ int SWGL_TileRenderThread(const bool infinitLoop)
 //#include <sched.h>
 //#endif
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 GLAPI void APIENTRY glFlush(void)
@@ -706,6 +707,7 @@ GLAPI void APIENTRY glFlush(void)
 
     //// sort tiles to get most heavy in the beggining of the array
     //
+    
     if(g_tileRefs.size() != tilesNum)
     {
       g_tileRefs.resize(tilesNum);
@@ -728,9 +730,10 @@ GLAPI void APIENTRY glFlush(void)
     g_pContext->m_currTileId = 0;
     while(g_pContext->m_currTileId < tilesNum)
       SWGL_TileRenderThread(false);
-
+    
+    
     /*
-    // #pragma omp parallel for
+    //#pragma omp parallel for
     for(int i=0; i<tilesNum; i++)
     {
       auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];

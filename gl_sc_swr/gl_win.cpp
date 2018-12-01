@@ -77,17 +77,21 @@ void SWGL_Context::Destroy()
 void SWGL_Context::CopyToScreeen()
 {
   if (m_useTiledFB)
-    m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
-  
-  const int pitch = (m_width + FB_BILLET_SIZE);
-
-  for (int y = 0; y < m_height; y++)
   {
-    int offset0 = y * m_width;
-    int offset1 = y * pitch;
-    memcpy(m_pixels + offset0, m_pixels2 + offset1, m_width*sizeof(int));
-    //for (int x = 0; x < m_width; x++)
-    //  m_pixels[offset0 + x] = m_pixels2[offset1 + x];
+    m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
+  }
+  else
+  {
+    const int pitch = (m_width + FB_BILLET_SIZE);
+
+    for (int y = 0; y < m_height; y++)
+    {
+      int offset0 = y * m_width;
+      int offset1 = y * pitch;
+      memcpy(m_pixels + offset0, m_pixels2 + offset1, m_width * sizeof(int));
+      //for (int x = 0; x < m_width; x++)
+      //  m_pixels[offset0 + x] = m_pixels2[offset1 + x];
+    }
   }
 
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
