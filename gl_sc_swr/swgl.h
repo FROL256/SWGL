@@ -378,8 +378,7 @@ struct SWGL_Context
   SWGL_FrameBuffer     m_tiledFrameBuffer;
   
   bool m_useTiledFB;
-  //int  m_currTileId;
-  std::atomic<int> m_currTileId;
+  int  m_currTileId;
 
 
 };

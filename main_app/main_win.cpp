@@ -118,10 +118,8 @@ int DrawGLScene(GLvoid)
 
   //demo04_pyramid_and_cube_3d(g_width, g_height, 20, 30);
 
-  const float coeff = 100.0f/ fmax(g_FPS, 1.0f);
-
-  rtri  += coeff*0.2f;											// Increase The Rotation Variable For The Triangle ( NEW )
-  rquad -= coeff*0.15f;										  // Decrease The Rotation Variable For The Quad ( NEW )
+  rtri  += 50.0f / (g_FPS + 1.0f);
+  rquad += 100.0f / (g_FPS + 1.0f);
  
   glFlush();
 
@@ -179,6 +177,7 @@ GLvoid KillGLWindow(GLvoid)
 		MessageBox(NULL,"Could Not Unregister Class.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		hInstance=NULL;									// Set hInstance To NULL
 	}
+
 }
 
 

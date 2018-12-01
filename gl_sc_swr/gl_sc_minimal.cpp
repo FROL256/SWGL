@@ -608,30 +608,36 @@ struct TileRef
 
 std::vector<TileRef> g_tileRefs;
 std::thread          g_threads[NUM_THREADS];
+int                  g_active [NUM_THREADS];
 
-int SWGL_TileRenderThread(const bool infinitLoop)
+int SWGL_TileRenderThread(int a_threadId)
 {
   if (g_pContext == nullptr)
     return 0;
 
   const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
 
+  const bool infinitLoop = (a_threadId >= 0);
+  int tileRefId = 0;
+
   while(true)
   {
-    //const int tileRefId = atomic_add(&g_pContext->m_currTileId, 1);
-    const int tileRefId = g_pContext->m_currTileId.fetch_add(1);
+    tileRefId = atomic_add(&g_pContext->m_currTileId, 1);
 
     if(infinitLoop)
     {
-      if (tileRefId >= tilesNum && infinitLoop)
+      if (tileRefId >= tilesNum || tileRefId < 0)
       {
-        //std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+        g_active[a_threadId] = 0;
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
         continue;
       }
+      else
+        g_active[a_threadId] = 1;
     }
     else
     {
-      if (g_pContext->m_currTileId >= tilesNum)
+      if (g_pContext->m_currTileId >= tilesNum || tileRefId < 0)
         break;
     }
 
@@ -671,18 +677,13 @@ int SWGL_TileRenderThread(const bool infinitLoop)
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// do useful work here
 
-    if(!infinitLoop)
+    if (!infinitLoop)
       break;
   };
 
+
   return 0;
 }
-
-//#ifndef WIN32
-//#include <pthread.h>
-//#include <sched.h>
-//#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -713,14 +714,12 @@ GLAPI void APIENTRY glFlush(void)
       g_tileRefs.resize(tilesNum);
       g_pContext->m_currTileId = tilesNum; // signal for threads to wait ...
       for(int i=0;i<NUM_THREADS;i++)
-      {
-        g_threads[i] = std::thread(&SWGL_TileRenderThread, true);
-      }
+        g_threads[i] = std::thread(&SWGL_TileRenderThread, i);
     }
 
     for(int i=0; i<tilesNum; i++)
     {
-      const auto& tile     = g_pContext->m_tiledFrameBuffer.tiles[i];
+      auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
       g_tileRefs[i].tileId = i;
       g_tileRefs[i].triNum = tile.endOffs - tile.begOffs;
     }
@@ -729,44 +728,19 @@ GLAPI void APIENTRY glFlush(void)
 
     g_pContext->m_currTileId = 0;
     while(g_pContext->m_currTileId < tilesNum)
-      SWGL_TileRenderThread(false);
-    
-    
-    /*
-    //#pragma omp parallel for
-    for(int i=0; i<tilesNum; i++)
+      SWGL_TileRenderThread(-1);
+
+    while (true) // waiting for all threads to finish
     {
-      auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
-      
-      FrameBuffer fb;
-      fb.w     = BIN_SIZE;
-      fb.h     = BIN_SIZE;
-      fb.pitch = fb.w + FB_BILLET_SIZE;
-      fb.vx    = 0;
-      fb.vy    = 0;
-      fb.vw    = BIN_SIZE;
-      fb.vh    = BIN_SIZE;
-    
-      fb.sbuffer = nullptr;
-      fb.zbuffer = tile.m_depth;
-      fb.cbuffer = tile.m_color;
-    
-      for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
-      {
-        const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
-        const auto& tri  = pDrawList->m_triMemory[triId2];
-        const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);    
+      bool allFinished = true;
+      for (int i = 0; i < NUM_THREADS; i++)
+        allFinished = allFinished && (g_active[i] == 0);
 
-        const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
-
-        auto stateId = swglStateIdFromPSO(pso, g_pContext, sameColor);
-
-        HWImpl::RasterizeTriangle(stateId, BlendOp_None, tri, tile.minX, tile.minY,
-                                  &fb);
-      }
-    
+      if (!allFinished)
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1)); 
+      else
+        break;
     }
-    */
 
     if (pDrawList->m_triTop != 0)
       swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
