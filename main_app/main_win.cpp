@@ -91,7 +91,7 @@ int DrawGLScene(GLvoid)
   }
 
   //test01_colored_triangle();
-  demo01_colored_triangle(rtri);
+  //demo01_colored_triangle(rtri);
   //demo01_colored_triangle(5.0f);
 
   //demo03_many_small_dynamic_triangles();
@@ -101,7 +101,7 @@ int DrawGLScene(GLvoid)
   //demo07_triangle_fan(g_width, g_height, rtri, rquad);
   //demo14_transparent_cube(g_width, g_height, rtri, rquad);
   //demo24_draw_elements_terrain(g_width, g_height, rtri, rquad);
-  //demo19_cubes(g_width, g_height, rtri, rquad);
+  demo19_cubes(g_width, g_height, rtri, rquad);
 
   //demo25_teapot(g_width, g_height, rtri, rquad);
   //demo26_teapots9(g_width, g_height, rtri, rquad);
