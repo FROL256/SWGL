@@ -29,6 +29,7 @@
     <ClCompile Include="HWBlockLine4x4.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
+    <ClCompile Include="HWBlockLine8x8.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
