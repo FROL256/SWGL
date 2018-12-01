@@ -59,4 +59,4 @@ find_package(Threads REQUIRED)
 add_library(swgl STATIC ${SOURCE_LIB})
 
 set_target_properties(swgl PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_options(swgl PUBLIC -std=c++11 -fpermissive -w -Wall) # ${OpenMP_CXX_FLAGS}
+target_compile_options(swgl PUBLIC -std=c++11 -fpermissive -w -Wall ${OpenMP_CXX_FLAGS}) # ${OpenMP_CXX_FLAGS}

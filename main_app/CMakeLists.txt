@@ -16,7 +16,7 @@ add_executable(test_gl
                HydraExport.cpp
                main_linux.cpp)
 
-target_link_libraries(test_gl swgl Threads::Threads) #${OpenMP_CXX_FLAGS}
+target_link_libraries(test_gl swgl ${OpenMP_CXX_FLAGS}) #${OpenMP_CXX_FLAGS}
 
 set_target_properties(test_gl PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_options(test_gl PUBLIC -std=c++11 -fpermissive -w -Wall ) # ${OpenMP_CXX_FLAGS}
+target_compile_options(test_gl PUBLIC -std=c++11 -fpermissive -w -Wall ${OpenMP_CXX_FLAGS}) # ${OpenMP_CXX_FLAGS}

@@ -16,6 +16,7 @@
 #include <memory>
 #include <fstream>
 #include <time.h>
+#include <atomic>
 
 #include "alloc16.h"
 
@@ -377,7 +378,8 @@ struct SWGL_Context
   SWGL_FrameBuffer     m_tiledFrameBuffer;
   
   bool m_useTiledFB;
-  int  m_currTileId;
+  //int  m_currTileId;
+  std::atomic<int> m_currTileId;
 
 
 };
