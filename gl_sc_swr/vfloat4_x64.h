@@ -172,15 +172,15 @@ static inline cvex::vfloat4 operator/(const float a, const cvex::vfloat4 b) { re
 
 static inline cvex::vint4 operator+(const cvex::vint4 a, const cvex::vint4 b) { return _mm_add_epi32(a, b); }
 static inline cvex::vint4 operator-(const cvex::vint4 a, const cvex::vint4 b) { return _mm_sub_epi32(a, b); }
-static inline cvex::vint4 operator*(const cvex::vint4 a, const cvex::vint4 b) { return _mm_mul_epi32(a, b); }
+static inline cvex::vint4 operator*(const cvex::vint4 a, const cvex::vint4 b) { return _mm_mullo_epi32(a, b); }
 
 static inline cvex::vint4 operator+(const cvex::vint4 a, const int b) { return _mm_add_epi32(a, cvex::splat(b)); }
 static inline cvex::vint4 operator-(const cvex::vint4 a, const int b) { return _mm_sub_epi32(a, cvex::splat(b)); }
-static inline cvex::vint4 operator*(const cvex::vint4 a, const int b) { return _mm_mul_epi32(a, cvex::splat(b)); }
+static inline cvex::vint4 operator*(const cvex::vint4 a, const int b) { return _mm_mullo_epi32(a, cvex::splat(b)); }
 
 static inline cvex::vint4 operator+(const int a, const cvex::vint4 b) { return _mm_add_epi32(cvex::splat(a), b); }
 static inline cvex::vint4 operator-(const int a, const cvex::vint4 b) { return _mm_sub_epi32(cvex::splat(a), b); }
-static inline cvex::vint4 operator*(const int a, const cvex::vint4 b) { return _mm_mul_epi32(cvex::splat(a), b); }
+static inline cvex::vint4 operator*(const int a, const cvex::vint4 b) { return _mm_mullo_epi32(cvex::splat(a), b); }
 
 static inline cvex::vint4 operator<<(const cvex::vint4 a, const int val) { return _mm_slli_epi32(a, val); }
 static inline cvex::vint4 operator>>(const cvex::vint4 a, const int val) { return _mm_srli_epi32(a, val); }
