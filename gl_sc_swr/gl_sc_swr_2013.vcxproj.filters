@@ -26,6 +26,9 @@
     <ClCompile Include="HWSSE1Impl.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
+    <ClCompile Include="HWBlockLine4x4.cpp">
+      <Filter>Rasterizers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />

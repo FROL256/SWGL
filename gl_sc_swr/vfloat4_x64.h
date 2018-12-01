@@ -26,25 +26,6 @@ namespace cvex
   typedef __m128  vfloat4;
   typedef __m128i vint4;
 
-  #ifdef WIN32 // MVSC does not define operators !!!
-
-  static inline vfloat4 operator+(const vfloat4 a, const vfloat4 b) { return _mm_add_ps(a, b); }
-  static inline vfloat4 operator-(const vfloat4 a, const vfloat4 b) { return _mm_sub_ps(a, b); }
-  static inline vfloat4 operator*(const vfloat4 a, const vfloat4 b) { return _mm_mul_ps(a, b); }
-  static inline vfloat4 operator/(const vfloat4 a, const vfloat4 b) { return _mm_div_ps(a, b); }
-
-  static inline vfloat4 operator+(const vfloat4 a, const float b) { return _mm_add_ps(a, _mm_broadcast_ss(&b)); }
-  static inline vfloat4 operator-(const vfloat4 a, const float b) { return _mm_sub_ps(a, _mm_broadcast_ss(&b)); }
-  static inline vfloat4 operator*(const vfloat4 a, const float b) { return _mm_mul_ps(a, _mm_broadcast_ss(&b)); }
-  static inline vfloat4 operator/(const vfloat4 a, const float b) { return _mm_div_ps(a, _mm_broadcast_ss(&b)); }
-
-  static inline vfloat4 operator+(const float a, const vfloat4 b) { return _mm_add_ps(_mm_broadcast_ss(&a), b); }
-  static inline vfloat4 operator-(const float a, const vfloat4 b) { return _mm_sub_ps(_mm_broadcast_ss(&a), b); }
-  static inline vfloat4 operator*(const float a, const vfloat4 b) { return _mm_mul_ps(_mm_broadcast_ss(&a), b); }
-  static inline vfloat4 operator/(const float a, const vfloat4 b) { return _mm_div_ps(_mm_broadcast_ss(&a), b); }
-
-  #endif
-
   static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);}
 
   static inline void store(float* data, vfloat4 a_val)   { _mm_store_ps(data, a_val);  }
@@ -171,5 +152,48 @@ namespace cvex
   static inline void prefetch(const float* ptr) {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
   static inline void prefetch(const int* ptr)   {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
 };
+
+#ifdef WIN32 // MVSC does not define operators !!!
+
+static inline cvex::vfloat4 operator+(const cvex::vfloat4 a, const cvex::vfloat4 b) { return _mm_add_ps(a, b); }
+static inline cvex::vfloat4 operator-(const cvex::vfloat4 a, const cvex::vfloat4 b) { return _mm_sub_ps(a, b); }
+static inline cvex::vfloat4 operator*(const cvex::vfloat4 a, const cvex::vfloat4 b) { return _mm_mul_ps(a, b); }
+static inline cvex::vfloat4 operator/(const cvex::vfloat4 a, const cvex::vfloat4 b) { return _mm_div_ps(a, b); }
+
+static inline cvex::vfloat4 operator+(const cvex::vfloat4 a, const float b) { return _mm_add_ps(a, _mm_broadcast_ss(&b)); }
+static inline cvex::vfloat4 operator-(const cvex::vfloat4 a, const float b) { return _mm_sub_ps(a, _mm_broadcast_ss(&b)); }
+static inline cvex::vfloat4 operator*(const cvex::vfloat4 a, const float b) { return _mm_mul_ps(a, _mm_broadcast_ss(&b)); }
+static inline cvex::vfloat4 operator/(const cvex::vfloat4 a, const float b) { return _mm_div_ps(a, _mm_broadcast_ss(&b)); }
+
+static inline cvex::vfloat4 operator+(const float a, const cvex::vfloat4 b) { return _mm_add_ps(_mm_broadcast_ss(&a), b); }
+static inline cvex::vfloat4 operator-(const float a, const cvex::vfloat4 b) { return _mm_sub_ps(_mm_broadcast_ss(&a), b); }
+static inline cvex::vfloat4 operator*(const float a, const cvex::vfloat4 b) { return _mm_mul_ps(_mm_broadcast_ss(&a), b); }
+static inline cvex::vfloat4 operator/(const float a, const cvex::vfloat4 b) { return _mm_div_ps(_mm_broadcast_ss(&a), b); }
+
+static inline cvex::vint4 operator+(const cvex::vint4 a, const cvex::vint4 b) { return _mm_add_epi32(a, b); }
+static inline cvex::vint4 operator-(const cvex::vint4 a, const cvex::vint4 b) { return _mm_sub_epi32(a, b); }
+static inline cvex::vint4 operator*(const cvex::vint4 a, const cvex::vint4 b) { return _mm_mul_epi32(a, b); }
+
+static inline cvex::vint4 operator+(const cvex::vint4 a, const int b) { return _mm_add_epi32(a, cvex::splat(b)); }
+static inline cvex::vint4 operator-(const cvex::vint4 a, const int b) { return _mm_sub_epi32(a, cvex::splat(b)); }
+static inline cvex::vint4 operator*(const cvex::vint4 a, const int b) { return _mm_mul_epi32(a, cvex::splat(b)); }
+
+static inline cvex::vint4 operator+(const int a, const cvex::vint4 b) { return _mm_add_epi32(cvex::splat(a), b); }
+static inline cvex::vint4 operator-(const int a, const cvex::vint4 b) { return _mm_sub_epi32(cvex::splat(a), b); }
+static inline cvex::vint4 operator*(const int a, const cvex::vint4 b) { return _mm_mul_epi32(cvex::splat(a), b); }
+
+static inline cvex::vint4 operator<<(const cvex::vint4 a, const int val) { return _mm_slli_epi32(a, val); }
+static inline cvex::vint4 operator>>(const cvex::vint4 a, const int val) { return _mm_srli_epi32(a, val); }
+
+static inline cvex::vint4 operator|(const cvex::vint4 a, const cvex::vint4 b) { return _mm_or_si128(a,b); }
+static inline cvex::vint4 operator&(const cvex::vint4 a, const cvex::vint4 b) { return _mm_and_si128(a, b); }
+
+static inline cvex::vint4 operator> (const cvex::vfloat4 a, const cvex::vfloat4 b) { return cvex::as_vint(_mm_cmpgt_ps(a, b)); }
+static inline cvex::vint4 operator< (const cvex::vfloat4 a, const cvex::vfloat4 b) { return cvex::as_vint(_mm_cmplt_ps(a, b)); }
+static inline cvex::vint4 operator>=(const cvex::vfloat4 a, const cvex::vfloat4 b) { return cvex::as_vint(_mm_cmpge_ps(a, b)); }
+static inline cvex::vint4 operator<=(const cvex::vfloat4 a, const cvex::vfloat4 b) { return cvex::as_vint(_mm_cmple_ps(a, b)); }
+
+#endif
+
 
 #endif //TEST_GL_TOP_VFLOAT4_H
