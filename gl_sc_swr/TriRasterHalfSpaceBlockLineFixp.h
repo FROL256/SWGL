@@ -59,7 +59,11 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, in
   int C3 = DY31 * X3 - DX31 * Y3;
 
   const auto triColor  = ROP::Line(tri);
-  const int  triColorS = triColor[0];
+
+  int dataTemp[blockSize];
+  store_u(dataTemp, triColor);
+
+  const int triColorS = dataTemp[0];
 
   // Correct for fill convention
   if (DY12 < 0 || (DY12 == 0 && DX12 > 0)) C1++;

@@ -111,8 +111,8 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
     cvex::vfloat4* depth = (cvex::vfloat4*)a_pContext->m_zbuffer;
     cvex::vint4*   color = (cvex::vint4*)a_pContext->m_pixels2;
 
-    uint64_t addr1 = reinterpret_cast<uint64_t>(depth);
-    uint64_t addr2 = reinterpret_cast<uint64_t>(color);
+    size_t addr1 = reinterpret_cast<size_t>(depth);
+    size_t addr2 = reinterpret_cast<size_t>(color);
 
     if(addr1%16 == 0 && addr2%16 == 0)
     {
@@ -612,7 +612,7 @@ std::thread          g_threads[NUM_THREADS];
 int SWGL_TileRenderThread(const bool infinitLoop)
 {
   if (g_pContext == nullptr)
-    return;
+    return 0;
 
   const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
 

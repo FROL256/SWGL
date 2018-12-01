@@ -39,16 +39,18 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   hdcMem = CreateCompatibleDC(a_hdc);
   hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);
 
-  m_pixels2 = m_pixels;
-  //m_pixels2 = (int*)    _aligned_malloc(width*height*sizeof(int),     16);
-  m_zbuffer = (float*)  _aligned_malloc(width*height*sizeof(float),   16);
-  m_sbuffer = (uint8_t*)_aligned_malloc(width*height*sizeof(uint8_t), 16);
-
+  //m_pixels2 = m_pixels;
+  m_pixels2 = (int*)    _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(int),     16);
+  m_zbuffer = (float*)  _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(float),   16);
+  m_sbuffer = (uint8_t*)_aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(uint8_t), 16);
 
   // new tiled frame buffer
   //
-  m_tiledFrameBuffer.Resize(m_width, m_height);
-  m_tiledFrameBuffer.TestClearChessBoard();
+  if (m_useTiledFB)
+  {
+    m_tiledFrameBuffer.Resize(m_width, m_height);
+    m_tiledFrameBuffer.TestClearChessBoard();
+  }
 }
 
 
@@ -58,7 +60,7 @@ void SWGL_Context::Destroy()
   DeleteDC(hdcMem);
   DeleteObject(hbmp);
 
-  //_aligned_free(m_pixels2);
+  _aligned_free(m_pixels2);
   _aligned_free(m_zbuffer);
   _aligned_free(m_sbuffer);
 
@@ -77,6 +79,17 @@ void SWGL_Context::CopyToScreeen()
   if (m_useTiledFB)
     m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
   
+  const int pitch = (m_width + FB_BILLET_SIZE);
+
+  for (int y = 0; y < m_height; y++)
+  {
+    int offset0 = y * m_width;
+    int offset1 = (m_height - y - 1) * pitch;
+
+    for (int x = 0; x < m_width; x++)
+      m_pixels[offset0 + x] = m_pixels2[offset1 + x];
+  }
+
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
 }
 

@@ -20,13 +20,10 @@
     <ClCompile Include="BatchExport.cpp" />
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
-    <ClCompile Include="PureCpp.cpp">
+    <ClCompile Include="HWPureCpp.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
-    <ClCompile Include="SSE1Impl.cpp">
-      <Filter>Rasterizers</Filter>
-    </ClCompile>
-    <ClCompile Include="PureCppBlock4x4.cpp">
+    <ClCompile Include="HWSSE1Impl.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -51,13 +48,17 @@
     <ClInclude Include="HWAbstractionLayer.h">
       <Filter>Rasterizers</Filter>
     </ClInclude>
-    <ClInclude Include="PureCpp.h">
+    <ClInclude Include="HW_VROP.h" />
+    <ClInclude Include="TriRasterHalfSpaceBlockLineFixp.h" />
+    <ClInclude Include="vfloat4_x64.h" />
+    <ClInclude Include="vfloat8_x64.h" />
+    <ClInclude Include="HWBlockLine4x4.h">
       <Filter>Rasterizers</Filter>
     </ClInclude>
-    <ClInclude Include="SSE1Impl.h">
+    <ClInclude Include="HWPureCpp.h">
       <Filter>Rasterizers</Filter>
     </ClInclude>
-    <ClInclude Include="PureCppBlock4x4.h">
+    <ClInclude Include="HWSSE1Impl.h">
       <Filter>Rasterizers</Filter>
     </ClInclude>
   </ItemGroup>

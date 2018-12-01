@@ -27,10 +27,22 @@ namespace cvex
   typedef __m128i vint4;
 
   #ifdef WIN32 // MVSC does not define operators !!!
+
   static inline vfloat4 operator+(const vfloat4 a, const vfloat4 b) { return _mm_add_ps(a, b); }
   static inline vfloat4 operator-(const vfloat4 a, const vfloat4 b) { return _mm_sub_ps(a, b); }
   static inline vfloat4 operator*(const vfloat4 a, const vfloat4 b) { return _mm_mul_ps(a, b); }
   static inline vfloat4 operator/(const vfloat4 a, const vfloat4 b) { return _mm_div_ps(a, b); }
+
+  static inline vfloat4 operator+(const vfloat4 a, const float b) { return _mm_add_ps(a, _mm_broadcast_ss(&b)); }
+  static inline vfloat4 operator-(const vfloat4 a, const float b) { return _mm_sub_ps(a, _mm_broadcast_ss(&b)); }
+  static inline vfloat4 operator*(const vfloat4 a, const float b) { return _mm_mul_ps(a, _mm_broadcast_ss(&b)); }
+  static inline vfloat4 operator/(const vfloat4 a, const float b) { return _mm_div_ps(a, _mm_broadcast_ss(&b)); }
+
+  static inline vfloat4 operator+(const float a, const vfloat4 b) { return _mm_add_ps(_mm_broadcast_ss(&a), b); }
+  static inline vfloat4 operator-(const float a, const vfloat4 b) { return _mm_sub_ps(_mm_broadcast_ss(&a), b); }
+  static inline vfloat4 operator*(const float a, const vfloat4 b) { return _mm_mul_ps(_mm_broadcast_ss(&a), b); }
+  static inline vfloat4 operator/(const float a, const vfloat4 b) { return _mm_div_ps(_mm_broadcast_ss(&a), b); }
+
   #endif
 
   static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);}
@@ -156,8 +168,8 @@ namespace cvex
   static inline vfloat4 div_s(vfloat4 a, vfloat4 b) { return _mm_div_ss(a,b); } // #NOTE: assume you will never use .yzw coordinates!; only .x is valid!
   static inline vfloat4 rcp_s(vfloat4 a)            { return _mm_rcp_ss(a);   } // #NOTE: assume you will never use .yzw coordinates!; only .x is valid!
 
-  static inline void prefetch(const float* ptr) {  _mm_prefetch(ptr, _MM_HINT_T0); }
-  static inline void prefetch(const int* ptr)   {  _mm_prefetch(ptr, _MM_HINT_T0); }
+  static inline void prefetch(const float* ptr) {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
+  static inline void prefetch(const int* ptr)   {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
 };
 
 #endif //TEST_GL_TOP_VFLOAT4_H

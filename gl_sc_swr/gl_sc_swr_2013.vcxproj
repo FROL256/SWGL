@@ -287,9 +287,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="HWAbstractionLayer.h" />
-    <ClInclude Include="PureCpp.h" />
-    <ClInclude Include="PureCppBlock4x4.h" />
-    <ClInclude Include="SSE1Impl.h" />
+    <ClInclude Include="HWBlockLine4x4.h" />
+    <ClInclude Include="HWPureCpp.h" />
+    <ClInclude Include="HWSSE1Impl.h" />
+    <ClInclude Include="HW_VROP.h" />
     <ClInclude Include="SWGL_TiledFrameBuffer.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="gl_sc.h" />
@@ -301,6 +302,9 @@
     <ClInclude Include="TexSampler.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="TriRaster.h" />
+    <ClInclude Include="TriRasterHalfSpaceBlockLineFixp.h" />
+    <ClInclude Include="vfloat4_x64.h" />
+    <ClInclude Include="vfloat8_x64.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BatchExport.cpp" />
@@ -308,10 +312,9 @@
     <ClCompile Include="gl_sc_standart.cpp" />
     <ClCompile Include="gl_standart.cpp" />
     <ClCompile Include="gl_win.cpp" />
-    <ClCompile Include="PureCpp.cpp" />
+    <ClCompile Include="HWPureCpp.cpp" />
+    <ClCompile Include="HWSSE1Impl.cpp" />
     <ClCompile Include="pugixml.cpp" />
-    <ClCompile Include="PureCppBlock4x4.cpp" />
-    <ClCompile Include="SSE1Impl.cpp" />
     <ClCompile Include="swgl.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
     <ClCompile Include="Timer.cpp" />

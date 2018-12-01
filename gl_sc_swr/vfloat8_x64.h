@@ -13,6 +13,25 @@ namespace cvex
   typedef __m256  vfloat8;
   typedef __m256i vint8;
 
+  #ifdef WIN32 // MVSC does not define operators !!!
+
+  static inline vfloat8 operator+(const vfloat8 a, const vfloat8 b) { return _mm256_add_ps(a, b); }
+  static inline vfloat8 operator-(const vfloat8 a, const vfloat8 b) { return _mm256_sub_ps(a, b); }
+  static inline vfloat8 operator*(const vfloat8 a, const vfloat8 b) { return _mm256_mul_ps(a, b); }
+  static inline vfloat8 operator/(const vfloat8 a, const vfloat8 b) { return _mm256_div_ps(a, b); }
+
+  static inline vfloat8 operator+(const vfloat8 a, const float b) { return _mm256_add_ps(a, _mm256_broadcast_ss(&b)); }
+  static inline vfloat8 operator-(const vfloat8 a, const float b) { return _mm256_sub_ps(a, _mm256_broadcast_ss(&b)); }
+  static inline vfloat8 operator*(const vfloat8 a, const float b) { return _mm256_mul_ps(a, _mm256_broadcast_ss(&b)); }
+  static inline vfloat8 operator/(const vfloat8 a, const float b) { return _mm256_div_ps(a, _mm256_broadcast_ss(&b)); }
+
+  static inline vfloat8 operator+(const float a, const vfloat8 b) { return _mm256_add_ps(_mm256_broadcast_ss(&a), b); }
+  static inline vfloat8 operator-(const float a, const vfloat8 b) { return _mm256_sub_ps(_mm256_broadcast_ss(&a), b); }
+  static inline vfloat8 operator*(const float a, const vfloat8 b) { return _mm256_mul_ps(_mm256_broadcast_ss(&a), b); }
+  static inline vfloat8 operator/(const float a, const vfloat8 b) { return _mm256_div_ps(_mm256_broadcast_ss(&a), b); }
+
+  #endif
+
   static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO);}
 
   static inline void store(float* data, vfloat8 a_val)   { _mm256_store_ps(data, a_val);  }
@@ -55,8 +74,8 @@ namespace cvex
 
   static inline vfloat8 vclamp(const vfloat8 x, const vfloat8 minVal, const vfloat8 maxVal) { return _mm256_max_ps(_mm256_min_ps(x, maxVal), minVal); }
 
-  static inline void prefetch(const float* ptr) {  _mm_prefetch(ptr, _MM_HINT_T0); }
-  static inline void prefetch(const int* ptr)   {  _mm_prefetch(ptr, _MM_HINT_T0); }
+  static inline void prefetch(const float* ptr) {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
+  static inline void prefetch(const int* ptr)   {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
 };
 
 #endif //TEST_GL_TOP_VFLOAT8_H

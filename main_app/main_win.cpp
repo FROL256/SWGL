@@ -91,11 +91,11 @@ int DrawGLScene(GLvoid)
   }
 
   //test01_colored_triangle();
-  //demo01_colored_triangle(rtri);
+  demo01_colored_triangle(rtri);
   //demo01_colored_triangle(5.0f);
 
   //demo03_many_small_dynamic_triangles();
-  demo04_pyramid_and_cube_3d(g_width, g_height, rtri, rquad); // rtri, rquad // 200.0f, -100.0f
+  //demo04_pyramid_and_cube_3d(g_width, g_height, rtri, rquad); // rtri, rquad // 200.0f, -100.0f
 
   //demo05_texture_3D(g_width, g_height, rtri, rquad);
   //demo07_triangle_fan(g_width, g_height, rtri, rquad);
