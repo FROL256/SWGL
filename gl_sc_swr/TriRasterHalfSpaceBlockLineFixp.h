@@ -207,7 +207,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
   if (DY23 < 0 || (DY23 == 0 && DX23 > 0)) C2++;
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
-  const float areaInv = 1.0f / (256.0f*fabs(float( (DY31*DX12 >> 8) - (DX31*DY12 >> 8) )));
+  const float areaInv = 1.0f / fabs(float(DY31*DX12 - DX31*DY12));
 
   // Loop through blocks
   for (int y = miny; y < maxy; y += blockSize)
@@ -354,7 +354,7 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
   if (DY23 < 0 || (DY23 == 0 && DX23 > 0)) C2++;
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
-  const float areaInv = 1.0f / (256.0f*fabs(float( (DY31*DX12 >> 8) - (DX31*DY12 >> 8) )));
+  const float areaInv = 1.0f / fabs(float(DY31*DX12 - DX31*DY12));
 
   // Loop through blocks
   for (int y = miny; y < maxy; y += blockSize)
