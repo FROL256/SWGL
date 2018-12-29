@@ -69,7 +69,7 @@ namespace cvex
   }
 
   static inline vint4 make_vint(const int a, const int b, const int c, const int d) { return vint4{a,b,c,d}; }
-
+  static inline vuint4 make_vuint(const unsigned int a, const unsigned int b, const unsigned int c, const unsigned int d) { return vuint4{a,b,c,d}; }
 
   static inline vfloat4 min(const vfloat4 a, const vfloat4 b)
   {
