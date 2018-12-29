@@ -30,7 +30,7 @@ struct LineOffs<vint, 4>
 {
   static inline vint w(const int CX1, const int FDY12)
   {
-    return make_vuint((unsigned int)CX1, (unsigned int)(CX1 - FDY12), (unsigned int)(CX1 - FDY12*2), (unsigned int)(CX1 - FDY12*3));
+    return make_vuint((unsigned int)CX1, (unsigned int)(CX1 - FDY12), (unsigned int)(CX1 - FDY12*2), (unsigned int)(CX1 - FDY12*3)) >> 16;
   }
 
 };
@@ -68,13 +68,9 @@ struct VROP_FIXP
     static inline void Line(const TriangleT &tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const unsigned int areaInv,
                             int *pLineColor)
     {
-
-      //const vfloat c_one = splat(1.0f);
-      const vint c_255 = splat((unsigned int)255);
-
-      const vint w1 = (areaInv * LineOffs<vint, n>::w(CX1, FDY12)) >> 24;
-      const vint w2 = (areaInv * LineOffs<vint, n>::w(CX2, FDY23)) >> 24;
-      const vint w3 = (c_255 - w1 - w2);
+      const vint w1 = (areaInv * LineOffs<vint, n>::w(CX1, FDY12)) >> 8;
+      const vint w2 = (areaInv * LineOffs<vint, n>::w(CX2, FDY23)) >> 8;
+      const vint w3 = (splat((unsigned int)255) - w1 - w2);
 
       //const vint r = ( (tri.c1.x)*w1 + (tri.c2.x)*w2 + (tri.c3.x)*w3 ) >> 8;
       //const vint g = ( (tri.c1.y)*w1 + (tri.c2.y)*w2 + (tri.c3.y)*w3 ) >> 8;
