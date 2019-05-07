@@ -208,7 +208,7 @@ struct VROP
 
     static inline void store_line(int* line, vint data)
     {
-      store(line, data); // can use store instead of store_u due to we guarantee block size aligment
+      store_u(line, data);
     }
 
   };
@@ -240,7 +240,7 @@ struct VROP
                        (to_int32(b * c_255) << 0)  |
                        (to_int32(a * c_255) << 24);
 
-      store(pLineColor, res); // can use store instead of store_u due to we guarantee block size aligment
+      store_u(pLineColor, res);
     }
 
     static inline int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
@@ -272,7 +272,7 @@ struct VROP
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
-      const vfloat zOld  = load(pLineDepth);
+      const vfloat zOld  = load_u(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
       if(test_bits_any(zTest))
@@ -285,7 +285,7 @@ struct VROP
         const auto b = (tri.c1.z * w1 + tri.c2.z * w2 + tri.c3.z * w3)*z;
         const auto a = (tri.c1.w * w1 + tri.c2.w * w2 + tri.c3.w * w3)*z;
 
-        const vint colorOld = load(pLineColor);
+        const vint colorOld = load_u(pLineColor);
 
         //const vint colori = splat(int(0xFFFFFFFF));
 
@@ -300,8 +300,8 @@ struct VROP
                             (to_int32(b * c_255) << 0)  |
                             (to_int32(a * c_255) << 24);
 
-        store(pLineColor, blend(colori, colorOld, zTest));
-        store(pLineDepth, blend(zInv,   zOld,     zTest));
+        store_u(pLineColor, blend(colori, colorOld, zTest));
+        store_u(pLineDepth, blend(zInv,   zOld,     zTest));
       }
     }
 
@@ -616,7 +616,7 @@ struct VROP
                        (to_int32(g * texColor[1] * c_255) << 8)  |
                        (to_int32(b * texColor[2] * c_255) << 0);
 
-      store(pLineColor, res);
+      store_u(pLineColor, res);
     }
 
     static inline int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
@@ -652,12 +652,12 @@ struct VROP
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
-      const vfloat zOld  = load(pLineDepth);
+      const vfloat zOld  = load_u(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
       if(test_bits_any(zTest))
       {
-        store(pLineDepth, blend(zInv, zOld, zTest));
+        store_u(pLineDepth, blend(zInv, zOld, zTest));
         prefetch(pLineColor);
 
         const vfloat  z = rcp_e(zInv);
@@ -672,13 +672,13 @@ struct VROP
         vfloat texColor[3];
         Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-        const vint colorOld = load(pLineColor);
+        const vint colorOld = load_u(pLineColor);
 
         const vint colori = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
                             (to_int32(g * texColor[1] * c_255) << 8)  |
                             (to_int32(b * texColor[2] * c_255) << 0);
 
-        store(pLineColor, blend(colori, colorOld, zTest));
+        store_u(pLineColor, blend(colori, colorOld, zTest));
       }
     }
 
@@ -731,12 +731,12 @@ struct VROP
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
-      const vfloat zOld  = load(pLineDepth);
+      const vfloat zOld  = load_u(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
       if(test_bits_any(zTest))
       {
-        store(pLineDepth, blend(zInv, zOld, zTest));
+        store_u(pLineDepth, blend(zInv, zOld, zTest));
         prefetch(pLineColor);
 
         const vfloat  z = rcp_e(zInv);
@@ -752,7 +752,7 @@ struct VROP
         vfloat texColor[4];
         Tex2DSample4f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-        const vint colorOld = load(pLineColor);
+        const vint colorOld = load_u(pLineColor);
 
         const vfloat redOld   = to_float32( (to_uint32(colorOld) & 0x00FF0000) >> 16)*c_255Inv;
         const vfloat greenOld = to_float32( (to_uint32(colorOld) & 0x0000FF00) >> 8 )*c_255Inv;
@@ -771,7 +771,7 @@ struct VROP
                             (to_uint32(blueNew  * c_255) << 0)  |
                             (to_uint32(alphaNew * c_255) << 24);
 
-        store(pLineColor, blend(colori, colorOld, zTest));
+        store_u(pLineColor, blend(colori, colorOld, zTest));
       }
     }
 
