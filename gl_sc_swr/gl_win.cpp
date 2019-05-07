@@ -40,9 +40,9 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);
 
   //m_pixels2 = m_pixels;
-  m_pixels2 = (int*)    _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(int),     16);
-  m_zbuffer = (float*)  _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(float),   16);
-  m_sbuffer = (uint8_t*)_aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(uint8_t), 16);
+  m_pixels2 = (int*)    _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(int),     64);
+  m_zbuffer = (float*)  _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(float),   64);
+  m_sbuffer = (uint8_t*)_aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(uint8_t), 64);
 
   // new tiled frame buffer
   //
