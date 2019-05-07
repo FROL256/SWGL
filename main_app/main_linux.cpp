@@ -95,7 +95,7 @@ void ExposeFunc()
     try
     {
       //test01_colored_triangle();
-      demo01_colored_triangle(angle1);
+      //demo01_colored_triangle(angle1);
       //test02_nehe_lesson1_simplified();
 
       //demo04_pyramid_and_cube_3d(wa.width, wa.height, 10.0f, 13.0f);
@@ -111,15 +111,18 @@ void ExposeFunc()
       //demo19_cubes(wa.width, wa.height, 10.0f, 13.0f);
       //demo19_cubes(wa.width, wa.height, angle1, angle2);
 
-      //demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
+      demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
       //demo25_teapot(wa.width, wa.height, angle1, angle2);
 
       //demo04_pyramid_and_cube_3d(wa.width, wa.height, 20, 30);
       //test11_alpha_tex_and_transp(); // 2D Blending test ...
 
 
-      angle1 += 50.0f/(FPS+1.0f);
-      angle2 += 100.0f/(FPS+1.0f);
+      angle1 += 25.0f/(FPS+1.0f);
+      angle2 += 50.0f/(FPS+1.0f);
+
+      //angle1 += 0.1f;
+      //angle2 += 0.2f;
 
       frameCounter++;
       frameTime += g_timer.getElapsed();

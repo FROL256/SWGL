@@ -5,10 +5,13 @@
 #undef max
 #endif
 
+
+#if defined WIN32
+
 //------------------------------------------------------------------------
 
-double Timer::s_ticksToSecsCoef  = -1.0;
-long long int Timer::s_prevTicks = 0;
+double Timer::s_ticksToSecsCoef    = -1.0;
+long long int Timer::s_prevTicks          = 0;
 
 //------------------------------------------------------------------------
 
@@ -61,3 +64,23 @@ long long int Timer::getElapsedTicks(void)
 }
 
 //------------------------------------------------------------------------
+
+#else
+
+float Timer::getElapsed()
+{
+  double elapsedTime = 0.0;
+  
+  timeval t2 = {0,0};
+  gettimeofday(&t2, nullptr);
+
+  timeval t1 = m_timeVal;
+
+  // compute and print the elapsed time in millisec
+  elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
+  elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+
+  return elapsedTime*0.001f;
+}
+
+#endif

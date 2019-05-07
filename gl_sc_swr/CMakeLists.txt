@@ -35,7 +35,7 @@ set(SOURCE_LIB
         HWBlockLine4x4.h
         HWSSE1Impl.h
         SWGL_TiledFrameBuffer.h
-        TimerLinux.cpp
+        Timer.cpp
         HW_VROP.h HW_VROP_FIXP.h
         vfloat4_x64.h vfloat4_gcc.h vfloat8_x64.h vfloat8_gcc.h
         TriRasterHalfSpaceBlockLineFixp.h
