@@ -656,9 +656,10 @@ int SWGL_TileRenderThread(int a_threadId)
     fb.vw    = BIN_SIZE;
     fb.vh    = BIN_SIZE;
 
-    fb.sbuffer = nullptr;
-    fb.zbuffer = tile.m_depth;
-    fb.cbuffer = tile.m_color;
+    fb.sbuffer    = nullptr;
+    fb.zbuffer    = tile.m_depth;
+    fb.cbuffer    = tile.m_color;
+    fb.lockbuffer = g_pContext->m_locks;
 
     auto* pDrawList = &g_pContext->m_drawList;
 
