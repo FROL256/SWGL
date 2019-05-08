@@ -87,12 +87,12 @@ void SWGL_Context::InitCommon()
   freopen("stdout.txt", "wt", stdout);
   freopen("stderr.txt", "wt", stderr);
 
-  m_currFrame    = 0;
-  m_lastNFramesT = clock();
-  m_texTop       = 0;
+  m_texTop = 0;
   m_textures.resize(1024); // max 1024 tex
 
-  m_useTiledFB = false;
+  m_useTiledFB  = false;
+  m_useTriQueue = false;
+
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
@@ -641,8 +641,8 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 
     Triangle* pTri   = &(a_pDrawList->m_triMemory[top + triId]);
     pTri->psoId      = psoId;
-    pTri->curr_sval  = pBatch->state.stencilValue;
-    pTri->curr_smask = pBatch->state.stencilMask;
+    //pTri->curr_sval  = pBatch->state.stencilValue;
+    //pTri->curr_smask = pBatch->state.stencilMask;
 
     HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, pTri);
     clampTriBBox(pTri, frameBuff);                        // need this to prevent out of border
@@ -730,13 +730,11 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     ////////////////////////////////////////////////////////////////////
     ////
     Triangle localTri;
-    localTri.curr_sval  = pBatch->state.stencilValue;
-    localTri.curr_smask = pBatch->state.stencilMask;
-
     HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3,
                           &localTri);
     
-    const auto stateId   = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
+    const auto stateId = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
+    localTri.ropId     = stateId;
     ////
     ////////////////////////////////////////////////////////////////////
     
@@ -752,19 +750,70 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
 }
 
-
-void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch) // pre (a_pContext != nullptr && pBatch != nullptr)
+void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff) // pre (a_pContext != nullptr && pBatch != nullptr)
 {
-#ifdef MEASURE_NOLOAD_PERF
-  return;
+  const std::vector<int>& indices = pBatch->indices;
+
+  if (indices.size() == 0)
+    return;
+
+#ifdef MEASURE_STATS
+  Timer timer(true);
 #endif
 
-  swglRunBatchVertexShader(a_pContext, pBatch);
+  float timeAccumTriSetUp  = 0.0f;
+  float timeAccumTriRaster = 0.0f;
 
-  FrameBuffer frameBuff = swglBatchFb(a_pContext, pBatch->state);
+  const int triNum = int(indices.size() / 3);
 
-  swglDrawBatchTriangles(a_pContext, pBatch, frameBuff);
+  #pragma omp parallel for if(triNum > 1000) num_threads(2)
+  for (int triId = 0; triId < triNum; triId++)
+  {
+    int   i1 = indices[triId * 3 + 0];
+    int   i2 = indices[triId * 3 + 1];
+    int   i3 = indices[triId * 3 + 2];
+
+    const float4 v1 = pBatch->vertPos[i1];
+    const float4 v2 = pBatch->vertPos[i2];
+    const float4 v3 = pBatch->vertPos[i3];
+
+    const float4 u = v2 - v1;
+    const float4 v = v3 - v1;
+    const float nz = u.x*v.y - u.y*v.x;
+
+    if (pBatch->state.cullFaceEnabled && pBatch->state.cullFaceMode != 0)
+    {
+      const bool cullFace = ((pBatch->state.cullFaceMode == GL_FRONT) && (nz > 0.0f)) ||
+                            ((pBatch->state.cullFaceMode == GL_BACK) && (nz < 0.0f));
+
+      if (cullFace)
+        continue;
+      else if (nz < 0.0f)
+        std::swap(i2, i3);
+    }
+    else if (nz < 0.0f)
+      std::swap(i2, i3);
+
+    ////////////////////////////////////////////////////////////////////
+    ////
+    Triangle localTri;
+    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3,
+                          &localTri);
+
+    const auto stateId = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
+    localTri.ropId     = stateId;
+    ////
+    ////////////////////////////////////////////////////////////////////
+
+    a_pContext->m_tqueue.enqueue(localTri);
+  }
+
+#ifdef MEASURE_STATS
+  a_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
+#endif
+
 }
+
 
 RasterOp swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Context* a_pContext, bool a_vertsAreOfSameColor)
 {

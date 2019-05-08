@@ -26,6 +26,8 @@
 #include "TriRaster.h"
 #include "HWAbstractionLayer.h"
 
+#include "concurrentqueue.h"
+
 #define PI  ((float)3.1415926535)
 #define DEG_TO_RAD (PI/(float)180.0)
 #define RAD_TO_DEG ((float)180.0/PI)
@@ -242,18 +244,6 @@ struct ALIGNED(16) SWGL_TextureStorage
   GLint format;
 };
 
-struct ScreenTile
-{
-  int minX;
-  int maxX;
-
-  int minY;
-  int maxY;
-
-  int beginOffs;
-  int endOffs;
-};
-
 static inline unsigned int divTileSize(unsigned int x) {return x / BIN_SIZE;}
 
 struct SWGL_DrawList
@@ -286,15 +276,14 @@ struct SWGL_Timings
 enum LOG_MODES { LOG_FOR_DEBUG_ERROR = 0, LOG_ALL = 1, LOG_NORMAL = 2, LOG_MINIMUM = 3, LOG_PERF = 4, LOG_NOTHING = 10 };
 
 
-struct ITriangleRasterizer;
-
 struct SWGL_Context
 {
   static const int logMode = LOG_NOTHING; // select one from LOG_MODES
 
 #ifdef WIN32
 
-  SWGL_Context() : hbmp(NULL), hdcMem(NULL), hbmOld(NULL), m_width(0), m_height(0), m_zbuffer(0), m_sbuffer(0), m_locks(nullptr)
+  SWGL_Context() : hbmp(NULL), hdcMem(NULL), hbmOld(NULL), m_width(0), m_height(0), m_zbuffer(0), m_sbuffer(0),
+                   m_locks(nullptr), m_tqueue(MAX_NUM_TRIANGLES_TOTAL), m_useTriQueue(false), m_useTiledFB(false)
   {
     InitCommon();
   }
@@ -314,7 +303,8 @@ struct SWGL_Context
 
 #else
   
-  SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f), m_locks(nullptr)
+  SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f),
+                   m_locks(nullptr), m_tqueue(MAX_NUM_TRIANGLES_TOTAL), m_useTriQueue(false), m_useTiledFB(false)
   {
     InitCommon();
   }
@@ -347,10 +337,6 @@ struct SWGL_Context
 
   int m_texTop;
 
-  // FPS counter
-  //
-  int           m_currFrame;
-  clock_t       m_lastNFramesT;
   static std::ofstream* m_pLog;
 
   SWGL_DrawList        m_drawList;
@@ -358,9 +344,11 @@ struct SWGL_Context
   SWGL_FrameBuffer     m_tiledFrameBuffer;
   
   bool m_useTiledFB;
+  bool m_useTriQueue;
   int  m_currTileId;
 
   std::atomic_flag* m_locks;
+  moodycamel::ConcurrentQueue<HWImpl::TriangleType> m_tqueue;
 };
 
 
@@ -369,11 +357,8 @@ inline float4x4* swglGetCurrMatrix(SWGL_Context* a_pContext) // pre (a_pContext 
   return (a_pContext->input.inputMatrixMode == GL_MODELVIEW) ? &a_pContext->input.batchState.worldViewMatrix : &a_pContext->input.batchState.projMatrix;
 }
 
-void swglDrawBatch(SWGL_Context* a_pContext, Batch* pBatch);
 void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum);
 void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
-//int  swglGetDrawListFreeSpace(SWGL_DrawList* a_pDrawList);
-
 void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch);
 
 void swglAppendTriIndices(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPrimType, size_t lastSizeVert);
@@ -451,6 +436,7 @@ RasterOp swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Conte
 void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch,
                                    const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB);
 
+void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 
 static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext != nullptr)
 {
@@ -477,6 +463,8 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
   
   if (a_pContext->m_useTiledFB)
     swglAppendTrianglesToDrawList(pDrawList, a_pContext, pBatch, fb, &a_pContext->m_tiledFrameBuffer);
+  else if(a_pContext->m_useTriQueue)
+    swglEnqueueBatchTriangles(a_pContext, pBatch, fb);
   else
     swglDrawBatchTriangles(a_pContext, pBatch, fb);
 

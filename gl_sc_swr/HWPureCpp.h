@@ -18,8 +18,8 @@ ALIGNED(16) struct HWImplementationPureCpp
       texS.w    = 0;
       texS.h    = 0;
 
-      curr_sval  = 0;
-      curr_smask = 0;
+      //curr_sval  = 0;
+      //curr_smask = 0;
       psoId      = -1;
     }
 
@@ -40,11 +40,13 @@ ALIGNED(16) struct HWImplementationPureCpp
     int bb_iminY;
     int bb_imaxY;
 
-    int     psoId;
-    uint8_t curr_sval;
-    uint8_t curr_smask;
-
+    int        psoId;
     TexSampler texS;
+    RasterOp   ropId;
+    //BlendOp  bopId;
+    //uint8_t curr_sval;
+    //uint8_t curr_smask;
+
   };
 
   //

@@ -746,6 +746,25 @@ GLAPI void APIENTRY glFlush(void)
     if (pDrawList->m_triTop != 0)
       swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
+  else if(g_pContext->m_useTriQueue)
+  {
+    FrameBuffer fb = swglBatchFb(g_pContext, g_pContext->input.getCurrBatch()->state); // #TODO: push fb or state info in queue too ...
+
+    // flush trinagles queue
+    //
+    while(g_pContext->m_tqueue.size_approx() != 0)
+    {
+      Triangle localTri;
+      bool tookTri = g_pContext->m_tqueue.try_dequeue(localTri);
+      if(tookTri)
+      {
+        clampTriBBox(&localTri, fb);  // need this to prevent out of border, can be done in separate thread
+
+        HWImpl::RasterizeTriangle(localTri.ropId, BlendOp_None, localTri, 0, 0,
+                                  &fb);
+      }
+    }
+  }
   else
   {
     // memset(g_pContext->m_pixels2, 0xFFFFFFFF, frameBuff.w*frameBuff.h*sizeof(int));
