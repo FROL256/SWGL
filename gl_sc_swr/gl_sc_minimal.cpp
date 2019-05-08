@@ -610,6 +610,33 @@ std::vector<TileRef> g_tileRefs;
 std::thread          g_threads[NUM_THREADS];
 int                  g_active [NUM_THREADS];
 
+std::thread   g_threads_rast[NUM_THREADS_AUX];
+bool          g_initialized_rast = false;
+bool          g_kill_all         = false;
+
+
+int SWGL_TriangleRenderThread(FrameBuffer a_frameBuff)
+{
+  if (g_pContext == nullptr)
+    return 0;
+
+  FrameBuffer frameBuff = a_frameBuff;
+  Triangle localTri;
+
+  while(!g_kill_all)
+  {
+    if(g_pContext->m_tqueue.try_dequeue(localTri))
+    {
+      clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
+
+      HWImpl::RasterizeTriangle(localTri.ropId, BlendOp_None, localTri, 0, 0,
+                                &frameBuff);
+    }
+  }
+
+  return 0;
+}
+
 int SWGL_TileRenderThread(int a_threadId)
 {
   if (g_pContext == nullptr)
@@ -749,6 +776,13 @@ GLAPI void APIENTRY glFlush(void)
   else if(g_pContext->m_useTriQueue)
   {
     FrameBuffer fb = swglBatchFb(g_pContext, g_pContext->input.getCurrBatch()->state); // #TODO: push fb or state info in queue too ...
+
+    if(!g_initialized_rast)
+    {
+      for(int i=0;i<NUM_THREADS_AUX;i++)
+        g_threads_rast[i] = std::thread(&SWGL_TriangleRenderThread, fb);
+      g_initialized_rast = true;
+    }
 
     // flush trinagles queue
     //

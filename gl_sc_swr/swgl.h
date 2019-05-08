@@ -288,12 +288,6 @@ struct SWGL_Context
     InitCommon();
   }
 
-  ~SWGL_Context()
-  {
-    delete [] m_locks;
-    m_locks = nullptr;
-  }
-
   void Create(HDC a_hdc, int width, int height);
 
   HBITMAP hbmOld;
@@ -309,16 +303,12 @@ struct SWGL_Context
     InitCommon();
   }
 
-  ~SWGL_Context()
-  {
-    delete [] m_locks;
-    m_locks = nullptr;
-  }
-
   void Create(Display *dpy, XVisualInfo *vis, int width, int height);
   __GLXcontextRec glxrec;
 
 #endif
+
+  ~SWGL_Context();
 
   void Destroy();
   void CopyToScreeen();
