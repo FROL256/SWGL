@@ -21,6 +21,7 @@
 #include "alloc16.h"
 
 #include <memory.h>
+#include <atomic>
 
 #include "TriRaster.h"
 #include "HWAbstractionLayer.h"
@@ -282,9 +283,7 @@ struct SWGL_Timings
 };
 
 
-
-
-enum LOG_MODES { LOG_FOR_DEBUG_ERROR = 0, LOG_ALL = 1, LOG_NORMAL = 2, MOG_MINIMUM = 3, LOG_PERF = 4, LOG_NOTHING = 10 };
+enum LOG_MODES { LOG_FOR_DEBUG_ERROR = 0, LOG_ALL = 1, LOG_NORMAL = 2, LOG_MINIMUM = 3, LOG_PERF = 4, LOG_NOTHING = 10 };
 
 
 struct ITriangleRasterizer;
@@ -295,14 +294,15 @@ struct SWGL_Context
 
 #ifdef WIN32
 
-  SWGL_Context() : hbmp(NULL), hdcMem(NULL), hbmOld(NULL), m_width(0), m_height(0), m_zbuffer(0), m_sbuffer(0) //, m_pTaskPool(nullptr)
+  SWGL_Context() : hbmp(NULL), hdcMem(NULL), hbmOld(NULL), m_width(0), m_height(0), m_zbuffer(0), m_sbuffer(0), m_locks(nullptr)
   {
     InitCommon();
   }
 
   ~SWGL_Context()
   {
-
+    delete [] m_locks;
+    m_locks = nullptr;
   }
 
   void Create(HDC a_hdc, int width, int height);
@@ -313,48 +313,28 @@ struct SWGL_Context
   HDC     m_hdc;
 
 #else
-
-  #ifdef LINUX_PPC
-
-  SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f)
-  {
-    m_clFirstFrameLoadDataToGPU = true;
-    m_pRasterImpl               = nullptr;
-    InitCommon();
-  }
-
-  ~SWGL_Context()
-  {
-
-  }
-
-  void Create();
-  int device;
-
-  #else
-
-
-  SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f)
+  
+  SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f), m_locks(nullptr)
   {
     InitCommon();
   }
 
   ~SWGL_Context()
   {
-
+    delete [] m_locks;
+    m_locks = nullptr;
   }
 
   void Create(Display *dpy, XVisualInfo *vis, int width, int height);
   __GLXcontextRec glxrec;
-
-  #endif
 
 #endif
 
   void Destroy();
   void CopyToScreeen();
   void InitCommon();
-
+  void ResizeCommon(int width, int height);
+  
   uint8_t* m_sbuffer;
   float*   m_zbuffer;
   int*     m_pixels;
@@ -380,7 +360,7 @@ struct SWGL_Context
   bool m_useTiledFB;
   int  m_currTileId;
 
-
+  std::atomic_flag* m_locks;
 };
 
 
@@ -414,12 +394,13 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
 {
   FrameBuffer frameBuff;
 
-  frameBuff.cbuffer = a_pContext->m_pixels2;
-  frameBuff.zbuffer = a_pContext->m_zbuffer;
-  frameBuff.sbuffer = a_pContext->m_sbuffer;
-  frameBuff.w       = a_pContext->m_width;
-  frameBuff.h       = a_pContext->m_height;
-  frameBuff.pitch   = frameBuff.w + FB_BILLET_SIZE;
+  frameBuff.cbuffer    = a_pContext->m_pixels2;
+  frameBuff.zbuffer    = a_pContext->m_zbuffer;
+  frameBuff.sbuffer    = a_pContext->m_sbuffer;
+  frameBuff.w          = a_pContext->m_width;
+  frameBuff.h          = a_pContext->m_height;
+  frameBuff.pitch      = frameBuff.w + FB_BILLET_SIZE;
+  frameBuff.lockbuffer = a_pContext->m_locks;
 
   frameBuff.vx = a_state.viewport[0];
   frameBuff.vy = a_state.viewport[1];

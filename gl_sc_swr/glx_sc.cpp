@@ -121,7 +121,8 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
   
   m_tiledFrameBuffer.Resize(m_width, m_height);
   m_tiledFrameBuffer.TestClearChessBoard();
-
+  
+  ResizeCommon(m_width, m_height); //#TODO: move memory allocation inside 'ResizeCommon'
 }
 
 void SWGL_Context::Destroy()

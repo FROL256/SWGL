@@ -3,6 +3,7 @@
 
 #include "LiteMath.h"
 #include <cstdint>
+#include <atomic>
 
 enum RasterOp { ROP_FillColor = 1,
 
@@ -52,7 +53,7 @@ static inline int nextLine(int y, int w, int h)   { return y + w; }
 struct FrameBuffer
 {
   FrameBuffer() : w(0), h(0), pitch(0), dummy(0), vx(0), vy(0), vw(0), vh(0),
-                  cbuffer(nullptr), zbuffer(nullptr), sbuffer(nullptr) {}
+                  cbuffer(nullptr), zbuffer(nullptr), sbuffer(nullptr), lockbuffer(nullptr) {}
 
   int w;
   int h;
@@ -67,6 +68,8 @@ struct FrameBuffer
   int*     cbuffer;
   float*   zbuffer;
   uint8_t* sbuffer;
+  
+  std::atomic_flag* lockbuffer;
 };
 
 struct ALIGNED(16) TexSampler

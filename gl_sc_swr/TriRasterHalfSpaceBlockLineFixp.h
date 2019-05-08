@@ -9,6 +9,11 @@ static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
 
+template<int value> int div    (int a_arg) { return a_arg/value; }
+template<>          int div<2> (int a_arg) { return a_arg >> 1; }
+template<>          int div<4> (int a_arg) { return a_arg >> 2; }
+template<>          int div<8> (int a_arg) { return a_arg >> 3; }
+template<>          int div<16>(int a_arg) { return a_arg >> 4; }
 
 template<typename ROP>
 void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, int tileMinX, int tileMinY,
@@ -69,7 +74,7 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, in
   if (DY12 < 0 || (DY12 == 0 && DX12 > 0)) C1++;
   if (DY23 < 0 || (DY23 == 0 && DX23 > 0)) C2++;
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
-
+  
   // Loop through blocks
   for (int y = miny; y < maxy; y += blockSize)
   {
@@ -86,26 +91,32 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, in
       const bool a10 = C1 + DX12 * y0 - DY12 * x1 > 0;
       const bool a01 = C1 + DX12 * y1 - DY12 * x0 > 0;
       const bool a11 = C1 + DX12 * y1 - DY12 * x1 > 0;
-      const int a = (a00 << 0) | (a10 << 1) | (a01 << 2) | (a11 << 3);
+      const int  a   = (a00 << 0) | (a10 << 1) | (a01 << 2) | (a11 << 3);
 
       const bool b00 = C2 + DX23 * y0 - DY23 * x0 > 0;
       const bool b10 = C2 + DX23 * y0 - DY23 * x1 > 0;
       const bool b01 = C2 + DX23 * y1 - DY23 * x0 > 0;
       const bool b11 = C2 + DX23 * y1 - DY23 * x1 > 0;
-      const int b = (b00 << 0) | (b10 << 1) | (b01 << 2) | (b11 << 3);
+      const int  b   = (b00 << 0) | (b10 << 1) | (b01 << 2) | (b11 << 3);
 
       const bool c00 = C3 + DX31 * y0 - DY31 * x0 > 0;
       const bool c10 = C3 + DX31 * y0 - DY31 * x1 > 0;
       const bool c01 = C3 + DX31 * y1 - DY31 * x0 > 0;
       const bool c11 = C3 + DX31 * y1 - DY31 * x1 > 0;
-      const int c = (c00 << 0) | (c10 << 1) | (c01 << 2) | (c11 << 3);
+      const int  c   = (c00 << 0) | (c10 << 1) | (c01 << 2) | (c11 << 3);
 
       // Skip block when outside an edge
       if (a == 0x0 || b == 0x0 || c == 0x0)
         continue;
 
       int *buffer = colorBuffer;
-
+  
+      const int MTX = div<blockSize>(x);
+      const int MTY = div<blockSize>(y);
+      const int MTO = MTY*div<blockSize>(frameBuf->w) + MTX;
+  
+      while (frameBuf->lockbuffer[MTO].test_and_set(std::memory_order_acquire)); // lock micro tile
+      
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)
       {
@@ -145,6 +156,8 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, in
           buffer += pitch;
         }
       }
+  
+      frameBuf->lockbuffer[MTO].clear(std::memory_order_release);
     }
 
     colorBuffer += blockSize * pitch;
@@ -208,7 +221,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
   const float areaInv = 1.0f / fabs(float(DY31*DX12 - DX31*DY12));
-
+  
   // Loop through blocks
   for (int y = miny; y < maxy; y += blockSize)
   {
@@ -245,6 +258,12 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
 
       int *buffer = colorBuffer;
 
+      const int MTX = div<blockSize>(x);
+      const int MTY = div<blockSize>(y);
+      const int MTO = MTY*div<blockSize>(frameBuf->w) + MTX;
+      
+      while (frameBuf->lockbuffer[MTO].test_and_set(std::memory_order_acquire)); // lock micro tile
+      
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)
       {
@@ -293,8 +312,10 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
           buffer += pitch;
         }
       }
+  
+      frameBuf->lockbuffer[MTO].clear(std::memory_order_release); // unlock micro tile
     }
-
+  
     colorBuffer += blockSize * pitch;
   }
 
@@ -392,7 +413,13 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
 
       int*   bufferc = colorBuffer;
       float* bufferz = depthBuffer;
-
+  
+      const int MTX = div<blockSize>(x);
+      const int MTY = div<blockSize>(y);
+      const int MTO = MTY*div<blockSize>(frameBuf->w) + MTX;
+  
+      while (frameBuf->lockbuffer[MTO].test_and_set(std::memory_order_acquire)); // lock micro tile
+      
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)
       {
@@ -446,6 +473,8 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
           bufferz += pitch;
         }
       }
+  
+      frameBuf->lockbuffer[MTO].clear(std::memory_order_release); // unlock micro tile
     }
 
     colorBuffer += blockSize * pitch;
@@ -517,7 +546,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
   const unsigned int areaInv = (unsigned int)(0xFFFFFFFF) / (unsigned int)(abs(DY31*DX12 - DX31*DY12));
-
+  
   // Loop through blocks
   for (int y = miny; y < maxy; y += blockSize)
   {
@@ -553,6 +582,12 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
         continue;
 
       int *buffer = colorBuffer;
+  
+      const int MTX = div<blockSize>(x);
+      const int MTY = div<blockSize>(y);
+      const int MTO = MTY*div<blockSize>(frameBuf->w) + MTX;
+  
+      while (frameBuf->lockbuffer[MTO].test_and_set(std::memory_order_acquire)); // lock micro tile
 
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)
@@ -602,12 +637,13 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
           buffer += pitch;
         }
       }
+  
+      frameBuf->lockbuffer[MTO].clear(std::memory_order_release); // unlock micro tile
     }
 
     colorBuffer += blockSize * pitch;
   }
 
 }
-
 
 #endif //TEST_GL_TOP_SIMDBLOCKFIXP_H

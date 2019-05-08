@@ -51,6 +51,8 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
     m_tiledFrameBuffer.Resize(m_width, m_height);
     m_tiledFrameBuffer.TestClearChessBoard();
   }
+  
+  ResizeCommon(m_width, m_height);
 }
 
 

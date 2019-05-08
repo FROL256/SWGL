@@ -97,6 +97,14 @@ void SWGL_Context::InitCommon()
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
 }
 
+void SWGL_Context::ResizeCommon(int width, int height)
+{
+  const int tileSize = 4; // when we have 8x8 tiles, we just alloc a bit more memory then needed, but it should work fine
+  const int size     = (width/tileSize)*(height/tileSize);
+  m_locks = new std::atomic_flag[size];
+  for(int i=0;i<size;i++)
+    m_locks[i].clear(std::memory_order_release);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -690,7 +698,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
   const int triNum = int(indices.size() / 3);
 
-  //#pragma omp parallel for
+  #pragma omp parallel for if(triNum > 10)
   for (int triId = 0; triId < triNum; triId++)
   {
     int   i1 = indices[triId * 3 + 0];
