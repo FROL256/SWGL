@@ -474,12 +474,12 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
     return;
 
   swglRunBatchVertexShader(a_pContext, pBatch);
-
+  
   if (a_pContext->m_useTiledFB)
     swglAppendTrianglesToDrawList(pDrawList, a_pContext, pBatch, fb, &a_pContext->m_tiledFrameBuffer);
   else
     swglDrawBatchTriangles(a_pContext, pBatch, fb);
 
-  pBatch->clear();
+  pBatch->clear(); // don't clear batch if you need it further!
 
 }

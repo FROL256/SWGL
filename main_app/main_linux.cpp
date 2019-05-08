@@ -86,12 +86,6 @@ void ExposeFunc()
       g_timer.start();
     }
 
-    // cvex::vfloat4 src1 = {1.0f, 2.0f, 3.0f, 4.0f};
-    // cvex::vfloat4 src2 = {5.0f, 6.0f, 7.0f, 8.0f};
-    // cvex::vfloat4 shf1 = _mm_shuffle_ps(src1, src2, _MM_SHUFFLE(1, 0, 1, 0));
-    // cvex::vfloat4 shf2 = _mm_shuffle_ps(src1, src2, _MM_SHUFFLE(3, 2, 1, 0));
-    // int a = 2;
-
     try
     {
       //test01_colored_triangle();

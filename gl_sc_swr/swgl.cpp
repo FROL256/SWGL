@@ -698,7 +698,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
   const int triNum = int(indices.size() / 3);
 
-  #pragma omp parallel for if(triNum > 10)
+  #pragma omp parallel for if(triNum > 10) // #TODO: make parallel for and push triangles in queue with 1-2 threads (not many!).
   for (int triId = 0; triId < triNum; triId++)
   {
     int   i1 = indices[triId * 3 + 0];
@@ -727,19 +727,21 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     else if (nz < 0.0f)
       std::swap(i2, i3);
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    ////////////////////////////////////////////////////////////////////
+    ////
     Triangle localTri;
     localTri.curr_sval  = pBatch->state.stencilValue;
     localTri.curr_smask = pBatch->state.stencilMask;
 
-    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, &localTri);
-    clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border
-
-    const bool sameColor = HWImpl::TriVertsAreOfSameColor(localTri);
-
-    auto stateId = swglStateIdFromPSO(&pBatch->state, a_pContext, sameColor);
-
+    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3,
+                          &localTri);
+    
+    const auto stateId   = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
+    ////
+    ////////////////////////////////////////////////////////////////////
+    
+    clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
+    
     HWImpl::RasterizeTriangle(stateId, BlendOp_None, localTri, 0, 0,
                               &frameBuff);
   }
