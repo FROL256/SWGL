@@ -93,7 +93,7 @@ void ExposeFunc()
     //test02_nehe_lesson1_simplified();
 
     //demo04_pyramid_and_cube_3d(wa.width, wa.height, 10.0f, 13.0f);
-    //demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
+    demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
     //demo14_transparent_cube(wa.width, wa.height, 10.0f, 13.0f);
     //demo03_many_small_dynamic_triangles();
 
@@ -105,7 +105,7 @@ void ExposeFunc()
     //demo19_cubes(wa.width, wa.height, 10.0f, 13.0f);
     //demo19_cubes(wa.width, wa.height, angle1, angle2);
 
-    demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
+    //demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
     //demo25_teapot(wa.width, wa.height, angle1, angle2);
 
     //demo04_pyramid_and_cube_3d(wa.width, wa.height, 20, 30);

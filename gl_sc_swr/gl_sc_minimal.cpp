@@ -608,30 +608,33 @@ struct TileRef
 
 std::vector<TileRef> g_tileRefs;
 std::thread          g_threads[NUM_THREADS];
-int                  g_active [NUM_THREADS];
+int                  g_active [NUM_THREADS]; //#TODO: use std::atomics
 
-std::thread   g_threads_rast[NUM_THREADS_AUX];
 bool          g_initialized_rast = false;
 bool          g_kill_all         = false;
+FrameBuffer   g_fb;
 
-
-int SWGL_TriangleRenderThread(FrameBuffer a_frameBuff)
+int SWGL_TriangleRenderThread(int a_threadId)
 {
   if (g_pContext == nullptr)
     return 0;
 
-  FrameBuffer frameBuff = a_frameBuff;
+  FrameBuffer& frameBuff = g_fb;
   Triangle localTri;
 
   while(!g_kill_all)
   {
     if(g_pContext->m_tqueue.try_dequeue(localTri))
     {
+      g_active[a_threadId] = 1;
+
       clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
       HWImpl::RasterizeTriangle(localTri.ropId, BlendOp_None, localTri, 0, 0,
                                 &frameBuff);
     }
+    else
+      g_active[a_threadId] = 0;
   }
 
   return 0;
@@ -736,7 +739,6 @@ GLAPI void APIENTRY glFlush(void)
 
     //// sort tiles to get most heavy in the beggining of the array
     //
-    
     if(g_tileRefs.size() != tilesNum)
     {
       g_tileRefs.resize(tilesNum);
@@ -775,29 +777,42 @@ GLAPI void APIENTRY glFlush(void)
   }
   else if(g_pContext->m_useTriQueue)
   {
-    FrameBuffer fb = swglBatchFb(g_pContext, g_pContext->input.getCurrBatch()->state); // #TODO: push fb or state info in queue too ...
+    g_fb = swglBatchFb(g_pContext, g_pContext->input.getCurrBatch()->state); // #TODO: push fb or state info in queue too ...
 
     if(!g_initialized_rast)
     {
       for(int i=0;i<NUM_THREADS_AUX;i++)
-        g_threads_rast[i] = std::thread(&SWGL_TriangleRenderThread, fb);
+      {
+        g_active [i] = 0;
+        g_threads[i] = std::thread(&SWGL_TriangleRenderThread, i);
+      }
       g_initialized_rast = true;
     }
 
     // flush trinagles queue
     //
-    while(g_pContext->m_tqueue.size_approx() != 0)
+    Triangle localTri;
+    while(g_pContext->m_tqueue.try_dequeue(localTri))
     {
-      Triangle localTri;
-      bool tookTri = g_pContext->m_tqueue.try_dequeue(localTri);
-      if(tookTri)
-      {
-        clampTriBBox(&localTri, fb);  // need this to prevent out of border, can be done in separate thread
-
-        HWImpl::RasterizeTriangle(localTri.ropId, BlendOp_None, localTri, 0, 0,
-                                  &fb);
-      }
+      clampTriBBox(&localTri, g_fb);  // need this to prevent out of border, can be done in separate thread
+      HWImpl::RasterizeTriangle(localTri.ropId, BlendOp_None, localTri, 0, 0,
+                                &g_fb);
     }
+
+    while (true) // waiting for all threads to finish
+    {
+      bool allFinished = true;
+      for (int i = 0; i < NUM_THREADS_AUX; i++)
+      {
+        allFinished = allFinished && (g_active[i] == 0);
+      }
+
+      if (!allFinished)
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+      else
+        break;
+    }
+
   }
   else
   {
