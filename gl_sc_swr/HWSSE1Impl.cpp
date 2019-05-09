@@ -518,10 +518,12 @@ void RasterizeTriHalfSpaceSimple3D(const TriangleLocal& tri, int tileMinX, int t
 
 }
 
-void HWImpl_SSE1::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleLocal& tri, int tileMinX, int tileMinY,
+void HWImpl_SSE1::RasterizeTriangle(const TriangleLocal& tri, int tileMinX, int tileMinY,
                                     FrameBuffer* frameBuf)
 {
   set_ftz();
+
+  const auto a_ropT = tri.ropId;
 
   switch (a_ropT)
   {

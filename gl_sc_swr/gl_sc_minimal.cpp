@@ -630,11 +630,14 @@ int SWGL_TriangleRenderThread(int a_threadId)
 
       clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
-      HWImpl::RasterizeTriangle(localTri.ropId, BlendOp_None, localTri, 0, 0,
+      HWImpl::RasterizeTriangle(localTri, 0, 0,
                                 &frameBuff);
     }
     else
+    {
       g_active[a_threadId] = 0;
+      //std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+    }
   }
 
   return 0;
@@ -696,14 +699,16 @@ int SWGL_TileRenderThread(int a_threadId)
     for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
     {
       const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
-      const auto& tri  = pDrawList->m_triMemory[triId2];
+            auto& tri  = pDrawList->m_triMemory[triId2];
       const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);
 
       const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
 
       auto stateId = swglStateIdFromPSO(pso, g_pContext, sameColor);
 
-      HWImpl::RasterizeTriangle(stateId, BlendOp_None, tri, tile.minX, tile.minY,
+      tri.ropId = stateId;
+
+      HWImpl::RasterizeTriangle(tri, tile.minX, tile.minY,
                                 &fb);
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// do useful work here
@@ -795,7 +800,7 @@ GLAPI void APIENTRY glFlush(void)
     while(g_pContext->m_tqueue.try_dequeue(localTri))
     {
       clampTriBBox(&localTri, g_fb);  // need this to prevent out of border, can be done in separate thread
-      HWImpl::RasterizeTriangle(localTri.ropId, BlendOp_None, localTri, 0, 0,
+      HWImpl::RasterizeTriangle(localTri, 0, 0,
                                 &g_fb);
     }
 
@@ -803,9 +808,7 @@ GLAPI void APIENTRY glFlush(void)
     {
       bool allFinished = true;
       for (int i = 0; i < NUM_THREADS_AUX; i++)
-      {
         allFinished = allFinished && (g_active[i] == 0);
-      }
 
       if (!allFinished)
         std::this_thread::sleep_for(std::chrono::nanoseconds(1));

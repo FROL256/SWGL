@@ -53,7 +53,7 @@ using cvex::prefetch;
 using ROP_CVEX_2D = VROP_FIXP<TriangleLocal, cvex::vfloat4, cvex::vuint4, 4, false>::Colored2D;
 
 
-void HWImplBlockLine4x4Fixp_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
+void HWImplBlockLine4x4Fixp_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                                     FrameBuffer* frameBuf)
 {
   RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast<ROP_CVEX_2D>(tri, tileMinX, tileMinY,

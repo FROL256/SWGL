@@ -658,9 +658,11 @@ static void RasterizeTriHalfSpace3DBlend(const TriangleLocal& tri, int tileMinX,
 }
 
 
-void HWImplementationPureCpp::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
+void HWImplementationPureCpp::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                                 FrameBuffer* frameBuf)
 {
+
+  const auto a_ropT = tri.ropId;
 
   switch (a_ropT)
   {

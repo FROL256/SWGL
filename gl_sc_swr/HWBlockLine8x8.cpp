@@ -53,10 +53,12 @@ using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, cvex::vfloat8, cvex::vint8, 
 using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, cvex::vfloat8, cvex::vint8, 8, true >::Textured3D_Blend;
 #endif
 
-void HWImplBlockLine8x8_CVEX::RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
+void HWImplBlockLine8x8_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                                 FrameBuffer* frameBuf)
 {
   cvex::set_ftz();
+
+  const auto a_ropT = tri.ropId;
 
   //RasterizeTriHalfSpaceBlockFixp2D_Fill<ROP_CVEX_FILL>(tri, tileMinX, tileMinY,
   //                                                     frameBuf);

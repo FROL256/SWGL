@@ -17,10 +17,11 @@ ALIGNED(16) struct HWImplementationPureCpp
       texS.data = nullptr;
       texS.w    = 0;
       texS.h    = 0;
-
       //curr_sval  = 0;
       //curr_smask = 0;
-      psoId      = -1;
+      psoId = -1;
+      ropId = ROP_FillColor;
+      bopId = BlendOp_None;
     }
 
     ALIGNED(16) float4 v1;
@@ -43,10 +44,9 @@ ALIGNED(16) struct HWImplementationPureCpp
     int        psoId;
     TexSampler texS;
     RasterOp   ropId;
-    //BlendOp  bopId;
+    BlendOp    bopId;
     //uint8_t curr_sval;
     //uint8_t curr_smask;
-
   };
 
   //
@@ -72,7 +72,7 @@ ALIGNED(16) struct HWImplementationPureCpp
   static void TriangleSetUp(const SWGL_Context* a_pContext, const Batch* pBatch, int i1, int i2, int i3,
                             TriangleType* t1);
 
-  static void RasterizeTriangle(RasterOp a_ropT, BlendOp a_bopT, const TriangleType& tri, int tileMinX, int tileMinY,
+  static void RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                 FrameBuffer* frameBuf);
 };
 

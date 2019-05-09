@@ -706,7 +706,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
   const int triNum = int(indices.size() / 3);
 
-  #pragma omp parallel for if(triNum > 10) // #TODO: make parallel for and push triangles in queue with 1-2 threads (not many!).
+  #pragma omp parallel for if(triNum > 16)
   for (int triId = 0; triId < triNum; triId++)
   {
     int   i1 = indices[triId * 3 + 0];
@@ -748,7 +748,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     
     clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
     
-    HWImpl::RasterizeTriangle(stateId, BlendOp_None, localTri, 0, 0,
+    HWImpl::RasterizeTriangle(localTri, 0, 0,
                               &frameBuff);
   }
 
