@@ -840,6 +840,104 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 }
 
 
+void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices, int a_indicesNum, const SWGL_Input& a_input)
+{
+  const int triNum = int(a_indicesNum / 3);
+
+  const float3* vertf3 = (const float3*)a_input.vertexPosPointer;
+  const float4* vertf4 = (const float4*)a_input.vertexPosPointer;
+  const float2* vtexf2 = (const float2*)a_input.vertexTexCoordPointer;
+
+  ////
+  //
+  Batch dummy;
+
+  dummy.indices.resize(3);
+  dummy.vertPos.resize(3);
+  dummy.vertColor.resize(3);
+  dummy.vertTexCoord.resize(3);
+
+  dummy.indices[0] = 0;
+  dummy.indices[1] = 1;
+  dummy.indices[2] = 2;
+
+  dummy.vertColor[0] = a_input.currInputColor;
+  dummy.vertColor[1] = a_input.currInputColor;
+  dummy.vertColor[2] = a_input.currInputColor;
+
+  ////
+  //
+  const float viewportf[4] = { (float)a_input.batchState.viewport[0],
+                               (float)a_input.batchState.viewport[1],
+                               (float)a_input.batchState.viewport[2],
+                               (float)a_input.batchState.viewport[3] };
+
+  dummy.state = a_input.batchState;
+  dummy.state.worldViewProjMatrix = mul(dummy.state.projMatrix, dummy.state.worldViewMatrix);
+
+
+  ////
+  //
+  FrameBuffer fb  = swglBatchFb(a_pContext, a_input.batchState);
+  a_pContext->batchFrameBuffers.push_back(fb);
+  const int frameBufferId = a_pContext->batchFrameBuffers.size()-1;
+
+  ////
+  //
+  for (int triId = 0; triId < triNum; triId++)
+  {
+    int i1 = indices[triId * 3 + 0];
+    int i2 = indices[triId * 3 + 1];
+    int i3 = indices[triId * 3 + 2];
+
+    const float4 v1 = to_float4(vertf3[i1], 1.0f);
+    const float4 v2 = to_float4(vertf3[i2], 1.0f);
+    const float4 v3 = to_float4(vertf3[i3], 1.0f);
+
+    const float4 u = v2 - v1;
+    const float4 v = v3 - v1;
+    const float nz = u.x*v.y - u.y*v.x;
+
+    if (a_input.batchState.cullFaceEnabled && a_input.batchState.cullFaceMode != 0)
+    {
+      const bool cullFace = ((a_input.batchState.cullFaceMode == GL_FRONT) && (nz > 0.0f)) ||
+                            ((a_input.batchState.cullFaceMode == GL_BACK) && (nz < 0.0f));
+
+      if (cullFace)
+        continue;
+      else if (nz < 0.0f)
+        std::swap(i2, i3);
+    }
+    else if (nz < 0.0f)
+      std::swap(i2, i3);
+
+    dummy.vertPos[0] = to_float4(vertf3[i1], 1.0f);
+    dummy.vertPos[1] = to_float4(vertf3[i2], 1.0f);
+    dummy.vertPos[2] = to_float4(vertf3[i3], 1.0f);
+
+    dummy.vertTexCoord[0] = vtexf2[i1];
+    dummy.vertTexCoord[1] = vtexf2[i2];
+    dummy.vertTexCoord[2] = vtexf2[i3];
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    HWImpl::VertexShader((const float*)dummy.vertPos.data(), (float*)dummy.vertPos.data(), 3,
+                         viewportf, dummy.state.worldViewProjMatrix.L());
+
+    Triangle localTri;
+    HWImpl::TriangleSetUp(a_pContext, &dummy, 0, 1, 2,
+                          &localTri);
+
+    localTri.ropId     = swglStateIdFromPSO(&a_input.batchState, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
+    localTri.bopId     = BlendOp_None;
+    localTri.fbId      = frameBufferId;
+
+    a_pContext->m_tqueue.enqueue(localTri);
+  }
+
+}
+
+
 RasterOp swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Context* a_pContext, bool a_vertsAreOfSameColor)
 {
   const bool trianglesAreTextured = a_pso->texure2DEnabled && (a_pso->slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);

@@ -356,6 +356,8 @@ void swglAppendTriIndices(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPri
 int  swglAppendTriIndices2(SWGL_Context* a_pContext, Batch* pCurr, GLenum currPrimType, size_t lastSizeVert, const int* inIndices, int count);
 void swglAppendVertices(SWGL_Context* a_pContext, GLenum currPrimType, size_t lastSizeVert, int first, int count);
 
+void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* a_inIndices, int a_indicesNum, const SWGL_Input& a_input);
+
 int atomic_add(int* pAddress, int pVal);
 void clampTriBBox(Triangle* t1, const FrameBuffer& frameBuff);
 

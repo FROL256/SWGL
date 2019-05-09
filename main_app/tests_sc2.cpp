@@ -570,7 +570,7 @@ void demo24_draw_elements_terrain(int width, int height, float algle1, float ang
   glEnableClientState(GL_VERTEX_ARRAY);
 
   glTexCoordPointer(2, GL_FLOAT, 0, &texCoord[0]);
-  glVertexPointer(3, GL_FLOAT, 0, &vertPos[0]);
+  glVertexPointer  (3, GL_FLOAT, 0, &vertPos[0]);
 
   //
   glPushMatrix();

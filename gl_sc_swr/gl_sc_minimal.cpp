@@ -449,16 +449,28 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
     *(g_pContext->m_pLog) << "count        = " << count << std::endl;
   }
 
-  const int maxVertexId = swglAppendTriIndices2(g_pContext, currBatch, mode, lastVertSize, inIndices, count);
+  const bool optInput = (g_pContext->input.vertexPosPointer      != nullptr) && (g_pContext->input.vertPosComponents      == 3) &&
+                        (g_pContext->input.vertexTexCoordPointer != nullptr) && (g_pContext->input.vertTexCoordComponents == 2) && // g_pContext->input.vertexTexCoordPtrEnabled
+                        ((g_pContext->input.vertexColorPointer == nullptr) || (g_pContext->input.vertexColorPtrEnabled == false)) &&
+                        (mode == GL_TRIANGLES);
 
-  swglAppendVertices(g_pContext, mode, lastVertSize, 0, maxVertexId+1);                //#TODO: remove this, append directly to the triagle list
+  if(g_pContext->m_useTriQueue && optInput) // append triangles to queue directly from input pointers
+  {
+    swglEnqueueTrianglesFromInput(g_pContext, inIndices, count, g_pContext->input);
+  }
+  else                                   // old way
+  {
+    const int maxVertexId = swglAppendTriIndices2(g_pContext, currBatch, mode, lastVertSize, inIndices, count);
 
-  if (g_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
-    *(g_pContext->m_pLog) << "glDrawElements, after Append (1) " << std::endl;
+    swglAppendVertices(g_pContext, mode, lastVertSize, 0,
+                       maxVertexId + 1);                //#TODO: remove this, append directly to the triagle list
 
-  currBatch->state = g_pContext->input.batchState; // ok
-  swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately
-  
+    if (g_pContext->logMode <= LOG_FOR_DEBUG_ERROR)
+      *(g_pContext->m_pLog) << "glDrawElements, after Append (1) " << std::endl;
+
+    currBatch->state = g_pContext->input.batchState; // ok
+    swglProcessBatch(g_pContext);                    // run vertex shader and triangle setup immediately
+  }
 }
 
 GLAPI void APIENTRY glEnable(GLenum cap)
