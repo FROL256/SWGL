@@ -10,9 +10,9 @@ struct Batch;
 ALIGNED(16) struct HWImplementationPureCpp
 {
 
-  struct TriangleDataNoSSE
+  struct TriangleType
   {
-    TriangleDataNoSSE()
+    TriangleType()
     {
       texS.data = nullptr;
       texS.w    = 0;
@@ -22,6 +22,7 @@ ALIGNED(16) struct HWImplementationPureCpp
       psoId = -1;
       ropId = ROP_FillColor;
       bopId = BlendOp_None;
+      fbId  = 0;
     }
 
     ALIGNED(16) float4 v1;
@@ -45,13 +46,11 @@ ALIGNED(16) struct HWImplementationPureCpp
     TexSampler texS;
     RasterOp   ropId;
     BlendOp    bopId;
+    int        fbId;
     //uint8_t curr_sval;
     //uint8_t curr_smask;
   };
 
-  //
-  //
-  typedef TriangleDataNoSSE TriangleType;
 
   static void memset32(int32_t* a_data, int32_t val, int32_t numElements);
 

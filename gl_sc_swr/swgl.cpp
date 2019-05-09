@@ -103,6 +103,8 @@ void SWGL_Context::InitCommon()
 
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
+
+  batchFrameBuffers.reserve(100); // approximate "different" batches number
 }
 
 void SWGL_Context::ResizeCommon(int width, int height)
@@ -769,6 +771,22 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
   Timer timer(true);
 #endif
 
+  //// append new FrameBuffer structure if FrameBuffer change compared to previous batch
+  //
+  if(a_pContext->batchFrameBuffers.size() == 0)
+    a_pContext->batchFrameBuffers.push_back(frameBuff);
+  else
+  {
+    const int lastFrameBufferId = int(a_pContext->batchFrameBuffers.size()) - 1;
+    const auto res              = memcmp(&(a_pContext->batchFrameBuffers[lastFrameBufferId]), &frameBuff, sizeof(FrameBuffer));
+    if(res != 0)
+      a_pContext->batchFrameBuffers.push_back(frameBuff);
+  }
+
+  const int frameBufferId = int(a_pContext->batchFrameBuffers.size()) - 1;
+
+  //// process triangles and append them to triangle queue
+  //
   float timeAccumTriSetUp  = 0.0f;
   float timeAccumTriRaster = 0.0f;
 
@@ -802,16 +820,15 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
     else if (nz < 0.0f)
       std::swap(i2, i3);
 
-    ////////////////////////////////////////////////////////////////////
-    ////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     Triangle localTri;
     HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3,
                           &localTri);
 
-    const auto stateId = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
-    localTri.ropId     = stateId;
-    ////
-    ////////////////////////////////////////////////////////////////////
+    localTri.ropId     = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
+    localTri.bopId     = BlendOp_None;
+    localTri.fbId      = frameBufferId;
 
     a_pContext->m_tqueue.enqueue(localTri);
   }
@@ -861,39 +878,7 @@ RasterOp swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Conte
         return ROP_Colored2D;
     }
   }
+
   return ROP_FillColor;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// int swglGetDrawListFreeSpace(SWGL_DrawList* a_pDrawList) // pre (a_pDrawList != nullptr)
-// {
-//   const size_t tilesNum = a_pDrawList->tilesIds.size();
-//   if(tilesNum == 0)
-//     return 0;
-// 
-//   int maxSize = 0;
-// 
-//   for (size_t i = 0; i < tilesNum; i++)
-//   {
-//     int2 tileCoord   = a_pDrawList->tilesIds[i];
-//     const auto& tile = a_pDrawList->tiles[tileCoord.x][tileCoord.y];
-//     const int size   = tile.endOffs - tile.beginOffs;
-// 
-//     if (size > maxSize)
-//       maxSize = size;
-//   }
-// 
-//   int2 res(0, 0);
-// 
-//   res.x = a_pDrawList->m_triMemory.size() - a_pDrawList->m_triTop;
-//   res.y = a_pDrawList->m_tilesTriIndicesMemory.size() / tilesNum - maxSize;
-// 
-//   if (res.x < res.y)
-//     return res.x;
-//   else
-//     return res.y;
-// }

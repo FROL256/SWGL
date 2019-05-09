@@ -339,6 +339,7 @@ struct SWGL_Context
 
   std::atomic_flag* m_locks;
   moodycamel::ConcurrentQueue<HWImpl::TriangleType> m_tqueue;
+  std::vector<FrameBuffer>                          batchFrameBuffers;
 };
 
 

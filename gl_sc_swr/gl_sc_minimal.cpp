@@ -612,14 +612,12 @@ int                  g_active [NUM_THREADS]; //#TODO: use std::atomics
 
 bool          g_initialized_rast = false;
 bool          g_kill_all         = false;
-FrameBuffer   g_fb;
 
 int SWGL_TriangleRenderThread(int a_threadId)
 {
   if (g_pContext == nullptr)
     return 0;
 
-  FrameBuffer& frameBuff = g_fb;
   Triangle localTri;
 
   while(!g_kill_all)
@@ -627,6 +625,8 @@ int SWGL_TriangleRenderThread(int a_threadId)
     if(g_pContext->m_tqueue.try_dequeue(localTri))
     {
       g_active[a_threadId] = 1;
+
+      FrameBuffer& frameBuff = g_pContext->batchFrameBuffers[localTri.fbId];
 
       clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
@@ -782,8 +782,6 @@ GLAPI void APIENTRY glFlush(void)
   }
   else if(g_pContext->m_useTriQueue)
   {
-    g_fb = swglBatchFb(g_pContext, g_pContext->input.getCurrBatch()->state); // #TODO: push fb or state info in queue too ...
-
     if(!g_initialized_rast)
     {
       for(int i=0;i<NUM_THREADS_AUX;i++)
@@ -799,9 +797,10 @@ GLAPI void APIENTRY glFlush(void)
     Triangle localTri;
     while(g_pContext->m_tqueue.try_dequeue(localTri))
     {
-      clampTriBBox(&localTri, g_fb);  // need this to prevent out of border, can be done in separate thread
+      auto& fb = g_pContext->batchFrameBuffers[localTri.fbId];
+      clampTriBBox(&localTri, fb);                            // need this to prevent out of border, can be done in separate thread
       HWImpl::RasterizeTriangle(localTri, 0, 0,
-                                &g_fb);
+                                &fb);
     }
 
     while (true) // waiting for all threads to finish
@@ -822,6 +821,7 @@ GLAPI void APIENTRY glFlush(void)
     // memset(g_pContext->m_pixels2, 0xFFFFFFFF, frameBuff.w*frameBuff.h*sizeof(int));
   }
 
+  g_pContext->batchFrameBuffers.clear();
 }
 
 GLAPI void APIENTRY glGenTextures(GLsizei n, GLuint *textures)
