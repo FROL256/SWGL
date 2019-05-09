@@ -890,9 +890,24 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     int i2 = indices[triId * 3 + 1];
     int i3 = indices[triId * 3 + 2];
 
-    const float4 v1 = to_float4(vertf3[i1], 1.0f);
-    const float4 v2 = to_float4(vertf3[i2], 1.0f);
-    const float4 v3 = to_float4(vertf3[i3], 1.0f);
+    dummy.vertPos[0]      = to_float4(vertf3[i1], 1.0f);
+    dummy.vertPos[1]      = to_float4(vertf3[i2], 1.0f);
+    dummy.vertPos[2]      = to_float4(vertf3[i3], 1.0f);
+
+    dummy.vertTexCoord[0] = vtexf2[i1];
+    dummy.vertTexCoord[1] = vtexf2[i2];
+    dummy.vertTexCoord[2] = vtexf2[i3];
+
+    HWImpl::VertexShader((const float*)dummy.vertPos.data(), (float*)dummy.vertPos.data(), 3,
+                         viewportf, dummy.state.worldViewProjMatrix.L());
+
+    i1 = 0;
+    i2 = 1;
+    i3 = 2;
+
+    const float4 v1 = dummy.vertPos[i1];
+    const float4 v2 = dummy.vertPos[i2];
+    const float4 v3 = dummy.vertPos[i3];
 
     const float4 u = v2 - v1;
     const float4 v = v3 - v1;
@@ -911,21 +926,10 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     else if (nz < 0.0f)
       std::swap(i2, i3);
 
-    dummy.vertPos[0] = to_float4(vertf3[i1], 1.0f);
-    dummy.vertPos[1] = to_float4(vertf3[i2], 1.0f);
-    dummy.vertPos[2] = to_float4(vertf3[i3], 1.0f);
-
-    dummy.vertTexCoord[0] = vtexf2[i1];
-    dummy.vertTexCoord[1] = vtexf2[i2];
-    dummy.vertTexCoord[2] = vtexf2[i3];
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    HWImpl::VertexShader((const float*)dummy.vertPos.data(), (float*)dummy.vertPos.data(), 3,
-                         viewportf, dummy.state.worldViewProjMatrix.L());
-
     Triangle localTri;
-    HWImpl::TriangleSetUp(a_pContext, &dummy, 0, 1, 2,
+    HWImpl::TriangleSetUp(a_pContext, &dummy, i1, i2, i3,
                           &localTri);
 
     localTri.ropId     = swglStateIdFromPSO(&a_input.batchState, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
