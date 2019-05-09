@@ -454,7 +454,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
                         ((g_pContext->input.vertexColorPointer == nullptr) || (g_pContext->input.vertexColorPtrEnabled == false)) &&
                         (mode == GL_TRIANGLES);
 
-  if(g_pContext->m_useTriQueue && optInput) // append triangles to queue directly from input pointers
+  if(g_pContext->m_useTriQueue && optInput && false) // append triangles to queue directly from input pointers
   {
     swglEnqueueTrianglesFromInput(g_pContext, inIndices, count, g_pContext->input);
   }
