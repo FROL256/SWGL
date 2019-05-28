@@ -625,39 +625,6 @@ int                  g_active [NUM_THREADS]; //#TODO: use std::atomics
 bool          g_initialized_rast = false;
 bool          g_kill_all         = false;
 
-
-inline void DrawTriangle(Triangle& localTri)
-{
-  FrameBuffer& frameBuff = g_pContext->batchFrameBuffers[localTri.fbId];
-  clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
-  HWImpl::RasterizeTriangle(localTri, 0, 0,
-                            &frameBuff);
-}
-
-int SWGL_TriangleRenderThread(int a_threadId)
-{
-  if (g_pContext == nullptr)
-    return 0;
-
-  Triangle localTri;
-
-  while(!g_kill_all)
-  {
-    if(g_pContext->m_tqueue.try_dequeue(localTri))
-    {
-      g_active[a_threadId] = 1;
-      DrawTriangle(localTri);
-    }
-    else
-    {
-      g_active[a_threadId] = 0;
-      //std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-    }
-  }
-
-  return 0;
-}
-
 int SWGL_TileRenderThread(int a_threadId)
 {
   if (g_pContext == nullptr)
@@ -714,7 +681,7 @@ int SWGL_TileRenderThread(int a_threadId)
     for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
     {
       const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
-            auto& tri  = pDrawList->m_triMemory[triId2];
+      auto& tri  = pDrawList->m_triMemory[triId2];
       const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);
 
       const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
@@ -732,6 +699,45 @@ int SWGL_TileRenderThread(int a_threadId)
       break;
   };
 
+
+  return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+inline void DrawTriangle(Triangle& localTri)
+{
+  FrameBuffer& frameBuff = g_pContext->batchFrameBuffers[localTri.fbId];
+  clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
+  HWImpl::RasterizeTriangle(localTri, 0, 0,
+                            &frameBuff);
+}
+
+
+int SWGL_TriangleRenderThread(int a_threadId)
+{
+  if (g_pContext == nullptr)
+    return 0;
+
+  constexpr int BULKSIZE = 4;
+  Triangle localTris[BULKSIZE];
+
+  while(!g_kill_all)
+  {
+    const int fetchSize = g_pContext->m_tqueue.size_approx() > 4*BULKSIZE ? BULKSIZE : 1; // fetch single triangle if we don't have enough triangles
+    const auto fetched  = g_pContext->m_tqueue.try_dequeue_bulk(localTris, fetchSize);
+    if(fetched > 0)
+    {
+      g_active[a_threadId] = 1;
+      for(int i=0;i<fetched;i++)
+        DrawTriangle(localTris[i]);
+    }
+    else
+    {
+      g_active[a_threadId] = 0;
+      //std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+    }
+  }
 
   return 0;
 }
@@ -807,7 +813,7 @@ GLAPI void APIENTRY glFlush(void)
       g_initialized_rast = true;
     }
 
-    // flush trinagles queue
+    // flush triangle queue
     //
     Triangle localTri;
     while(g_pContext->m_tqueue.try_dequeue(localTri))
