@@ -936,6 +936,14 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     localTri.bopId     = BlendOp_None;
     localTri.fbId      = frameBufferId;
 
+    //if(a_pContext->m_tqueue.size_approx() >= 50) // if queue grows, draw triangle now instead of pushing it to queue //#NOTE: does not helps!
+    //{
+    //  auto& fb = a_pContext->batchFrameBuffers[localTri.fbId];
+    //  clampTriBBox(&localTri, fb);
+    //  HWImpl::RasterizeTriangle(localTri, 0, 0,
+    //                            &fb);
+    //}
+    //else
     a_pContext->m_tqueue.enqueue(localTri);
   }
 

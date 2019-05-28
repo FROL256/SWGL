@@ -454,7 +454,7 @@ GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, cons
                         ((g_pContext->input.vertexColorPointer == nullptr) || (g_pContext->input.vertexColorPtrEnabled == false)) &&
                         (mode == GL_TRIANGLES);
 
-  if(g_pContext->m_useTriQueue && optInput && false) // append triangles to queue directly from input pointers
+  if(g_pContext->m_useTriQueue && optInput) // append triangles to queue directly from input pointers
   {
     swglEnqueueTrianglesFromInput(g_pContext, inIndices, count, g_pContext->input);
   }
@@ -625,6 +625,15 @@ int                  g_active [NUM_THREADS]; //#TODO: use std::atomics
 bool          g_initialized_rast = false;
 bool          g_kill_all         = false;
 
+
+inline void DrawTriangle(Triangle& localTri)
+{
+  FrameBuffer& frameBuff = g_pContext->batchFrameBuffers[localTri.fbId];
+  clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
+  HWImpl::RasterizeTriangle(localTri, 0, 0,
+                            &frameBuff);
+}
+
 int SWGL_TriangleRenderThread(int a_threadId)
 {
   if (g_pContext == nullptr)
@@ -637,13 +646,7 @@ int SWGL_TriangleRenderThread(int a_threadId)
     if(g_pContext->m_tqueue.try_dequeue(localTri))
     {
       g_active[a_threadId] = 1;
-
-      FrameBuffer& frameBuff = g_pContext->batchFrameBuffers[localTri.fbId];
-
-      clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
-
-      HWImpl::RasterizeTriangle(localTri, 0, 0,
-                                &frameBuff);
+      DrawTriangle(localTri);
     }
     else
     {
@@ -808,12 +811,7 @@ GLAPI void APIENTRY glFlush(void)
     //
     Triangle localTri;
     while(g_pContext->m_tqueue.try_dequeue(localTri))
-    {
-      auto& fb = g_pContext->batchFrameBuffers[localTri.fbId];
-      clampTriBBox(&localTri, fb);                            // need this to prevent out of border, can be done in separate thread
-      HWImpl::RasterizeTriangle(localTri, 0, 0,
-                                &fb);
-    }
+      DrawTriangle(localTri);
 
     while (true) // waiting for all threads to finish
     {
