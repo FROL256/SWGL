@@ -620,8 +620,6 @@ void demo25_teapot(int width, int height, float algle1, float angle2)
     firstFrame = false;
   }
 
-
-
   glMatrixMode(GL_PROJECTION);			// Select The Projection Matrix
   glLoadIdentity();									// Reset The Projection Matrix
 
@@ -651,7 +649,8 @@ void demo25_teapot(int width, int height, float algle1, float angle2)
   const float zrot = -angle2*0.5f;
 
   //glTranslatef(0.0f, -0.5f, -4.0f);
-  glTranslatef(0.0f, -0.5f, -5.0f);
+  //glTranslatef(0.0f, -0.5f, -4.5f);
+  glTranslatef(0.0f, -0.5f, -4.8f);
 
   glRotatef(20.0f, 1.0f, 0.0f, 0.0f);
   glRotatef(yrot, 0.0f, 1.0f, 0.0f);
