@@ -650,7 +650,8 @@ void demo25_teapot(int width, int height, float algle1, float angle2)
   const float yrot = angle2*0.25f*10.0f;
   const float zrot = -angle2*0.5f;
 
-  glTranslatef(0.0f, -0.5f, -4.0f);
+  //glTranslatef(0.0f, -0.5f, -4.0f);
+  glTranslatef(0.0f, -0.5f, -5.0f);
 
   glRotatef(20.0f, 1.0f, 0.0f, 0.0f);
   glRotatef(yrot, 0.0f, 1.0f, 0.0f);
@@ -760,7 +761,7 @@ void demo26_teapots9(int width, int height, float algle1, float angle2)
   const float yrot = angle2*0.25f*10.0f;
   const float zrot = -angle2*0.5f;
 
-  glTranslatef(0.0f, -0.5f, -6.0f);
+  glTranslatef(0.0f, -0.5f, -5.0f);
 
   glRotatef(20.0f, 1.0f, 0.0f, 0.0f);
   glRotatef(yrot, 0.0f, 1.0f, 0.0f);
