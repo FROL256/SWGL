@@ -1768,8 +1768,8 @@ void test25_clip_triangles(int width, int height, float a_rot)
   glRotatef(a_rot, 0,1,0);
 
   const float nearCoord = -20.0f;
-  const float farCoord  = -1.0f;
-  //const float farCoord  = +1.0f;
+  //const float farCoord  = -1.0f;
+  const float farCoord  = +1.0f;
 
   glBegin(GL_TRIANGLES);
   glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(-0.5f - 0.5f, -0.5f, farCoord);

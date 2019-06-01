@@ -822,6 +822,9 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    if(v1.w <= 0 || v2.w <= 0 || v3.w <= 0) // face clipping ...
+      continue;
+
     Triangle localTri;
     HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3,
                           &localTri);
