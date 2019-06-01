@@ -581,6 +581,7 @@ void demo24_draw_elements_terrain(int width, int height, float algle1, float ang
 }
 
 #include "HydraExport.h"
+#include "../gl_sc_swr/swgl.h"
 
 void demo25_teapot(int width, int height, float algle1, float angle2)
 {
@@ -1739,6 +1740,45 @@ void test_box_tri_overlap()
   glColor4f(1, 1, 1, 1);
 
   DrawBox(bmin, bmax);
+}
 
+void test25_clip_triangles(int width, int height, float a_rot)
+{
+  glMatrixMode(GL_PROJECTION);			// Select The Projection Matrix
+  glLoadIdentity();									// Reset The Projection Matrix
+
+  // Calculate The Aspect Ratio Of The Window
+  gluPerspective2(45.0f, (GLfloat)width / (GLfloat)height, 0.001f, 1000.0f);
+
+  glMatrixMode(GL_MODELVIEW);			       // Select The Modelview Matrix
+  glLoadIdentity();									     // Reset The Modelview Matrix
+
+  glShadeModel(GL_SMOOTH);							 // Enable Smooth Shading
+  glClearColor(0.0f, 0.0f, 0.0f, 0.5f);	 // Black Background
+  glClearDepth(1.0f);									   // Depth Buffer Setup
+  glEnable(GL_DEPTH_TEST);							 // Enables Depth Testing
+  glDepthFunc(GL_LEQUAL);								 // The Type Of Depth Testing To Do
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Really Nice Perspective Calculations
+
+
+  glDisable(GL_TEXTURE_2D);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
+
+  glTranslatef(0.0f, -0.25f, 0.0f);
+  glRotatef(a_rot, 0,1,0);
+
+  const float nearCoord = -20.0f;
+  const float farCoord  = -1.0f;
+  //const float farCoord  = +1.0f;
+
+  glBegin(GL_TRIANGLES);
+  glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(-0.5f - 0.5f, -0.5f, farCoord);
+  glColor3f(0.0f, 1.0f, 0.0f); glVertex3f(0.5f  - 0.5f, -0.5f, farCoord);
+  glColor3f(0.0f, 0.0f, 1.0f); glVertex3f(0.0   - 0.5f, -0.5f, nearCoord);
+
+  glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(-0.5f + 0.5f, -0.5f, nearCoord);
+  glColor3f(0.0f, 1.0f, 0.0f); glVertex3f(0.5f  + 0.5f, -0.5f, nearCoord);
+  glColor3f(0.0f, 0.0f, 1.0f); glVertex3f(0.0f  + 0.5f, -0.5f, farCoord);
+  glEnd();
 }
 
