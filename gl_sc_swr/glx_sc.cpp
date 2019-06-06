@@ -188,7 +188,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx)
   return True;
 }
 
-void glXSwapBuffers( Display *dpy, GLXDrawable drawable )
+void glXSwapBuffers(Display *dpy, GLXDrawable drawable )
 {
   static int totalFrameCounter = 0;
 

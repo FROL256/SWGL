@@ -884,6 +884,10 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
   a_pContext->batchFrameBuffers.push_back(fb);
   const int frameBufferId = a_pContext->batchFrameBuffers.size()-1;
 
+  #ifdef MEASURE_STATS
+  Timer localTimer(true);
+  #endif
+
   ////
   //
   for (int triId = 0; triId < triNum; triId++)
@@ -949,6 +953,9 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     a_pContext->m_tqueue.enqueue(localTri);
   }
 
+  #ifdef MEASURE_STATS
+  a_pContext->m_timeStats.msTriSetUp += localTimer.getElapsed()*1000.0f;
+  #endif
 }
 
 
