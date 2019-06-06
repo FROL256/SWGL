@@ -53,6 +53,7 @@ struct HWImpl_SSE1
     TexSampler texS;
 
     int        psoId;
+    int        fbId;
     RasterOp   ropId;
     BlendOp    bopId;
     uint8_t curr_sval;

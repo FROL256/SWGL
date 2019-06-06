@@ -99,7 +99,7 @@ void SWGL_Context::InitCommon()
   m_textures.resize(1024); // max 1024 tex
 
   m_useTiledFB  = false;
-  m_useTriQueue = true;
+  m_useTriQueue = false;
 
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
@@ -760,6 +760,17 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
 }
 
+inline void swglClipEdge(float4 v0, float4 v1)
+{
+  // Compute interpolation coefficients.
+  const float d0     = v0.z + v0.w;
+  const float d1     = v1.z + v1.w;
+  const float factor = 1.0f / (d1 - d0);
+  //const float3 newVertex = factor*(d1 * v0 - d0 * v1);
+
+}
+
+
 void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff) // pre (a_pContext != nullptr && pBatch != nullptr)
 {
   const std::vector<int>& indices = pBatch->indices;
@@ -792,7 +803,7 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 
   const int triNum = int(indices.size() / 3);
 
-  #pragma omp parallel for if(triNum > 1000) num_threads(2)
+  #pragma omp parallel for if(triNum > 10000) num_threads(2)
   for (int triId = 0; triId < triNum; triId++)
   {
     int   i1 = indices[triId * 3 + 0];
@@ -822,7 +833,9 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    if(v1.w <= 0 || v2.w <= 0 || v3.w <= 0) // face clipping ...
+    if(v1.w <= 0 && v2.w <= 0 && v3.w <= 0) // discard invisiable face
+      continue;
+    else if(v1.w <= 0 || v2.w <= 0 || v3.w <= 0) // #TODO: face clipping must be implemented here ...
       continue;
 
     Triangle localTri;
