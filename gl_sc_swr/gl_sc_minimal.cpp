@@ -1,9 +1,13 @@
 #include "gl_sc.h"
 #include "swgl.h"
 
+
 #ifndef WIN32
   #include "glx_sc.h"
   extern struct __GLXcontextRec g_xcontext;
+  #include "vfloat4_x64.h"
+#else
+  #include "vfloat4_gcc.h"
 #endif // WIN32
 
 #ifdef MEASURE_STATS

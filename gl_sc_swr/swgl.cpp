@@ -564,7 +564,6 @@ void clampTriBBox(Triangle* t1, const FrameBuffer& frameBuff)
 
   if (t1->bb_iminX >= frameBuff.w) t1->bb_iminX = frameBuff.w - 1;
   if (t1->bb_iminY >= frameBuff.h) t1->bb_iminY = frameBuff.h - 1;
-
 }
 
 

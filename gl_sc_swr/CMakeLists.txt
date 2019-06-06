@@ -25,7 +25,6 @@ set(SOURCE_LIB
         tri_raster_shared.h
         gl_sc_standart.cpp
         glx_sc.cpp
-        HWSSE1Impl.cpp
         SWGL_TiledFrameBuffer.cpp
         Timer.h
         config.h
@@ -33,7 +32,6 @@ set(SOURCE_LIB
         glx_sc.h
         pugiconfig.hpp
         HWBlockLine4x4.h
-        HWSSE1Impl.h
         SWGL_TiledFrameBuffer.h
         Timer.cpp
         HW_VROP.h HW_VROP_FIXP.h
