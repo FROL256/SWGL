@@ -694,7 +694,6 @@ void demo25_teapot(int width, int height, float algle1, float angle2)
 
 }
 
-
 void demo26_teapots9(int width, int height, float algle1, float angle2)
 {
   const float rtri = algle1;
@@ -710,7 +709,7 @@ void demo26_teapots9(int width, int height, float algle1, float angle2)
     int w, h;
     std::vector<int> pixels = LoadBMP(L"data/Glass2.bmp", &w, &h);
 
-    glGenTextures(1, &texture);					// Create The Texture
+    glGenTextures(1, &texture);         // Create The Texture
 
     // Typical Texture Generation Using Data From The Bitmap
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -720,7 +719,7 @@ void demo26_teapots9(int width, int height, float algle1, float angle2)
 
     pixels = LoadBMP(L"data/board10.bmp", &w, &h);
 
-    glGenTextures(1, &texture2);					// Create The Texture
+    glGenTextures(1, &texture2);          // Create The Texture
 
     // Typical Texture Generation Using Data From The Bitmap
     glBindTexture(GL_TEXTURE_2D, texture2);
@@ -734,27 +733,27 @@ void demo26_teapots9(int width, int height, float algle1, float angle2)
   }
 
 
-  glMatrixMode(GL_PROJECTION);			// Select The Projection Matrix
-  glLoadIdentity();									// Reset The Projection Matrix
+  glMatrixMode(GL_PROJECTION);      // Select The Projection Matrix
+  glLoadIdentity();                 // Reset The Projection Matrix
 
   // Calculate The Aspect Ratio Of The Window
   gluPerspective2(45.0f, (GLfloat)width / (GLfloat)height, 0.01f, 1000.0f);
 
-  glMatrixMode(GL_MODELVIEW);			       // Select The Modelview Matrix
-  glLoadIdentity();									     // Reset The Modelview Matrix
+  glMatrixMode(GL_MODELVIEW);            // Select The Modelview Matrix
+  glLoadIdentity();                      // Reset The Modelview Matrix
 
-  glShadeModel(GL_SMOOTH);							 // Enable Smooth Shading
-  glClearColor(0.0f, 0.0f, 0.0f, 0.5f);	 // Black Background
-  glClearDepth(1.0f);									   // Depth Buffer Setup
-  glEnable(GL_DEPTH_TEST);							 // Enables Depth Testing
-  glDepthFunc(GL_LEQUAL);								 // The Type Of Depth Testing To Do
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Really Nice Perspective Calculations
+  glShadeModel(GL_SMOOTH);               // Enable Smooth Shading
+  glClearColor(0.0f, 0.0f, 0.0f, 0.5f);  // Black Background
+  glClearDepth(1.0f);                    // Depth Buffer Setup
+  glEnable(GL_DEPTH_TEST);               // Enables Depth Testing
+  glDepthFunc(GL_LEQUAL);                // The Type Of Depth Testing To Do
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Really Nice Perspective Calculations
 
 
   glEnable(GL_TEXTURE_2D);
   //glDisable(GL_TEXTURE_2D);
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear Screen And Depth Buffer
 
   //
   //
@@ -762,7 +761,7 @@ void demo26_teapots9(int width, int height, float algle1, float angle2)
   const float yrot = angle2*0.25f*10.0f;
   const float zrot = -angle2*0.5f;
 
-  glTranslatef(0.0f, -0.5f, -5.0f);
+  glTranslatef(0.0f, +0.5f, -5.0f);
 
   glRotatef(20.0f, 1.0f, 0.0f, 0.0f);
   glRotatef(yrot, 0.0f, 1.0f, 0.0f);
@@ -813,7 +812,6 @@ void demo26_teapots9(int width, int height, float algle1, float angle2)
   glPopMatrix();
 
 }
-
 
 
 void test15_simple_stencil()
