@@ -94,8 +94,12 @@ void ExposeFunc()
 
     // paper demos
 
-    //demo04_pyramid_and_cube_3d(wa.width, wa.height, 40.0f, 20.0f);
-    demo03_many_small_dynamic_triangles();
+    demo04_pyramid_and_cube_3d(wa.width, wa.height, 40.0f, 20.0f);
+    //demo03_many_small_dynamic_triangles();
+    //demo19_cubes(wa.width, wa.height, 0.0f, 50.0f);
+    //demo25_teapot(wa.width, wa.height, 0.0f, 0.0f);
+    //demo26_teapots9(wa.width, wa.height, 0.0f, 60.0f);
+    //demo24_draw_elements_terrain(wa.width, wa.height, 0.0f, 0.0f);
 
     // \\ paper demos
 
@@ -120,10 +124,11 @@ void ExposeFunc()
 
     //test25_clip_triangles(wa.width, wa.height, 0.0f);
 
-    std::vector<int>   pixels1(wa.width*wa.height);
-    glReadPixels(0, 0, wa.width, wa.height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
-    SaveBMP("zscreen.bmp", pixels1.data(), wa.width, wa.height);
-    exit(0);
+    //glFinish();
+    //std::vector<int>   pixels1(wa.width*wa.height);
+    //glReadPixels(0, 0, wa.width, wa.height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
+    //SaveBMP("zscreen.bmp", pixels1.data(), wa.width, wa.height);
+    //exit(0);
 
     angle1 += 25.0f/(FPS+1.0f);
     angle2 += 50.0f/(FPS+1.0f);
