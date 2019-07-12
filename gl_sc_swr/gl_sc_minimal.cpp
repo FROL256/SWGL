@@ -1066,30 +1066,20 @@ GLAPI void APIENTRY glReadPixels(GLint a_x, GLint a_y, GLsizei a_width, GLsizei 
   if (a_x < 0 || a_x > g_pContext->m_width || a_y < 0 || a_y > g_pContext->m_height)
     return;
 
-  int maxX = min(a_width, g_pContext->m_width);
-  int maxY = min(a_height, g_pContext->m_height);
 
   if (format == GL_RGBA && type == GL_UNSIGNED_BYTE)
   {
     int* outPixels = (int*)pixels;
 
-    for (int y = a_y; y < maxY; y++)
+    const int pitch = (a_width + FB_BILLET_SIZE);
+
+    for (int y = 0; y < a_height; y++)
     {
-      int offset1 = a_width*(y - a_y);
-      int offset2 = g_pContext->m_width*y;
+      int offset0 = y * a_width;
+      int offset1 = y * pitch;
 
-      for (int x = a_x; x < maxX; x++)
-      {
-        int pixelBGRA = g_pContext->m_pixels2[offset2 + x];
-
-        int blue = pixelBGRA & 0x000000FF;
-        int red = (pixelBGRA & 0x00FF0000) >> 16;
-        int green = (pixelBGRA & 0x0000FF00);
-
-        int pixelRGBA = (blue << 16) | green | red;
-
-        outPixels[offset1 + x - a_x] = pixelRGBA;
-      }
+      for (int x = 0; x < a_width; x++)
+        outPixels[offset0 + x] = g_pContext->m_pixels2[offset1 + x];
     }
   }
 

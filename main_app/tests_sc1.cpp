@@ -162,50 +162,36 @@ struct BITMAPINFOHEADER
 
 #endif
 
-void WriteBMP(const wchar_t* fname, Pixel* a_pixelData, int width, int height)
+void WriteBMP(const char* fname, Pixel* a_pixelData, int width, int height)
 {
-  BITMAPFILEHEADER bmfh;
-  BITMAPINFOHEADER info;
+  int paddedsize = (width*height) * sizeof(Pixel);
 
-  memset(&bmfh, 0, sizeof(BITMAPFILEHEADER));
-  memset(&info, 0, sizeof(BITMAPINFOHEADER));
+  unsigned char bmpfileheader[14] = {'B','M', 0,0,0,0, 0,0, 0,0, 54,0,0,0};
+  unsigned char bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0};
 
-  int paddedsize = (width*height)*sizeof(Pixel);
+  bmpfileheader[ 2] = (unsigned char)(paddedsize    );
+  bmpfileheader[ 3] = (unsigned char)(paddedsize>> 8);
+  bmpfileheader[ 4] = (unsigned char)(paddedsize>>16);
+  bmpfileheader[ 5] = (unsigned char)(paddedsize>>24);
 
-  bmfh.bfType      = 0x4d42; // 0x4d42 = 'BM'
-  bmfh.bfReserved1 = 0;
-  bmfh.bfReserved2 = 0;
-  bmfh.bfSize      = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + paddedsize;
-  bmfh.bfOffBits   = 0x36;
+  bmpinfoheader[ 4] = (unsigned char)(width    );
+  bmpinfoheader[ 5] = (unsigned char)(width>> 8);
+  bmpinfoheader[ 6] = (unsigned char)(width>>16);
+  bmpinfoheader[ 7] = (unsigned char)(width>>24);
+  bmpinfoheader[ 8] = (unsigned char)(height    );
+  bmpinfoheader[ 9] = (unsigned char)(height>> 8);
+  bmpinfoheader[10] = (unsigned char)(height>>16);
+  bmpinfoheader[11] = (unsigned char)(height>>24);
 
-  info.biSize          = sizeof(BITMAPINFOHEADER);
-  info.biWidth         = width;
-  info.biHeight        = height;
-  info.biPlanes        = 1;
-  info.biBitCount      = 24;
-  info.biCompression   = 0;
-  info.biSizeImage     = 0;
-  info.biXPelsPerMeter = 0x0ec4;
-  info.biYPelsPerMeter = 0x0ec4;
-  info.biClrUsed       = 0;
-  info.biClrImportant  = 0;
-
-#ifdef WIN32
   std::ofstream out(fname, std::ios::out | std::ios::binary);
-#else
-  std::wstring s1(fname);
-  std::string  s2(s1.begin(), s1.end());
-  std::ofstream out(s2.c_str(), std::ios::out | std::ios::binary);
-#endif
-
-  out.write((const char*)&bmfh, sizeof(BITMAPFILEHEADER));
-  out.write((const char*)&info, sizeof(BITMAPINFOHEADER));
+  out.write((const char*)bmpfileheader, 14);
+  out.write((const char*)bmpinfoheader, 40);
   out.write((const char*)a_pixelData, paddedsize);
   out.flush();
   out.close();
 }
 
-void SaveBMP(const wchar_t* fname, const int* pixels, int w, int h)
+void SaveBMP(const char* fname, const int* pixels, int w, int h)
 {
   std::vector<Pixel> pixels2(w*h);
 
@@ -438,7 +424,7 @@ void test_all(int width, int height)
 
   for (int i = 0; i < testNum; i++)
   {
-    std::wstringstream fileNameOut;
+    std::stringstream fileNameOut;
 
     fileNameOut.fill('0');
     fileNameOut.width(2);
@@ -446,10 +432,10 @@ void test_all(int width, int height)
 
 #ifdef USE_SWGL
 
-    std::wstring fileName = std::wstring(L"z_test_out\\z_test_") + fileNameOut.str() + L".bmp";
+    std::string fileName = std::string("z_test_out\\z_test_") + fileNameOut.str() + ".bmp";
 #else
 
-    std::wstring fileName = std::wstring(L"z_test_out\\z_ref_") + fileNameOut.str() + L".bmp";
+    std::string fileName = std::string("z_test_out\\z_ref_") + fileNameOut.str() + ".bmp";
 
 #endif
 
@@ -459,7 +445,6 @@ void test_all(int width, int height)
 
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
     SaveBMP(fileName.c_str(), &pixels1[0], width, height);
-
   }
 
 }

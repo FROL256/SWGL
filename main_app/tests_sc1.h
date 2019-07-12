@@ -64,6 +64,6 @@ void demo26_teapots9(int width, int height, float algle1, float angle2);
 
 #include <vector>
 
-void SaveBMP(const wchar_t* fname, const int* pixels, int w, int h);
+void SaveBMP(const char* fname, const int* pixels, int w, int h);
 std::vector<int> LoadBMP(const wchar_t* fname, int* w, int* h);
 

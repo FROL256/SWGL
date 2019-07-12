@@ -92,7 +92,9 @@ void ExposeFunc()
     //demo01_colored_triangle(angle1);
     //test02_nehe_lesson1_simplified();
 
-    //demo04_pyramid_and_cube_3d(wa.width, wa.height, 10.0f, 13.0f);
+    demo04_pyramid_and_cube_3d(wa.width, wa.height, 10.0f, 13.0f);
+
+
     //demo04_pyramid_and_cube_3d(wa.width, wa.height, angle1, angle2);
     //demo14_transparent_cube(wa.width, wa.height, 10.0f, 13.0f);
     //demo03_many_small_dynamic_triangles();
@@ -105,7 +107,7 @@ void ExposeFunc()
     //demo19_cubes(wa.width, wa.height, 10.0f, 13.0f);
     //demo19_cubes(wa.width, wa.height, angle1, angle2);
 
-    demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
+    //demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
     //demo25_teapot(wa.width, wa.height, angle1, angle2);
     //demo26_teapots9(wa.width, wa.height, angle1, angle2);
 
@@ -113,6 +115,11 @@ void ExposeFunc()
     //test11_alpha_tex_and_transp(); // 2D Blending test ...
 
     //test25_clip_triangles(wa.width, wa.height, 0.0f);
+
+    std::vector<int>   pixels1(wa.width*wa.height);
+    glReadPixels(0, 0, wa.width, wa.height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
+    SaveBMP("zscreen.bmp", pixels1.data(), wa.width, wa.height);
+    exit(0);
 
     angle1 += 25.0f/(FPS+1.0f);
     angle2 += 50.0f/(FPS+1.0f);
