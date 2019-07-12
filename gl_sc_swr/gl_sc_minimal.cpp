@@ -1079,7 +1079,14 @@ GLAPI void APIENTRY glReadPixels(GLint a_x, GLint a_y, GLsizei a_width, GLsizei 
       int offset1 = y * pitch;
 
       for (int x = 0; x < a_width; x++)
-        outPixels[offset0 + x] = g_pContext->m_pixels2[offset1 + x];
+      {
+        const uint32_t BGRA = (uint32_t)g_pContext->m_pixels2[offset1 + x];
+        const uint32_t R    = (BGRA & 0x000000FF);
+        const uint32_t G    = (BGRA & 0x0000FF00);
+        const uint32_t B    = (BGRA & 0x00FF0000) >> 16;
+
+        outPixels[offset0 + x] = (R << 16) | G | B;
+      }
     }
   }
 
