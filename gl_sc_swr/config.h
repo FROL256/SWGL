@@ -1,5 +1,5 @@
 #pragma once
-#define NUM_THREADS     2
+#define NUM_THREADS     4
 #define NUM_THREADS_AUX (NUM_THREADS-1)
 
 //#define TEX_NEAREST

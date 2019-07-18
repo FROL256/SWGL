@@ -807,13 +807,19 @@ GLAPI void APIENTRY glFlush(void)
         break;
     }
 
+    #ifdef MEASURE_STATS
     g_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
+    #endif
 
     if (pDrawList->m_triTop != 0)
       swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
   else if(g_pContext->m_useTriQueue)
   {
+   #ifdef MEASURE_STATS
+     Timer timer(true);
+   #endif
+
     if(!g_initialized_rast)
     {
       for(int i=0;i<NUM_THREADS_AUX;i++)
@@ -842,6 +848,9 @@ GLAPI void APIENTRY glFlush(void)
         break;
     }
 
+   #ifdef MEASURE_STATS
+   g_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
+   #endif
   }
   else
   {
