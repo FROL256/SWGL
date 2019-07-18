@@ -755,6 +755,7 @@ GLAPI void APIENTRY glFlush(void)
   return;
 #endif
 
+
   if (g_pContext == nullptr)
     return;
 
@@ -765,6 +766,10 @@ GLAPI void APIENTRY glFlush(void)
 
   if (g_pContext->m_useTiledFB)
   {
+  #ifdef MEASURE_STATS
+    Timer timer(true);
+  #endif
+
     const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
 
     //// sort tiles to get most heavy in the beggining of the array
@@ -801,6 +806,8 @@ GLAPI void APIENTRY glFlush(void)
       else
         break;
     }
+
+    g_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
 
     if (pDrawList->m_triTop != 0)
       swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
