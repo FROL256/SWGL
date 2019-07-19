@@ -37,7 +37,7 @@ set(SOURCE_LIB
         HW_VROP.h HW_VROP_FIXP.h
         vfloat4_x64.h vfloat4_gcc.h vfloat8_x64.h vfloat8_gcc.h
         TriRasterHalfSpaceBlockLineFixp.h
-        HWBlockLine4x4.cpp HWBlockLine8x8.cpp HWBlockLine4x4Fixp.cpp)
+        HWBlockLine4x4.cpp HWBlockLine8x8.cpp HWBlockLine4x4Fixp.cpp HWSSE1Impl.cpp HWSSE1Impl.h)
 
 include_directories("..")
 
