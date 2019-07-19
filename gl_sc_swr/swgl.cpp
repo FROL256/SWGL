@@ -95,7 +95,7 @@ void SWGL_Context::InitCommon()
   m_texTop = 0;
   m_textures.resize(1024); // max 1024 tex
 
-  m_useTiledFB  = false;
+  m_useTiledFB  = true;
   m_useTriQueue = false;
 
   if(m_useTiledFB)

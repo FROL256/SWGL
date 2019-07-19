@@ -1089,25 +1089,35 @@ GLAPI void APIENTRY glReadPixels(GLint a_x, GLint a_y, GLsizei a_width, GLsizei 
   {
     int* outPixels = (int*)pixels;
 
-    const int pitch = (a_width + FB_BILLET_SIZE);
-
-    for (int y = 0; y < a_height; y++)
+    if(g_pContext->m_useTiledFB)
     {
-      int offset0 = y * a_width;
-      int offset1 = y * pitch;
+      g_pContext->m_tiledFrameBuffer.CopyToRowPitch(outPixels);
+    }
+    else
+    {
+      const int pitch = (a_width + FB_BILLET_SIZE);
 
-      for (int x = 0; x < a_width; x++)
+      for (int y = 0; y < a_height; y++)
       {
-        const uint32_t BGRA = (uint32_t)g_pContext->m_pixels2[offset1 + x];
-        const uint32_t R    = (BGRA & 0x000000FF);
-        const uint32_t G    = (BGRA & 0x0000FF00);
-        const uint32_t B    = (BGRA & 0x00FF0000) >> 16;
+        int offset0 = y * a_width;
+        int offset1 = y * pitch;
 
-        outPixels[offset0 + x] = (R << 16) | G | B;
+        for (int x = 0; x < a_width; x++)
+        {
+          const uint32_t BGRA = (uint32_t) g_pContext->m_pixels2[offset1 + x];
+          const uint32_t R = (BGRA & 0x000000FF);
+          const uint32_t G = (BGRA & 0x0000FF00);
+          const uint32_t B = (BGRA & 0x00FF0000) >> 16;
+
+          outPixels[offset0 + x] = (R << 16) | G | B;
+        }
       }
     }
   }
-
+  else
+  {
+    // TODO: do some thing else ...
+  }
 
 }
 
