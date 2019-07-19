@@ -99,7 +99,7 @@ void SWGL_Context::InitCommon()
   m_textures.resize(1024); // max 1024 tex
 
   m_useTiledFB  = false;
-  m_useTriQueue = true;
+  m_useTriQueue = false;
 
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
@@ -109,6 +109,8 @@ void SWGL_Context::InitCommon()
 
 void SWGL_Context::ResizeCommon(int width, int height)
 {
+  delete [] m_locks;
+  
   const int tileSize = 4; // when we have 8x8 tiles, we just alloc a bit more memory then needed, but it should work fine
   const int size     = (width/tileSize)*(height/tileSize);
   m_locks = new std::atomic_flag[size];

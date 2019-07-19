@@ -1171,7 +1171,7 @@ void demo19_cubes(int width, int height, float algle1, float angle2)
   }
 
 
-  glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
+  glMatrixMode(GL_PROJECTION);		 // Select The Projection Matrix
   glLoadIdentity();									// Reset The Projection Matrix
 
   // Calculate The Aspect Ratio Of The Window

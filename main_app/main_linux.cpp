@@ -21,6 +21,10 @@
 #include <iostream>
 
 #include "../gl_sc_swr/Timer.h"
+#include "../gl_sc_swr/config.h"
+
+const int WIN_WIDTH_INITIAL  = 1024;
+const int WIN_HEIGHT_INITIAL = 1024;
 
 
 void InfoGL() // check custome extentions here
@@ -48,11 +52,9 @@ XSetWindowAttributes    swa;
 XWindowAttributes	wa;
 XEvent			xev;
 
-float			TimeCounter, LastFrameTimeCounter, DT, prevTime = 0.0, FPS;
-struct timeval		tv, tv0;
+float	TimeCounter, LastFrameTimeCounter, DT, prevTime = 0.0, FPS;
 int			Frame = 1, FramesPerFPS;
 
-GLfloat		rotation_matrix[16];
 float			rot_z_vel = 50.0, rot_y_vel = 30.0;
 
 extern int g_localWidth;
@@ -64,14 +66,19 @@ void ExposeFunc()
 {
   g_localHeight = wa.height;
   g_localWidth  = wa.width;
-
-  float	aspect_ratio;
-  char	info_string[256];
-
-  XGetWindowAttributes(dpy, win, &wa);
-  glViewport(0, 0, wa.width, wa.height);
-  aspect_ratio = (float)(wa.width) / (float)(wa.height);
-
+  
+  if(NOWINDOW)
+  {
+    glViewport(0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL);
+    wa.width  = WIN_WIDTH_INITIAL;
+    wa.height = WIN_HEIGHT_INITIAL;
+  }
+  else
+  {
+    XGetWindowAttributes(dpy, win, &wa);
+    glViewport(0, 0, wa.width, wa.height);
+  }
+  
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   static float angle1 = 30.0f;
@@ -80,7 +87,7 @@ void ExposeFunc()
   static int   frameCounter = -1;
   static float frameTime    = 0.0f;
 
-  if(frameCounter < 0)
+  if(frameCounter < 0 && !NOWINDOW)
   {
     frameCounter = 0;
     g_timer.start();
@@ -95,8 +102,8 @@ void ExposeFunc()
     // paper demos
 
     //demo04_pyramid_and_cube_3d(wa.width, wa.height, 40.0f, 20.0f);
-    demo03_many_small_dynamic_triangles();
-    //demo19_cubes(wa.width, wa.height, 0.0f, 50.0f);
+    //demo03_many_small_dynamic_triangles();
+    demo19_cubes(wa.width, wa.height, 0.0f, 50.0f);
     //demo25_teapot(wa.width, wa.height, 0.0f, 0.0f);
     //demo26_teapots9(wa.width, wa.height, 0.0f, 60.0f);
     //demo24_draw_elements_terrain(wa.width, wa.height, 0.0f, 0.0f);
@@ -124,29 +131,32 @@ void ExposeFunc()
 
     //test25_clip_triangles(wa.width, wa.height, 0.0f);
 
-    //glFinish();
-    //std::vector<int>   pixels1(wa.width*wa.height);
-    //glReadPixels(0, 0, wa.width, wa.height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
-    //SaveBMP("zscreen.bmp", pixels1.data(), wa.width, wa.height);
-    //exit(0);
-
     angle1 += 25.0f/(FPS+1.0f);
     angle2 += 50.0f/(FPS+1.0f);
 
-    frameCounter++;
-    frameTime += g_timer.getElapsed();
-    g_timer.start();
-
-    if(frameCounter >= 10)
+    if(!NOWINDOW)
     {
-      FPS = (float)frameCounter / frameTime;
-      frameCounter = 0;
-      frameTime    = 0.0f;
-
-      char temp[64];
-      sprintf(temp,"FPS = %f", FPS);
-      XStoreName(dpy, win, temp);
+      frameCounter++;
+      frameTime += g_timer.getElapsed();
+      g_timer.start();
+  
+      if (frameCounter >= 10)
+      {
+        FPS = (float) frameCounter / frameTime;
+        frameCounter = 0;
+        frameTime = 0.0f;
+    
+        char temp[64];
+        sprintf(temp, "FPS = %f", FPS);
+        XStoreName(dpy, win, temp);
+      }
     }
+  
+    glFinish();
+    std::vector<int>   pixels1(WIN_WIDTH_INITIAL*WIN_HEIGHT_INITIAL);
+    glReadPixels(0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
+    SaveBMP("zscreen.bmp", pixels1.data(), WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL);
+    exit(0);
   }
   catch(std::runtime_error& e)
   {
@@ -161,6 +171,9 @@ void ExposeFunc()
 //////////////////////////////////////////////////////////////////////////////////
 void CreateWindow()
 {
+  if(NOWINDOW)
+    return;
+  
   if((dpy = XOpenDisplay(NULL)) == NULL)
   {
     printf("\n\tcannot connect to x server\n\n");
@@ -183,7 +196,7 @@ void CreateWindow()
 
   swa.event_mask = KeyPressMask;
   swa.colormap 	= cmap;
-  win = XCreateWindow(dpy, root, 0, 0, 1024, 1024, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
+  win = XCreateWindow(dpy, root, 0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
   XStoreName(dpy, win, "OpenGL Animation");
   XMapWindow(dpy, win);
 }
@@ -207,33 +220,8 @@ void SetupGL()
   glXMakeCurrent(dpy, win, glc);
   glClearColor(0.00, 0.00, 0.40, 1.00);
 }
-//////////////////////////////////////////////////////////////////////////////////
-//				TIME COUNTER FUNCTIONS				//
-//////////////////////////////////////////////////////////////////////////////////
-void InitTimeCounter()
-{
-  gettimeofday(&tv0, NULL);
-  FramesPerFPS = 5;
-}
 
-void UpdateTimeCounter()
-{
-  LastFrameTimeCounter = TimeCounter;
-  gettimeofday(&tv, NULL);
-  TimeCounter = (float)(tv.tv_sec-tv0.tv_sec) + 0.000001*((float)(tv.tv_usec-tv0.tv_usec));
-  DT = TimeCounter - LastFrameTimeCounter;
-}
 
-void CalculateFPS()
-{
-  Frame++;
-
-  if((Frame%FramesPerFPS) == 0)
-  {
-    FPS = ((float)(FramesPerFPS)) / (TimeCounter-prevTime);
-    prevTime = TimeCounter;
-  }
-}
 //////////////////////////////////////////////////////////////////////////////////
 //				EXIT PROGRAM					//
 //////////////////////////////////////////////////////////////////////////////////
@@ -250,6 +238,9 @@ void ExitProgram()
 //////////////////////////////////////////////////////////////////////////////////
 void CheckKeyboard()
 {
+  if(NOWINDOW)
+    return;
+  
   if(XCheckWindowEvent(dpy, win, KeyPressMask, &xev))
   {
     char	*key_string = XKeysymToString(XkbKeycodeToKeysym(dpy, xev.xkey.keycode, 0, 0));
@@ -282,18 +273,31 @@ int main(int argc, char *argv[]) // 222
   CreateWindow();
   SetupGL();
   InfoGL();
-  InitTimeCounter();
-
+  
+  size_t frameCounter = 0;
   while(true)
   {
-    UpdateTimeCounter();
-    CalculateFPS();
-
     ExposeFunc();
     //usleep(1000);
     CheckKeyboard();
+  
+    frameCounter++;
+    
+    if(NOWINDOW && frameCounter > 100)
+      break;
   }
+  
+  if(NOWINDOW)
+  {
+    std::cout << "TODO: we must output stats here ... " << std::endl;
+    glFinish();
+    std::vector<int>   pixels1(WIN_WIDTH_INITIAL*WIN_HEIGHT_INITIAL);
+    glReadPixels(0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
+    SaveBMP("zscreen.bmp", pixels1.data(), WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL);
+    std::cout.flush();
+  }
+ 
+  return 0;
 }
 
 #endif
-

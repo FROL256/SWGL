@@ -18,3 +18,4 @@
 
 #define FB_BILLET_SIZE 8
 
+#define NOWINDOW true

@@ -41,6 +41,8 @@ set(SOURCE_LIB
 
 include_directories("..")
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer -fsanitize=leak -fsanitize=undefined -fsanitize=bounds-strict")
+
 MESSAGE(STATUS "Searching for X11..." )
 FIND_PACKAGE ( X11 REQUIRED )
 IF ( X11_FOUND )
