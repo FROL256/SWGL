@@ -1,9 +1,13 @@
 #include "gl_sc.h"
 #include "swgl.h"
 
+
 #ifndef WIN32
   #include "glx_sc.h"
   extern struct __GLXcontextRec g_xcontext;
+  #include "vfloat4_x64.h"
+#else
+  #include "vfloat4_gcc.h"
 #endif // WIN32
 
 #ifdef MEASURE_STATS
@@ -20,6 +24,8 @@
 
 SWGL_Context* g_pContext = nullptr;
 
+
+SWGL_Timings _swglGetStats() { return g_pContext->m_timeStats; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -751,6 +757,7 @@ GLAPI void APIENTRY glFlush(void)
   return;
 #endif
 
+
   if (g_pContext == nullptr)
     return;
 
@@ -761,6 +768,10 @@ GLAPI void APIENTRY glFlush(void)
 
   if (g_pContext->m_useTiledFB)
   {
+  #ifdef MEASURE_STATS
+    Timer timer(true);
+  #endif
+
     const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
 
     //// sort tiles to get most heavy in the beggining of the array
@@ -798,11 +809,19 @@ GLAPI void APIENTRY glFlush(void)
         break;
     }
 
+    #ifdef MEASURE_STATS
+    g_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
+    #endif
+
     if (pDrawList->m_triTop != 0)
       swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
   else if(g_pContext->m_useTriQueue)
   {
+   #ifdef MEASURE_STATS
+     Timer timer(true);
+   #endif
+
     if(!g_initialized_rast)
     {
       for(int i=0;i<NUM_THREADS_AUX;i++)
@@ -831,6 +850,9 @@ GLAPI void APIENTRY glFlush(void)
         break;
     }
 
+   #ifdef MEASURE_STATS
+   g_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
+   #endif
   }
   else
   {
@@ -1062,29 +1084,26 @@ GLAPI void APIENTRY glReadPixels(GLint a_x, GLint a_y, GLsizei a_width, GLsizei 
   if (a_x < 0 || a_x > g_pContext->m_width || a_y < 0 || a_y > g_pContext->m_height)
     return;
 
-  int maxX = min(a_width, g_pContext->m_width);
-  int maxY = min(a_height, g_pContext->m_height);
 
   if (format == GL_RGBA && type == GL_UNSIGNED_BYTE)
   {
     int* outPixels = (int*)pixels;
 
-    for (int y = a_y; y < maxY; y++)
+    const int pitch = (a_width + FB_BILLET_SIZE);
+
+    for (int y = 0; y < a_height; y++)
     {
-      int offset1 = a_width*(y - a_y);
-      int offset2 = g_pContext->m_width*y;
+      int offset0 = y * a_width;
+      int offset1 = y * pitch;
 
-      for (int x = a_x; x < maxX; x++)
+      for (int x = 0; x < a_width; x++)
       {
-        int pixelBGRA = g_pContext->m_pixels2[offset2 + x];
+        const uint32_t BGRA = (uint32_t)g_pContext->m_pixels2[offset1 + x];
+        const uint32_t R    = (BGRA & 0x000000FF);
+        const uint32_t G    = (BGRA & 0x0000FF00);
+        const uint32_t B    = (BGRA & 0x00FF0000) >> 16;
 
-        int blue = pixelBGRA & 0x000000FF;
-        int red = (pixelBGRA & 0x00FF0000) >> 16;
-        int green = (pixelBGRA & 0x0000FF00);
-
-        int pixelRGBA = (blue << 16) | green | red;
-
-        outPixels[offset1 + x - a_x] = pixelRGBA;
+        outPixels[offset0 + x] = (R << 16) | G | B;
       }
     }
   }

@@ -257,21 +257,6 @@ struct SWGL_DrawList
   mutable std::vector<Pipeline_State_Object> m_psoArray;
 };
 
-struct SWGL_Timings
-{
-  SWGL_Timings() { clear(); }
-
-  void clear() { msClear = 0.0f; msVertexShader = 0.0f; msTriSetUp = 0.0f; msRasterAndPixelShader = 0.0f; msSwapBuffers = 0.0f; msTotal = 0.0f; msBinRaster = 0.0f; }
-
-  float msClear;
-  float msVertexShader;
-  float msTriSetUp;
-  float msRasterAndPixelShader;
-  float msSwapBuffers;
-  float msTotal;
-  float msBinRaster;
-};
-
 
 enum LOG_MODES { LOG_FOR_DEBUG_ERROR = 0, LOG_ALL = 1, LOG_NORMAL = 2, LOG_MINIMUM = 3, LOG_PERF = 4, LOG_NOTHING = 10 };
 

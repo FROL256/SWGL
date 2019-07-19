@@ -5,8 +5,6 @@
 #include "TriRaster.h"        
 
 #include "HWPureCpp.h"
-#include "HWSSE1Impl.h"
-
 #include "HWBlockLine4x4.h"
 
 //@select current implementation here via typedef assigment :)

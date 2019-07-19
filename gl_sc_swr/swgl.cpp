@@ -92,9 +92,6 @@ void SWGL_Context::InitCommon()
   if (m_pLog == nullptr)
     m_pLog = new std::ofstream("zgl_log.txt");
 
-  freopen("stdout.txt", "wt", stdout);
-  freopen("stderr.txt", "wt", stderr);
-
   m_texTop = 0;
   m_textures.resize(1024); // max 1024 tex
 
@@ -109,6 +106,8 @@ void SWGL_Context::InitCommon()
 
 void SWGL_Context::ResizeCommon(int width, int height)
 {
+  delete [] m_locks;
+  
   const int tileSize = 4; // when we have 8x8 tiles, we just alloc a bit more memory then needed, but it should work fine
   const int size     = (width/tileSize)*(height/tileSize);
   m_locks = new std::atomic_flag[size];
@@ -564,7 +563,6 @@ void clampTriBBox(Triangle* t1, const FrameBuffer& frameBuff)
 
   if (t1->bb_iminX >= frameBuff.w) t1->bb_iminX = frameBuff.w - 1;
   if (t1->bb_iminY >= frameBuff.h) t1->bb_iminY = frameBuff.h - 1;
-
 }
 
 
@@ -708,7 +706,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
   const int triNum = int(indices.size() / 3);
 
-  #pragma omp parallel for if(triNum > 16)
+  //#pragma omp parallel for if(triNum > 16)
   for (int triId = 0; triId < triNum; triId++)
   {
     int   i1 = indices[triId * 3 + 0];
@@ -898,6 +896,10 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
   a_pContext->batchFrameBuffers.push_back(fb);
   const int frameBufferId = a_pContext->batchFrameBuffers.size()-1;
 
+  #ifdef MEASURE_STATS
+  Timer localTimer(true);
+  #endif
+
   ////
   //
   for (int triId = 0; triId < triNum; triId++)
@@ -963,6 +965,9 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     a_pContext->m_tqueue.enqueue(localTri);
   }
 
+  #ifdef MEASURE_STATS
+  a_pContext->m_timeStats.msTriSetUp += localTimer.getElapsed()*1000.0f;
+  #endif
 }
 
 

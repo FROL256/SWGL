@@ -25,7 +25,6 @@ set(SOURCE_LIB
         tri_raster_shared.h
         gl_sc_standart.cpp
         glx_sc.cpp
-        HWSSE1Impl.cpp
         SWGL_TiledFrameBuffer.cpp
         Timer.h
         config.h
@@ -33,7 +32,6 @@ set(SOURCE_LIB
         glx_sc.h
         pugiconfig.hpp
         HWBlockLine4x4.h
-        HWSSE1Impl.h
         SWGL_TiledFrameBuffer.h
         Timer.cpp
         HW_VROP.h HW_VROP_FIXP.h
@@ -42,6 +40,8 @@ set(SOURCE_LIB
         HWBlockLine4x4.cpp HWBlockLine8x8.cpp HWBlockLine4x4Fixp.cpp)
 
 include_directories("..")
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer -fsanitize=leak -fsanitize=undefined -fsanitize=bounds-strict")
 
 MESSAGE(STATUS "Searching for X11..." )
 FIND_PACKAGE ( X11 REQUIRED )
