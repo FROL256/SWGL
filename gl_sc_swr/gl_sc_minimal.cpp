@@ -122,18 +122,24 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
 
     if(addr1%16 == 0 && addr2%16 == 0)
     {
-      for (int i = 0; i < size/4; i++)
+      #pragma omp parallel for num_threads(NUM_THREADS_CLS)
+      for (int i = 0; i < size/4; i+=2)
       {
-        cvex::store((float*)(depth+i), depthVal4);
-        cvex::store((int*)  (color+i), colorVal4);
+        cvex::store((float*)(depth+i+0), depthVal4);
+        cvex::store((float*)(depth+i+1), depthVal4);
+        cvex::store((int*)  (color+i+0), colorVal4);
+        cvex::store((int*)  (color+i+1), colorVal4);
       }
     }
     else
     {
-      for (int i = 0; i < size/4; i++)
+      #pragma omp parallel for num_threads(NUM_THREADS_CLS)
+      for (int i = 0; i < size/4; i+=2)
       {
-        cvex::store_u((float*)(depth+i), depthVal4);
-        cvex::store_u((int*)  (color+i), colorVal4);
+        cvex::store_u((float*)(depth+i+0), depthVal4);
+        cvex::store_u((float*)(depth+i+1), depthVal4);
+        cvex::store_u((int*)  (color+i+0), colorVal4);
+        cvex::store_u((int*)  (color+i+1), colorVal4);
       }
     }
 
@@ -1116,7 +1122,8 @@ GLAPI void APIENTRY glReadPixels(GLint a_x, GLint a_y, GLsizei a_width, GLsizei 
   }
   else
   {
-    // TODO: do some thing else ...
+    if (g_pContext->logMode <= LOG_ALL)
+      *(g_pContext->m_pLog) << "glReadPixels(), bad 'format' or 'type'" << std::endl;
   }
 
 }

@@ -1,6 +1,8 @@
 #pragma once
-#define NUM_THREADS     1
+#define NUM_THREADS     4
 #define NUM_THREADS_AUX (NUM_THREADS-1)
+
+#define NUM_THREADS_CLS 2
 
 //#define TEX_NEAREST
 #define FILL_COLOR_ONLY
@@ -18,7 +20,7 @@
 
 #define FB_BILLET_SIZE 8
 
-#define NOWINDOW true
+#define NOWINDOW false
 
 struct SWGL_Timings
 {
