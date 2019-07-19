@@ -1139,7 +1139,6 @@ void demo19_cubes(int width, int height, float algle1, float angle2)
   static GLuint texture2 = (GLuint)(-1);
   static GLuint texture3 = (GLuint)(-1);
 
-
   if (firstFrame)
   {
     int w, h;

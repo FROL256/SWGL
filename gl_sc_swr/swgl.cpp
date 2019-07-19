@@ -92,9 +92,6 @@ void SWGL_Context::InitCommon()
   if (m_pLog == nullptr)
     m_pLog = new std::ofstream("zgl_log.txt");
 
-  freopen("stdout.txt", "wt", stdout);
-  freopen("stderr.txt", "wt", stderr);
-
   m_texTop = 0;
   m_textures.resize(1024); // max 1024 tex
 
@@ -709,7 +706,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
   const int triNum = int(indices.size() / 3);
 
-  #pragma omp parallel for if(triNum > 16)
+  //#pragma omp parallel for if(triNum > 16)
   for (int triId = 0; triId < triNum; triId++)
   {
     int   i1 = indices[triId * 3 + 0];

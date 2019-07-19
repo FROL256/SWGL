@@ -101,9 +101,9 @@ void ExposeFunc()
 
     // paper demos
 
-    //demo04_pyramid_and_cube_3d(wa.width, wa.height, 40.0f, 20.0f);
+    demo04_pyramid_and_cube_3d(wa.width, wa.height, 40.0f, 20.0f);
     //demo03_many_small_dynamic_triangles();
-    demo19_cubes(wa.width, wa.height, 0.0f, 50.0f);
+    //demo19_cubes(wa.width, wa.height, 0.0f, 50.0f);
     //demo25_teapot(wa.width, wa.height, 0.0f, 0.0f);
     //demo26_teapots9(wa.width, wa.height, 0.0f, 60.0f);
     //demo24_draw_elements_terrain(wa.width, wa.height, 0.0f, 0.0f);
@@ -152,11 +152,11 @@ void ExposeFunc()
       }
     }
   
-    glFinish();
-    std::vector<int>   pixels1(WIN_WIDTH_INITIAL*WIN_HEIGHT_INITIAL);
-    glReadPixels(0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
-    SaveBMP("zscreen.bmp", pixels1.data(), WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL);
-    exit(0);
+    //glFinish();
+    //std::vector<int>   pixels1(WIN_WIDTH_INITIAL*WIN_HEIGHT_INITIAL);
+    //glReadPixels(0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
+    //SaveBMP("zscreen.bmp", pixels1.data(), WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL);
+    //exit(0);
   }
   catch(std::runtime_error& e)
   {
@@ -267,9 +267,13 @@ void CheckKeyboard()
 //////////////////////////////////////////////////////////////////////////////////
 //				MAIN PROGRAM					                                                //
 //////////////////////////////////////////////////////////////////////////////////
+SWGL_Timings _swglGetStats();
 
 int main(int argc, char *argv[]) // 222
 {
+  //freopen("stdout.txt", "wt", stdout);
+  //freopen("stderr.txt", "wt", stderr);
+  
   CreateWindow();
   SetupGL();
   InfoGL();
@@ -282,14 +286,25 @@ int main(int argc, char *argv[]) // 222
     CheckKeyboard();
   
     frameCounter++;
-    
-    if(NOWINDOW && frameCounter > 100)
+    if(NOWINDOW && frameCounter >= 100)
       break;
   }
   
   if(NOWINDOW)
   {
-    std::cout << "TODO: we must output stats here ... " << std::endl;
+    auto timings = _swglGetStats();
+    
+    std::cout << std::endl;
+    std::cout << "Time stats: " << std::endl;
+  
+    std::cout << "Stats at frame " <<  frameCounter << ": " << std::endl;
+    std::cout << "msCL      = " << 0.01f*(timings.msClear) << std::endl;
+    std::cout << "msVS      = " << 0.01f*(timings.msVertexShader) << std::endl;
+    std::cout << "msTS      = " << 0.01f*(timings.msTriSetUp) << std::endl;
+    std::cout << "msRS      = " << 0.01f*(timings.msRasterAndPixelShader) << std::endl;
+    std::cout << "ms(TS+RS) = " << 0.01f*(timings.msTriSetUp + timings.msRasterAndPixelShader);
+    std::cout << std::endl;
+    
     glFinish();
     std::vector<int>   pixels1(WIN_WIDTH_INITIAL*WIN_HEIGHT_INITIAL);
     glReadPixels(0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
