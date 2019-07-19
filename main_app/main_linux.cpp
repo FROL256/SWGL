@@ -52,15 +52,15 @@ XSetWindowAttributes    swa;
 XWindowAttributes	wa;
 XEvent			xev;
 
-float	TimeCounter, LastFrameTimeCounter, DT, prevTime = 0.0, FPS;
-int			Frame = 1, FramesPerFPS;
-
-float			rot_z_vel = 50.0, rot_y_vel = 30.0;
+float	FPS;
+float	rot_z_vel = 50.0, rot_y_vel = 30.0;
 
 extern int g_localWidth;
 extern int g_localHeight;
 
 Timer g_timer(false);
+
+float g_totalFrameTimeMs = 0.0f;
 
 void ExposeFunc()
 {
@@ -87,7 +87,7 @@ void ExposeFunc()
   static int   frameCounter = -1;
   static float frameTime    = 0.0f;
 
-  if(frameCounter < 0 && !NOWINDOW)
+  if(frameCounter < 0)
   {
     frameCounter = 0;
     g_timer.start();
@@ -243,6 +243,7 @@ void CheckKeyboard()
   
   if(XCheckWindowEvent(dpy, win, KeyPressMask, &xev))
   {
+    const float DT    = 1.0f;
     char	*key_string = XKeysymToString(XkbKeycodeToKeysym(dpy, xev.xkey.keycode, 0, 0));
 
     if(strncmp(key_string, "Left", 4) == 0)
@@ -267,7 +268,9 @@ void CheckKeyboard()
 //////////////////////////////////////////////////////////////////////////////////
 //				MAIN PROGRAM					                                                //
 //////////////////////////////////////////////////////////////////////////////////
+#ifdef MEASURE_STATS
 SWGL_Timings _swglGetStats();
+#endif
 
 int main(int argc, char *argv[]) // 222
 {
@@ -289,29 +292,34 @@ int main(int argc, char *argv[]) // 222
     if(NOWINDOW && frameCounter >= 100)
       break;
   }
-  
+
+  #ifdef MEASURE_STATS
   if(NOWINDOW)
   {
+    const float timeTotal = g_timer.getElapsed()*1000.0f;
+    
     auto timings = _swglGetStats();
     
     std::cout << std::endl;
     std::cout << "Time stats: " << std::endl;
   
     std::cout << "Stats at frame " <<  frameCounter << ": " << std::endl;
-    std::cout << "msCL      = " << 0.01f*(timings.msClear) << std::endl;
-    std::cout << "msVS      = " << 0.01f*(timings.msVertexShader) << std::endl;
-    std::cout << "msTS      = " << 0.01f*(timings.msTriSetUp) << std::endl;
-    std::cout << "msRS      = " << 0.01f*(timings.msRasterAndPixelShader) << std::endl;
-    std::cout << "ms(TS+RS) = " << 0.01f*(timings.msTriSetUp + timings.msRasterAndPixelShader);
+    std::cout << "msCL         = " << 0.01f*(timings.msClear) << std::endl;
+    std::cout << "msVS         = " << 0.01f*(timings.msVertexShader) << std::endl;
+    std::cout << "msTS         = " << 0.01f*(timings.msTriSetUp) << std::endl;
+    std::cout << "msRS         = " << 0.01f*(timings.msRasterAndPixelShader) << std::endl;
+    std::cout << "ms(TS+RS)    = " << 0.01f*(timings.msTriSetUp + timings.msRasterAndPixelShader) << std::endl;
+    std::cout << "ms(total)    = " << 0.01f*timeTotal << std::endl;
+    std::cout << "ms(total-CL) = " << 0.01f*(timeTotal-timings.msClear) << std::endl;
     std::cout << std::endl;
     
-    glFinish();
     std::vector<int>   pixels1(WIN_WIDTH_INITIAL*WIN_HEIGHT_INITIAL);
     glReadPixels(0, 0, WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)&pixels1[0]);
     SaveBMP("zscreen.bmp", pixels1.data(), WIN_WIDTH_INITIAL, WIN_HEIGHT_INITIAL);
     std::cout.flush();
   }
- 
+  #endif
+  
   return 0;
 }
 
