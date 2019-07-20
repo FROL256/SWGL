@@ -106,7 +106,7 @@ void ExposeFunc()
     //demo19_cubes(wa.width, wa.height, 0.0f, 50.0f);
     //demo25_teapot(wa.width, wa.height, 0.0f, 0.0f);
     //demo26_teapots9(wa.width, wa.height, 0.0f, 60.0f);
-    //demo24_draw_elements_terrain(wa.width, wa.height, 0.0f, 0.0f);
+    demo24_draw_elements_terrain(wa.width, wa.height, 0.0f, 0.0f);
 
     // \\ paper demos
 
@@ -119,7 +119,7 @@ void ExposeFunc()
 
     //demo14_transparent_cube(wa.width, wa.height, angle1, angle2);
     //demo05_texture_3D(wa.width, wa.height, angle1, angle2);
-    demo19_cubes(wa.width, wa.height, angle1, angle2);
+    //demo19_cubes(wa.width, wa.height, angle1, angle2);
 
     //demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
     //demo25_teapot(wa.width, wa.height, angle1, angle2);

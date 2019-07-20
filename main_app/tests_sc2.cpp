@@ -520,7 +520,31 @@ void demo24_draw_elements_terrain(int width, int height, float algle1, float ang
     }
 
     firstFrame = false;
+
+    if(false) // random reorder of tri indices
+    {
+      struct TriCluster {int data[12];};
+      const int numOfClusters = triInd.size()/(sizeof(TriCluster)/sizeof(int));
+      TriCluster* pArray      = (TriCluster*)triInd.data();
+
+      for(int i=0;i<numOfClusters*100;i++)
+      {
+        const int x1 = abs(rand()%(numOfClusters-1));
+        const int x2 = abs(rand()%(numOfClusters-1));
+
+        if(x1 != x2)
+        {
+          auto temp  = pArray[x1];
+          pArray[x1] = pArray[x2];
+          pArray[x2] = temp;
+        }
+      }
+
+    }
+
   }
+
+
 
 
   glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
