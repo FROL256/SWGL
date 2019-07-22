@@ -691,14 +691,9 @@ int SWGL_TileRenderThread(int a_threadId)
     HWImpl::TriangleType localTri;
     
     auto* pDrawList = &g_pContext->m_drawList;
-    //for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
-    
     while(g_pContext->m_tqueue.try_dequeue_from_producer(*g_pContext->m_bintoks[tileId], localTri))
     {
-      //const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
-      //auto& tri        = pDrawList->m_triMemory[triId2];
       auto& tri            = localTri;
-      
       const auto* pso      = &(pDrawList->m_psoArray[tri.psoId]);
       const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
 
