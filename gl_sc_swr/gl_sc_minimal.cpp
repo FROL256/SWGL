@@ -707,8 +707,7 @@ int SWGL_TileRenderThread(int a_threadId)
     if (!infinitLoop)
       break;
   };
-
-
+  
   return 0;
 }
 
