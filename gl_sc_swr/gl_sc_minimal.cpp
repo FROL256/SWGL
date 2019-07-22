@@ -677,7 +677,7 @@ int SWGL_TileRenderThread(int a_threadId)
     FrameBuffer fb;
     fb.w     = BIN_SIZE;
     fb.h     = BIN_SIZE;
-    fb.pitch = fb.w + FB_BILLET_SIZE;
+    fb.pitch = fb.w + FB_BILLET_SIZE; // TODO: remove this pitch from tiled FB !!!
     fb.vx    = 0;
     fb.vy    = 0;
     fb.vw    = BIN_SIZE;
@@ -688,17 +688,17 @@ int SWGL_TileRenderThread(int a_threadId)
     fb.cbuffer    = tile.m_color;
     fb.lockbuffer = g_pContext->m_locks;
 
+    HWImpl::TriangleType localTri;
+    
     auto* pDrawList = &g_pContext->m_drawList;
-
-    for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
+    while(g_pContext->m_tqueue.try_dequeue_from_producer(*g_pContext->m_bintoks[tileId], localTri))
     {
-      const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
-      auto& tri        = pDrawList->m_triMemory[triId2];
-      const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);
+      auto& tri            = localTri;
+      const auto* pso      = &(pDrawList->m_psoArray[tri.psoId]);
+      const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
 
-      bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
-      auto stateId   = swglStateIdFromPSO(pso, g_pContext, sameColor);
-      tri.ropId      = stateId;
+      auto stateId = swglStateIdFromPSO(pso, g_pContext, sameColor);
+      tri.ropId    = stateId;
 
       HWImpl::RasterizeTriangle(tri, tile.minX, tile.minY,
                                 &fb);

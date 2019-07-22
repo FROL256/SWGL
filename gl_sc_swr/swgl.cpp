@@ -569,18 +569,11 @@ void clampTriBBox(Triangle* t1, const FrameBuffer& frameBuff)
 void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum)
 {
   a_pDrawList->m_triTop = 0;
-  a_pDrawList->m_triDrn = 0;
 
   const size_t tilesNum = a_pTiledFB->tiles.size();
 
   if (triNum == 0 || tilesNum == 0)
     return;
-
-  if (a_pDrawList->m_triMemory.size() < (size_t)triNum)
-    a_pDrawList->m_triMemory.resize(triNum);
-
-  if (a_pDrawList->m_tilesTriIndicesMemory.size() < triNum*tilesNum)
-    a_pDrawList->m_tilesTriIndicesMemory.resize(triNum*tilesNum);
 
   for (size_t i = 0; i < tilesNum; i++)
   {
@@ -593,15 +586,12 @@ void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_p
     a_pDrawList->m_psoArray.reserve(100);
 
   a_pDrawList->m_psoArray.resize(0);
-
 }
 
 
 void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch, 
                                    const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB)
 {
-  if (a_pDrawList->m_tilesTriIndicesMemory.size() == 0)
-    return;
 
 #ifdef MEASURE_STATS
   Timer timer(true);
@@ -612,10 +602,10 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 
   a_pDrawList->m_psoArray.push_back(pBatch->state);
   int psoId = a_pDrawList->m_psoArray.size() - 1;
-
-  int* triIndicesMem              = &(a_pDrawList->m_tilesTriIndicesMemory[0]);
+  
   const std::vector<int>& indices = pBatch->indices;
 
+  //#pragma omp parallel for if(triNum > 1000) num_threads(2)
   for (int triId = 0; triId < triNum; triId++)
   {
     int i1 = indices[triId * 3 + 0];
@@ -646,22 +636,20 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
       std::swap(i2, i3);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Triangle* pTri   = &(a_pDrawList->m_triMemory[top + triId]);
-    pTri->psoId      = psoId;
-    //pTri->curr_sval  = pBatch->state.stencilValue;
-    //pTri->curr_smask = pBatch->state.stencilMask;
-
-    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, pTri);
-    clampTriBBox(pTri, frameBuff);                        // need this to prevent out of border
+    Triangle localTri;
+    localTri.psoId      = psoId;
+    //localTri.curr_sval  = pBatch->state.stencilValue;
+    //localTri.curr_smask = pBatch->state.stencilMask;
+    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, &localTri);
+    clampTriBBox(&localTri, frameBuff);                        // need this to prevent out of border
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    const unsigned int tMinX = divTileSize(pTri->bb_iminX);
-    const unsigned int tMinY = divTileSize(pTri->bb_iminY);
+    const unsigned int tMinX = divTileSize(localTri.bb_iminX);
+    const unsigned int tMinY = divTileSize(localTri.bb_iminY);
  
-    const unsigned int tMaxX = divTileSize(pTri->bb_imaxX);
-    const unsigned int tMaxY = divTileSize(pTri->bb_imaxY);
+    const unsigned int tMaxX = divTileSize(localTri.bb_imaxX);
+    const unsigned int tMaxY = divTileSize(localTri.bb_imaxY);
 
     for (unsigned int ty = tMinY; ty <= tMaxY; ty++)
     {
@@ -673,12 +661,13 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
         const int tileMaxX = tx*BIN_SIZE + BIN_SIZE;
         const int tileMaxY = ty*BIN_SIZE + BIN_SIZE;
 
-        auto& tile = a_pTiledFB->tiles[ty*a_pTiledFB->sizeX + tx];  // auto& tile = a_pDrawList->tiles[tx][ty];
+        const int binId    = ty*a_pTiledFB->sizeX + tx;
+        auto& tile         = a_pTiledFB->tiles[binId];  // auto& tile = a_pDrawList->tiles[tx][ty];
 
-        if (HWImpl::AABBTriangleOverlap(*pTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
+        if (HWImpl::AABBTriangleOverlap(localTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
         {
-          int oldOffset = atomic_add((int*)&tile.endOffs, 1); // tile.endOffs; tile.endOffs++;
-          triIndicesMem[oldOffset] = top + triId;
+          tile.endOffs++; //  atomic_add((int*)&tile.endOffs, 1);  // signal that this tile is not empty!; needd for sorting tiles;
+          a_pContext->m_tqueue.enqueue(*a_pContext->m_bintoks[binId], localTri);
         }
       }
     }

@@ -248,12 +248,7 @@ static inline unsigned int divTileSize(unsigned int x) {return x / BIN_SIZE;}
 
 struct SWGL_DrawList
 {
-  std::vector<HWImpl::TriangleType, aligned16<HWImpl::TriangleType> >  m_triMemory; ///< N
-
-  std::vector<int>     m_tilesTriIndicesMemory; ///< N*M; M = m_tilesNumX*m_tilesNumY;
   int                  m_triTop;
-  int                  m_triDrn; // triangles already drawn
-
   mutable std::vector<Pipeline_State_Object> m_psoArray;
 };
 
@@ -322,8 +317,10 @@ struct SWGL_Context
   bool m_useTriQueue;
   int  m_currTileId;
 
-  std::atomic_flag* m_locks;
+  std::atomic_flag*                                 m_locks;
   moodycamel::ConcurrentQueue<HWImpl::TriangleType> m_tqueue;
+  std::vector< moodycamel::ProducerToken* >         m_bintoks; // for binned (tilex 64x64) framebuffer
+  
   std::vector<FrameBuffer>                          batchFrameBuffers;
 };
 
