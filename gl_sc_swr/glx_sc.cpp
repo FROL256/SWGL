@@ -175,10 +175,10 @@ void SWGL_Context::CopyToScreeen()
   }
 }
 
-#define MAX_CONTEXTS_COUNT 4
+#define MAX_CONTEXTS_COUNT 2
 
 SWGL_Context  g_allCtx[MAX_CONTEXTS_COUNT];
-int           g_ctxTop = 1;
+int           g_ctxTop = 0;
 
 extern SWGL_Context* g_pContext;
 

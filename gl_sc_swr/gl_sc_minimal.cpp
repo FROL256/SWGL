@@ -631,8 +631,8 @@ struct TileRef
 };
 
 std::vector<TileRef> g_tileRefs;
-std::thread          g_threads[NUM_THREADS];
-int                  g_active [NUM_THREADS]; //#TODO: use std::atomics
+std::thread          g_threads[NUM_THREADS_AUX];
+int                  g_active [NUM_THREADS_AUX]; //#TODO: use std::atomics
 
 bool          g_initialized_rast = false;
 bool          g_kill_all         = false;
@@ -642,8 +642,7 @@ int SWGL_TileRenderThread(int a_threadId)
   if (g_pContext == nullptr)
     return 0;
 
-  const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
-
+  const int tilesNum     = int(g_pContext->m_tiledFrameBuffer.tiles.size());
   const bool infinitLoop = (a_threadId >= 0);
   int tileRefId = 0;
 
@@ -775,28 +774,31 @@ GLAPI void APIENTRY glFlush(void)
   #ifdef MEASURE_STATS
     Timer timer(true);
   #endif
-
-    const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
-
-    //// sort tiles to get most heavy in the beggining of the array
+    
+    // launch threads for first time
     //
+    const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
     if(g_tileRefs.size() != tilesNum)
     {
       g_tileRefs.resize(tilesNum);
       g_pContext->m_currTileId = tilesNum; // signal for threads to wait ...
-      for(int i=0;i<NUM_THREADS;i++)
+      for(int i=0;i<NUM_THREADS_AUX;i++)
         g_threads[i] = std::thread(&SWGL_TileRenderThread, i);
     }
-
-    for(int i=0; i<tilesNum; i++)
+    
+    // sort tiles to get most heavy in the begin of the array
+    //
     {
-      auto& tile = g_pContext->m_tiledFrameBuffer.tiles[i];
-      g_tileRefs[i].tileId = i;
-      g_tileRefs[i].triNum = tile.endOffs - tile.begOffs;
+      for (int i = 0; i < tilesNum; i++)
+      {
+        auto &tile = g_pContext->m_tiledFrameBuffer.tiles[i];
+        g_tileRefs[i].tileId = i;
+        g_tileRefs[i].triNum = tile.endOffs - tile.begOffs;
+      }
+    
+      std::sort(g_tileRefs.rbegin(), g_tileRefs.rend());
     }
-
-    std::sort(g_tileRefs.rbegin(), g_tileRefs.rend());
-
+    
     g_pContext->m_currTileId = 0;
     while(g_pContext->m_currTileId < tilesNum)
       SWGL_TileRenderThread(-1);
@@ -804,11 +806,11 @@ GLAPI void APIENTRY glFlush(void)
     while (true) // waiting for all threads to finish
     {
       bool allFinished = true;
-      for (int i = 0; i < NUM_THREADS; i++)
+      for (int i = 0; i < NUM_THREADS_AUX; i++)
         allFinished = allFinished && (g_active[i] == 0);
 
       if (!allFinished)
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1)); 
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
       else
         break;
     }
