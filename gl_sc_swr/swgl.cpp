@@ -95,8 +95,8 @@ void SWGL_Context::InitCommon()
   m_texTop = 0;
   m_textures.resize(1024); // max 1024 tex
 
-  m_useTiledFB  = false;
-  m_useTriQueue = true;
+  m_useTiledFB  = true;
+  m_useTriQueue = false;
 
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
@@ -593,7 +593,6 @@ void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_p
     a_pDrawList->m_psoArray.reserve(100);
 
   a_pDrawList->m_psoArray.resize(0);
-
 }
 
 
@@ -616,6 +615,7 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
   int* triIndicesMem              = &(a_pDrawList->m_tilesTriIndicesMemory[0]);
   const std::vector<int>& indices = pBatch->indices;
 
+  //#pragma omp parallel for if(triNum > 1000) num_threads(2)
   for (int triId = 0; triId < triNum; triId++)
   {
     int i1 = indices[triId * 3 + 0];
@@ -673,12 +673,16 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
         const int tileMaxX = tx*BIN_SIZE + BIN_SIZE;
         const int tileMaxY = ty*BIN_SIZE + BIN_SIZE;
 
-        auto& tile = a_pTiledFB->tiles[ty*a_pTiledFB->sizeX + tx];  // auto& tile = a_pDrawList->tiles[tx][ty];
+        const int binId    = ty*a_pTiledFB->sizeX + tx;
+        
+        auto& tile = a_pTiledFB->tiles[binId];  // auto& tile = a_pDrawList->tiles[tx][ty];
 
         if (HWImpl::AABBTriangleOverlap(*pTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
         {
           int oldOffset = atomic_add((int*)&tile.endOffs, 1); // tile.endOffs; tile.endOffs++;
           triIndicesMem[oldOffset] = top + triId;
+  
+          a_pContext->m_tqueue.enqueue(*a_pContext->m_bintoks[binId], (*pTri));
         }
       }
     }

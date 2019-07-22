@@ -322,8 +322,10 @@ struct SWGL_Context
   bool m_useTriQueue;
   int  m_currTileId;
 
-  std::atomic_flag* m_locks;
+  std::atomic_flag*                                 m_locks;
   moodycamel::ConcurrentQueue<HWImpl::TriangleType> m_tqueue;
+  std::vector< moodycamel::ProducerToken* >         m_bintoks; // for binned (tilex 64x64) framebuffer
+  
   std::vector<FrameBuffer>                          batchFrameBuffers;
 };
 

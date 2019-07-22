@@ -125,6 +125,21 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
   m_tiledFrameBuffer.Resize(m_width, m_height);
   m_tiledFrameBuffer.TestClearChessBoard();
   
+  const size_t tilesNum = (m_width / BIN_SIZE) * (m_height / BIN_SIZE);
+  if(m_bintoks.size() != tilesNum)
+  {
+    for(auto& pToken : m_bintoks)
+    {
+      delete pToken;
+      pToken = nullptr;
+    }
+    
+    m_bintoks.resize(tilesNum);
+  
+    for(auto& pToken : m_bintoks)
+      pToken = new moodycamel::ProducerToken(m_tqueue);
+  }
+  
   ResizeCommon(m_width, m_height); //#TODO: move memory allocation inside 'ResizeCommon'
 }
 
@@ -133,6 +148,12 @@ void SWGL_Context::Destroy()
   free(m_pixels2); m_pixels2 = nullptr;
   free(m_zbuffer); m_zbuffer = nullptr;
   free(m_sbuffer); m_sbuffer = nullptr;
+  
+  for(auto& pToken : m_bintoks)
+  {
+    delete pToken;
+    pToken = nullptr;
+  }
 }
 
 void SWGL_Context::CopyToScreeen()
