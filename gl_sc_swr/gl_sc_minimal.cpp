@@ -693,14 +693,12 @@ int SWGL_TileRenderThread(int a_threadId)
     for (int triId = tile.begOffs; triId < tile.endOffs; triId++)
     {
       const int triId2 = pDrawList->m_tilesTriIndicesMemory[triId];
-      auto& tri  = pDrawList->m_triMemory[triId2];
+      auto& tri        = pDrawList->m_triMemory[triId2];
       const auto* pso  = &(pDrawList->m_psoArray[tri.psoId]);
 
-      const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
-
-      auto stateId = swglStateIdFromPSO(pso, g_pContext, sameColor);
-
-      tri.ropId = stateId;
+      bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
+      auto stateId   = swglStateIdFromPSO(pso, g_pContext, sameColor);
+      tri.ropId      = stateId;
 
       HWImpl::RasterizeTriangle(tri, tile.minX, tile.minY,
                                 &fb);
