@@ -676,7 +676,7 @@ int SWGL_TileRenderThread(int a_threadId)
     FrameBuffer fb;
     fb.w     = BIN_SIZE;
     fb.h     = BIN_SIZE;
-    fb.pitch = fb.w + FB_BILLET_SIZE; // TODO: remove this pitch from tiled FB !!!
+    fb.pitch = BIN_SIZE;
     fb.vx    = 0;
     fb.vy    = 0;
     fb.vw    = BIN_SIZE;

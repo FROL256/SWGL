@@ -23,8 +23,8 @@ struct ALIGNED(16) SWGL_ScreenTile
 
   // tile data
   //
-  ALIGNED(64) int32_t m_color[(BIN_SIZE + FB_BILLET_SIZE)*BIN_SIZE];
-  ALIGNED(64) float   m_depth[(BIN_SIZE + FB_BILLET_SIZE)*BIN_SIZE];
+  ALIGNED(64) int32_t m_color[BIN_SIZE*BIN_SIZE];
+  ALIGNED(64) float   m_depth[BIN_SIZE*BIN_SIZE];
   //uint8_t m_sbuffer[BIN_SIZE*BIN_SIZE];
 };
 
