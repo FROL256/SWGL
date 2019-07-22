@@ -192,10 +192,11 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
 
   if (g_pContext->m_useTiledFB) // #TODO: implement opt clear both for depth and color in a single loop
   {
-    if (mask & GL_COLOR_BUFFER_BIT)
+    if((mask & GL_COLOR_BUFFER_BIT) != 0 && (mask & GL_DEPTH_BUFFER_BIT) != 0 )
+      g_pContext->m_tiledFrameBuffer.ClearColorAndDepth(g_pContext->input.clearColor1u, 1.0f - g_pContext->input.clearDepth);
+    else if (mask & GL_COLOR_BUFFER_BIT)
       g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
-
-    if(mask & GL_DEPTH_BUFFER_BIT)
+    else if(mask & GL_DEPTH_BUFFER_BIT)
       g_pContext->m_tiledFrameBuffer.ClearDepth(1.0f - g_pContext->input.clearDepth);
 
     swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);

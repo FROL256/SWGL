@@ -50,6 +50,16 @@ void SWGL_FrameBuffer::ClearDepth(float a_val)
     tiles[tileId].ClearDepth(a_val);
 }
 
+void SWGL_FrameBuffer::ClearColorAndDepth(int32_t a_color, float a_val)
+{
+  #pragma omp parallel for num_threads(NUM_THREADS_CLS)
+  for (int tileId = 0; tileId < tiles.size(); tileId++)
+  {
+    tiles[tileId].ClearColor(a_color);
+    tiles[tileId].ClearDepth(a_val);
+  }
+}
+
 void SWGL_FrameBuffer::CopyToRowPitch(int32_t* a_data)
 {
   const int pitchX = sizeX*BIN_SIZE;

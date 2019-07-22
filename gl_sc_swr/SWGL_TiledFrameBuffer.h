@@ -34,6 +34,7 @@ struct SWGL_FrameBuffer
   void Resize(int a_x, int a_y);
   void ClearColor(int32_t a_color);
   void ClearDepth(float a_val);
+  void ClearColorAndDepth(int32_t a_color, float a_val);
   void CopyToRowPitch(int32_t* a_data);  //#TODO: consider pipelined copy to video mem, tile by tile.
 
   void TestClearChessBoard();
