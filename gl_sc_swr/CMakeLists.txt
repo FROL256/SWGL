@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 
 project(swgl)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon-vfpv4 -ffast-math") #  -mfpu=neon-vfpv4
+
+
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops")
 
@@ -53,7 +56,7 @@ IF ( X11_FOUND )
 ENDIF ( X11_FOUND )
 
 
-find_package(OpenMP REQUIRED)
+#find_package(OpenMP REQUIRED)
 find_package(Threads REQUIRED)
 
 add_library(swgl STATIC ${SOURCE_LIB})

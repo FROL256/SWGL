@@ -88,9 +88,9 @@ namespace cvex
 
   #ifdef __x86_64
   #include <xmmintrin.h> // SSE
-  void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO); }
+  static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO); }
   #else
-  void set_ftz() {}
+  static inline void set_ftz() { }
   #endif
 
 
