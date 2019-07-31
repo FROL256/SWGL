@@ -95,8 +95,8 @@ void SWGL_Context::InitCommon()
   m_texTop = 0;
   m_textures.resize(1024); // max 1024 tex
 
-  m_useTiledFB  = true;
-  m_useTriQueue = false;
+  m_useTiledFB  = false;
+  m_useTriQueue = true;
 
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);

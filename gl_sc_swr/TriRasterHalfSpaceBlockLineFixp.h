@@ -9,11 +9,11 @@ static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
 
-template<int value> int div    (int a_arg) { return a_arg/value; }
-template<>          int div<2> (int a_arg) { return a_arg >> 1; }
-template<>          int div<4> (int a_arg) { return a_arg >> 2; }
-template<>          int div<8> (int a_arg) { return a_arg >> 3; }
-template<>          int div<16>(int a_arg) { return a_arg >> 4; }
+template<int value> static inline int div    (int a_arg) { return a_arg/value; }
+template<>          static inline int div<2> (int a_arg) { return a_arg >> 1; }
+template<>          static inline int div<4> (int a_arg) { return a_arg >> 2; }
+template<>          static inline int div<8> (int a_arg) { return a_arg >> 3; }
+template<>          static inline int div<16>(int a_arg) { return a_arg >> 4; }
 
 template<typename ROP>
 void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, int tileMinX, int tileMinY,

@@ -1588,8 +1588,10 @@ private:
 		// generates code that uses this assumption for AVX instructions in some cases. Ideally, we
 		// should also align Block to the alignment of T in case it's higher than malloc's 16-byte
 		// alignment, but this is hard to do in a cross-platform way. Assert for this case:
-		static_assert(std::alignment_of<T>::value <= std::alignment_of<details::max_align_t>::value, "The queue does not support super-aligned types at this time");
-		// Additionally, we need the alignment of Block itself to be a multiple of max_align_t since
+
+		//static_assert(std::alignment_of<T>::value <= std::alignment_of<details::max_align_t>::value, "The queue does not support super-aligned types at this time");
+		
+    // Additionally, we need the alignment of Block itself to be a multiple of max_align_t since
 		// otherwise the appropriate padding will not be added at the end of Block in order to make
 		// arrays of Blocks all be properly aligned (not just the first one). We use a union to force
 		// this.

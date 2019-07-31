@@ -38,7 +38,7 @@
     <ProjectGuid>{CDD3B709-625E-42F6-B23C-9F7EDFDE0C0D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>gl_sc_swr</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -289,7 +289,6 @@
     <ClInclude Include="HWAbstractionLayer.h" />
     <ClInclude Include="HWBlockLine4x4.h" />
     <ClInclude Include="HWPureCpp.h" />
-    <ClInclude Include="HWSSE1Impl.h" />
     <ClInclude Include="HW_VROP.h" />
     <ClInclude Include="SWGL_TiledFrameBuffer.h" />
     <ClInclude Include="config.h" />
@@ -315,7 +314,6 @@
     <ClCompile Include="HWBlockLine4x4.cpp" />
     <ClCompile Include="HWBlockLine8x8.cpp" />
     <ClCompile Include="HWPureCpp.cpp" />
-    <ClCompile Include="HWSSE1Impl.cpp" />
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="swgl.cpp" />
     <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />

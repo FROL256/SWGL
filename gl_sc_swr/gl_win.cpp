@@ -267,6 +267,7 @@ extern "C" GLAPI BOOL WINAPI wglSwapBuffers(HDC a_hdc)
 
   // count FPS
   //
+#ifndef WIN32
   if (g_pContext->m_currFrame == 0)
     g_pContext->m_lastNFramesT = clock();
 
@@ -281,6 +282,7 @@ extern "C" GLAPI BOOL WINAPI wglSwapBuffers(HDC a_hdc)
     *(g_pContext->m_pLog) << "FPS = " << FPS << std::endl;
     g_pContext->m_currFrame = 0;
   }
+#endif
 
   if (totalFrameCounter == 100)
   {
