@@ -131,13 +131,13 @@ static inline cvex::vuint4 operator+(const cvex::vuint4 a, const cvex::vuint4 b)
 static inline cvex::vuint4 operator-(const cvex::vuint4 a, const cvex::vuint4 b) { return vsubq_u32(a.data, b.data);}
 static inline cvex::vuint4 operator*(const cvex::vuint4 a, const cvex::vuint4 b) { return vmulq_u32(a.data, b.data); }
 
-static inline cvex::vuint4 operator+(const cvex::vuint4 a, const int b) { return vaddq_u32(a, vld1q_dup_u32(&b)); }
-static inline cvex::vuint4 operator-(const cvex::vuint4 a, const int b) { return vsubq_u32(a, vld1q_dup_u32(&b)); }
-static inline cvex::vuint4 operator*(const cvex::vuint4 a, const int b) { return vmulq_u32(a, vld1q_dup_u32(&b)); }
+static inline cvex::vuint4 operator+(const cvex::vuint4 a, const int b) { return vaddq_u32(a, vld1q_dup_u32((unsigned int*)&b)); }
+static inline cvex::vuint4 operator-(const cvex::vuint4 a, const int b) { return vsubq_u32(a, vld1q_dup_u32((unsigned int*)&b)); }
+static inline cvex::vuint4 operator*(const cvex::vuint4 a, const int b) { return vmulq_u32(a, vld1q_dup_u32((unsigned int*)&b)); }
 
-static inline cvex::vuint4 operator+(const int a, const cvex::vuint4 b) { return vaddq_u32(vld1q_dup_u32(&a), b); }
-static inline cvex::vuint4 operator-(const int a, const cvex::vuint4 b) { return vsubq_u32(vld1q_dup_u32(&a), b); }
-static inline cvex::vuint4 operator*(const int a, const cvex::vuint4 b) { return vmulq_u32(vld1q_dup_u32(&a), b); }
+static inline cvex::vuint4 operator+(const int a, const cvex::vuint4 b) { return vaddq_u32(vld1q_dup_u32((unsigned int*)&a), b); }
+static inline cvex::vuint4 operator-(const int a, const cvex::vuint4 b) { return vsubq_u32(vld1q_dup_u32((unsigned int*)&a), b); }
+static inline cvex::vuint4 operator*(const int a, const cvex::vuint4 b) { return vmulq_u32(vld1q_dup_u32((unsigned int*)&a), b); }
 
 
 

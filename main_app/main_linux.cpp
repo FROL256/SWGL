@@ -23,8 +23,8 @@
 #include "../gl_sc_swr/Timer.h"
 #include "../gl_sc_swr/config.h"
 
-const int WIN_WIDTH_INITIAL  = 512;
-const int WIN_HEIGHT_INITIAL = 512;
+const int WIN_WIDTH_INITIAL  = 1024;
+const int WIN_HEIGHT_INITIAL = 640;
 
 void InfoGL() // check custome extentions here
 {
@@ -48,8 +48,8 @@ XVisualInfo             *vi;
 GLXContext              glc;
 Colormap                cmap;
 XSetWindowAttributes    swa;
-XWindowAttributes	wa;
-XEvent			xev;
+XWindowAttributes	      wa;
+XEvent			            xev;
 
 float	FPS;
 float	rot_z_vel = 50.0, rot_y_vel = 30.0;
@@ -95,7 +95,7 @@ void ExposeFunc()
   try
   {
     //test01_colored_triangle();
-    demo01_colored_triangle(angle1);
+    //demo01_colored_triangle(angle1);
     //test02_nehe_lesson1_simplified();
 
     // paper demos
@@ -120,7 +120,7 @@ void ExposeFunc()
     //demo05_texture_3D(wa.width, wa.height, angle1, angle2);
     //demo19_cubes(wa.width, wa.height, angle1, angle2);
 
-    //demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
+    demo24_draw_elements_terrain(wa.width, wa.height, angle1, angle2);
     //demo25_teapot(wa.width, wa.height, angle1, angle2);
     //demo26_teapots9(wa.width, wa.height, angle1, angle2);
 
