@@ -110,7 +110,8 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
     const uint32_t val = a_pContext->input.clearColor1u;
     const float vald   = 1.0f - a_pContext->input.clearDepth;
 
-    cvex::vfloat4 depthVal4 = {vald, vald, vald, vald};
+    ALIGNED(16) float depthDataA[4] = {vald, vald, vald, vald};
+    cvex::vfloat4 depthVal4 = cvex::load(depthDataA);
     cvex::vint4   colorVal4 = cvex::make_vint(val, val, val, val);
 
     cvex::vfloat4* depth = (cvex::vfloat4*)a_pContext->m_zbuffer;

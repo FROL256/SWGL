@@ -237,7 +237,7 @@ struct VROP
 
       const vint res = (to_int32(r * c_255) << 16) | // BGRA
                        (to_int32(g * c_255) << 8)  |
-                       (to_int32(b * c_255) << 0)  |
+                       (to_int32(b * c_255)     )  |
                        (to_int32(a * c_255) << 24);
 
       store(pLineColor, res);
@@ -297,7 +297,7 @@ struct VROP
 
         const vint colori = (to_int32(r * c_255) << 16) | // BGRA
                             (to_int32(g * c_255) << 8)  |
-                            (to_int32(b * c_255) << 0)  |
+                            (to_int32(b * c_255)     )  |
                             (to_int32(a * c_255) << 24);
 
         store(pLineColor, blend(colori, colorOld, zTest));
@@ -384,22 +384,22 @@ struct VROP
     const auto mask_B = splat(0x00FF0000);
     const auto mask_A = splat(0xFF000000);
 
-    const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R) >> 0);
+    const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R));
     const vfloat f1_y = mult*to_float32((ipixels[0] & mask_G) >> 8);
     const vfloat f1_z = mult*to_float32((ipixels[0] & mask_B) >> 16);
     const vfloat f1_w = mult*to_float32((ipixels[0] & mask_A) >> 24);
 
-    const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R) >> 0);
+    const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R));
     const vfloat f2_y = mult*to_float32((ipixels[1] & mask_G) >> 8);
     const vfloat f2_z = mult*to_float32((ipixels[1] & mask_B) >> 16);
     const vfloat f2_w = mult*to_float32((ipixels[1] & mask_A) >> 24);
 
-    const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
+    const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R));
     const vfloat f3_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
     const vfloat f3_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
     const vfloat f3_w = mult*to_float32((ipixels[2] & mask_A) >> 24);
 
-    const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
+    const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R));
     const vfloat f4_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
     const vfloat f4_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
     const vfloat f4_w = mult*to_float32((ipixels[3] & mask_A) >> 24);
@@ -441,7 +441,7 @@ struct VROP
     const auto mask_B = splat(0x00FF0000);
     const auto mask_A = splat(0xFF000000);
 
-    a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
+    a_result[0] = mult*to_float32((ipixel & mask_R));
     a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
     a_result[2] = mult*to_float32((ipixel & mask_B) >> 16);
     a_result[3] = mult*to_float32((ipixel & mask_A) >> 24);
@@ -510,19 +510,19 @@ struct VROP
     const vint mask_G = splat(int(0x0000FF00));
     const vint mask_B = splat(int(0x00FF0000));
 
-    const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R) >> 0);
+    const vfloat f1_x = mult*to_float32((ipixels[0] & mask_R));
     const vfloat f1_y = mult*to_float32((ipixels[0] & mask_G) >> 8);
     const vfloat f1_z = mult*to_float32((ipixels[0] & mask_B) >> 16);
 
-    const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R) >> 0);
+    const vfloat f2_x = mult*to_float32((ipixels[1] & mask_R));
     const vfloat f2_y = mult*to_float32((ipixels[1] & mask_G) >> 8);
     const vfloat f2_z = mult*to_float32((ipixels[1] & mask_B) >> 16);
 
-    const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R) >> 0);
+    const vfloat f3_x = mult*to_float32((ipixels[2] & mask_R));
     const vfloat f3_y = mult*to_float32((ipixels[2] & mask_G) >> 8);
     const vfloat f3_z = mult*to_float32((ipixels[2] & mask_B) >> 16);
 
-    const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R) >> 0);
+    const vfloat f4_x = mult*to_float32((ipixels[3] & mask_R));
     const vfloat f4_y = mult*to_float32((ipixels[3] & mask_G) >> 8);
     const vfloat f4_z = mult*to_float32((ipixels[3] & mask_B) >> 16);
 
@@ -561,7 +561,7 @@ struct VROP
     const vint mask_G = splat(int(0x0000FF00));
     const vint mask_B = splat(int(0x00FF0000));
 
-    a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
+    a_result[0] = mult*to_float32((ipixel & mask_R));
     a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
     a_result[2] = mult*to_float32((ipixel & mask_B) >> 16);
   }
@@ -614,7 +614,7 @@ struct VROP
 
       const vint res = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
                        (to_int32(g * texColor[1] * c_255) << 8)  |
-                       (to_int32(b * texColor[2] * c_255) << 0);
+                       (to_int32(b * texColor[2] * c_255));
 
       store(pLineColor, res);
     }
@@ -676,7 +676,7 @@ struct VROP
 
         const vint colori = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
                             (to_int32(g * texColor[1] * c_255) << 8)  |
-                            (to_int32(b * texColor[2] * c_255) << 0);
+                            (to_int32(b * texColor[2] * c_255));
 
         store(pLineColor, blend(colori, colorOld, zTest));
       }
@@ -756,7 +756,7 @@ struct VROP
 
         const vfloat redOld   = to_float32( (to_uint32(colorOld) & 0x00FF0000) >> 16)*c_255Inv;
         const vfloat greenOld = to_float32( (to_uint32(colorOld) & 0x0000FF00) >> 8 )*c_255Inv;
-        const vfloat blueOld  = to_float32( (to_uint32(colorOld) & 0x000000FF) >> 0 )*c_255Inv;
+        const vfloat blueOld  = to_float32( (to_uint32(colorOld) & 0x000000FF)      )*c_255Inv;
         const vfloat alphaOld = to_float32( (to_uint32(colorOld) & 0xFF000000) >> 24)*c_255Inv;
 
         const vfloat alpha    = (a * texColor[3]);
@@ -768,7 +768,7 @@ struct VROP
 
         const auto colori = (to_uint32(redNew   * c_255) << 16) | // BGRA
                             (to_uint32(greenNew * c_255) << 8)  |
-                            (to_uint32(blueNew  * c_255) << 0)  |
+                            (to_uint32(blueNew  * c_255)     )  |
                             (to_uint32(alphaNew * c_255) << 24);
 
         store(pLineColor, blend(colori, colorOld, zTest));

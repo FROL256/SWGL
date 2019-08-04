@@ -14,6 +14,7 @@ namespace cvex
 
   struct vfloat4
   {
+    inline vfloat4() {}
     inline vfloat4(float32x4_t a) {data = a;}
     inline operator float32x4_t() const {return data;}
     float32x4_t data;   
@@ -21,6 +22,7 @@ namespace cvex
 
   struct vint4 
   {
+    inline vint4() {}
     inline vint4(int32x4_t a) {data = a;}
     inline operator int32x4_t() const {return data;}
     int32x4_t data;
@@ -28,6 +30,7 @@ namespace cvex
 
   struct vuint4 
   {
+    inline vuint4() {}
     inline vuint4(uint32x4_t a) {data = a;}
     inline operator uint32x4_t() const {return data;}
     uint32x4_t data;
@@ -108,6 +111,8 @@ static inline cvex::vfloat4 operator+(const float b, const cvex::vfloat4 a) { re
 static inline cvex::vfloat4 operator-(const float b, const cvex::vfloat4 a) { return vsubq_f32(a.data, vld1q_dup_f32(&b)); }
 static inline cvex::vfloat4 operator*(const float b, const cvex::vfloat4 a) { return vmulq_f32(a.data, vld1q_dup_f32(&b)); }
 
+
+
 static inline cvex::vint4 operator+(const cvex::vint4 a, const cvex::vint4 b) { return vaddq_s32(a.data, b.data); }
 static inline cvex::vint4 operator-(const cvex::vint4 a, const cvex::vint4 b) { return vsubq_s32(a.data, b.data);}
 static inline cvex::vint4 operator*(const cvex::vint4 a, const cvex::vint4 b) { return vmulq_s32(a.data, b.data); }
@@ -120,11 +125,39 @@ static inline cvex::vint4 operator+(const int a, const cvex::vint4 b) { return v
 static inline cvex::vint4 operator-(const int a, const cvex::vint4 b) { return vsubq_s32(vld1q_dup_s32(&a), b); }
 static inline cvex::vint4 operator*(const int a, const cvex::vint4 b) { return vmulq_s32(vld1q_dup_s32(&a), b); }
 
+
+
+static inline cvex::vuint4 operator+(const cvex::vuint4 a, const cvex::vuint4 b) { return vaddq_u32(a.data, b.data); }
+static inline cvex::vuint4 operator-(const cvex::vuint4 a, const cvex::vuint4 b) { return vsubq_u32(a.data, b.data);}
+static inline cvex::vuint4 operator*(const cvex::vuint4 a, const cvex::vuint4 b) { return vmulq_u32(a.data, b.data); }
+
+static inline cvex::vuint4 operator+(const cvex::vuint4 a, const int b) { return vaddq_u32(a, vld1q_dup_u32(&b)); }
+static inline cvex::vuint4 operator-(const cvex::vuint4 a, const int b) { return vsubq_u32(a, vld1q_dup_u32(&b)); }
+static inline cvex::vuint4 operator*(const cvex::vuint4 a, const int b) { return vmulq_u32(a, vld1q_dup_u32(&b)); }
+
+static inline cvex::vuint4 operator+(const int a, const cvex::vuint4 b) { return vaddq_u32(vld1q_dup_u32(&a), b); }
+static inline cvex::vuint4 operator-(const int a, const cvex::vuint4 b) { return vsubq_u32(vld1q_dup_u32(&a), b); }
+static inline cvex::vuint4 operator*(const int a, const cvex::vuint4 b) { return vmulq_u32(vld1q_dup_u32(&a), b); }
+
+
+
 static inline cvex::vint4 operator<<(const cvex::vint4 a, const int val) { return vshlq_n_s32(a, val); }
 static inline cvex::vint4 operator>>(const cvex::vint4 a, const int val) { return vshrq_n_s32(a, val); }
 
+static inline cvex::vuint4 operator<<(const cvex::vuint4 a, const int val) { return vshlq_n_u32(a, val); }
+static inline cvex::vuint4 operator>>(const cvex::vuint4 a, const int val) { return vshrq_n_u32(a, val); }
+
 static inline cvex::vint4 operator|(const cvex::vint4 a, const cvex::vint4 b) { return vorrq_s32(a,b); }
 static inline cvex::vint4 operator&(const cvex::vint4 a, const cvex::vint4 b) { return vandq_s32(a,b); }
+
+static inline cvex::vuint4 operator|(const cvex::vuint4 a, const cvex::vuint4 b) { return vorrq_u32(a,b); }
+static inline cvex::vuint4 operator&(const cvex::vuint4 a, const cvex::vuint4 b) { return vandq_u32(a,b); }
+
+static inline cvex::vuint4 operator|(const cvex::vint4 a, const cvex::vuint4 b) { return vorrq_u32((uint32x4_t)a.data, b); }
+static inline cvex::vuint4 operator&(const cvex::vint4 a, const cvex::vuint4 b) { return vandq_u32((uint32x4_t)a.data, b); }
+
+static inline cvex::vuint4 operator|(const cvex::vuint4 a, const int b) { return vorrq_u32(a, vld1q_dup_u32((unsigned int*)&b)); }
+static inline cvex::vuint4 operator&(const cvex::vuint4 a, const int b) { return vandq_u32(a, vld1q_dup_u32((unsigned int*)&b)); }
 
 static inline cvex::vint4 operator> (const cvex::vfloat4 a, const cvex::vfloat4 b) { return (int32x4_t)vcgtq_f32(a, b); }
 static inline cvex::vint4 operator< (const cvex::vfloat4 a, const cvex::vfloat4 b) { return (int32x4_t)vcltq_f32(a, b); }

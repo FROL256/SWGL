@@ -5,6 +5,10 @@
 #ifndef TEST_GL_TOP_VFLOAT4_GCC_H
 #define TEST_GL_TOP_VFLOAT4_GCC_H
 
+#include "vfloat4_arm.h"
+
+/* 
+
 namespace cvex
 {
   typedef unsigned int vuint4  __attribute__((vector_size(16)));
@@ -97,6 +101,7 @@ namespace cvex
   static inline void prefetch(const float* ptr) {  __builtin_prefetch(ptr); }
   static inline void prefetch(const int* ptr)   {  __builtin_prefetch(ptr); }
 };
-
+*/
 
 #endif //TEST_GL_TOP_VFLOAT4_GCC_H
+
