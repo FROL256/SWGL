@@ -70,37 +70,23 @@ namespace cvex
   static inline vfloat4 rcp_e(vfloat4 a)       { return vrecpeq_f32(a); }
 
   static inline vfloat4 blend(const vfloat4 a, const vfloat4 b, const vint4 mask) { return vbslq_f32((uint32x4_t)mask.data, a.data, b.data); }
-  static inline vint4 blend(const vint4 a, const vint4 b, const vint4 mask) { return vbslq_s32((uint32x4_t)mask.data, a.data, b.data); }
-  static inline vint4 blend(const vuint4 a, const vint4 b, const vint4 mask) { return vbslq_s32((uint32x4_t)mask.data, (int32x4_t)a.data, b.data); }
-
-  /*
+  static inline vint4   blend(const vint4 a, const vint4 b, const vint4 mask)     { return vbslq_s32((uint32x4_t)mask.data, a.data, b.data); }
+  static inline vint4   blend(const vuint4 a, const vint4 b, const vint4 mask)    { return vbslq_s32((uint32x4_t)mask.data, (int32x4_t)a.data, b.data); }
 
   static inline bool test_bits_any(const vint4 a)
   {
-    //return (a[0] != 0 && a[1] != 0 && a[2] != 0 && a[3] != 0);
-    const int64_t a2 = ( *(int64_t*)&a ) | ( *(int64_t*)&a[2] );
-    return (a2 != 0);
+    const uint32x2_t tmp = vorr_u32(vget_low_u32((uint32x4_t)a.data), 
+                                    vget_high_u32((uint32x4_t)a.data));
+    return (vget_lane_u32(vpmax_u32(tmp, tmp), 0) != 0);
   }
 
-  static inline vint4  make_vint(const int a, const int b, const int c, const int d) { return vint4{a,b,c,d}; }
-  static inline vuint4 make_vuint(const unsigned int a, const unsigned int b, const unsigned int c, const unsigned int d) { return vuint4{a,b,c,d}; }
+  static inline vint4  make_vint(const int a, const int b, const int c, const int d) { return int32x4_t{a,b,c,d}; }
+  static inline vuint4 make_vuint(const unsigned int a, const unsigned int b, const unsigned int c, const unsigned int d) { return uint32x4_t{a,b,c,d}; }
 
-  static inline vfloat4 min(const vfloat4 a, const vfloat4 b)
-  {
-    return a < b ? a : b;
-  }
+  static inline vfloat4 min(const vfloat4 a, const vfloat4 b) { return vminq_f32(a.data,b.data); }
+  static inline vfloat4 max(const vfloat4 a, const vfloat4 b) { return vmaxq_f32(a.data,b.data); }
 
-  static inline vfloat4 max(const vfloat4 a, const vfloat4 b)
-  {
-    return a > b ? a : b;
-  }
-
-  static inline vfloat4 vclamp(const vfloat4 x, const vfloat4 minVal, const vfloat4 maxVal)
-  {
-    return max(min(x, maxVal), minVal);
-  }
-
-  */
+  static inline vfloat4 vclamp(const vfloat4 x, const vfloat4 minVal, const vfloat4 maxVal) { return max(min(x, maxVal), minVal);  }
 
   static inline void set_ftz() { }
 
