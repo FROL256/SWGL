@@ -18,7 +18,7 @@
 #include <cmath>
 #include <vector>
 
-#include "Timer.h"
+#include "../gl_sc_swr/Timer.h"
 #include "tests_sc1.h"
 
 
@@ -102,8 +102,9 @@ int DrawGLScene(GLvoid)
   //test11_alpha_tex_and_transp();
   //test12_rect_tex();
   //demo14_transparent_cube(g_width, g_height, rtri, rquad);
-  //demo24_draw_elements_terrain(g_width, g_height, rtri, rquad);
   demo19_cubes(g_width, g_height, rtri, rquad);
+  //demo24_draw_elements_terrain(g_width, g_height, rtri, rquad);
+
 
   //demo25_teapot(g_width, g_height, rtri, rquad);
   //demo26_teapots9(g_width, g_height, rtri, rquad);

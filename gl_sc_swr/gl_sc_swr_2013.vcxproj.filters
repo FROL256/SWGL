@@ -23,9 +23,6 @@
     <ClCompile Include="HWPureCpp.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
-    <ClCompile Include="HWSSE1Impl.cpp">
-      <Filter>Rasterizers</Filter>
-    </ClCompile>
     <ClCompile Include="HWBlockLine4x4.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
@@ -60,9 +57,6 @@
       <Filter>Rasterizers</Filter>
     </ClInclude>
     <ClInclude Include="HWPureCpp.h">
-      <Filter>Rasterizers</Filter>
-    </ClInclude>
-    <ClInclude Include="HWSSE1Impl.h">
       <Filter>Rasterizers</Filter>
     </ClInclude>
   </ItemGroup>
