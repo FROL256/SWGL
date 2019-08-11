@@ -9,11 +9,11 @@ static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
 
-template<int value> static inline int div    (int a_arg) { return a_arg/value; }
-template<>          static inline int div<2> (int a_arg) { return a_arg >> 1; }
-template<>          static inline int div<4> (int a_arg) { return a_arg >> 2; }
-template<>          static inline int div<8> (int a_arg) { return a_arg >> 3; }
-template<>          static inline int div<16>(int a_arg) { return a_arg >> 4; }
+template<int value> inline int div    (int a_arg) { return a_arg/value; }
+template<>          inline int div<2> (int a_arg) { return a_arg >> 1; }
+template<>          inline int div<4> (int a_arg) { return a_arg >> 2; }
+template<>          inline int div<8> (int a_arg) { return a_arg >> 3; }
+template<>          inline int div<16>(int a_arg) { return a_arg >> 4; }
 
 template<typename ROP>
 void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, int tileMinX, int tileMinY,
@@ -208,7 +208,6 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
   const int maxy = ( imin(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
 
   const int pitch  = frameBuf->pitch;
-  int* colorBuffer = frameBuf->cbuffer + miny * pitch;
 
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;
@@ -256,7 +255,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
       if (a == 0x0 || b == 0x0 || c == 0x0)
         continue;
 
-      int *buffer = colorBuffer;
+      int* buffer = frameBuf->cbuffer + y * pitch;
 
       const int MTX = div<blockSize>(x);
       const int MTY = div<blockSize>(y);
@@ -315,8 +314,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
   
       frameBuf->lockbuffer[MTO].clear(std::memory_order_release); // unlock micro tile
     }
-  
-    colorBuffer += blockSize * pitch;
+
   }
 
 }
@@ -361,10 +359,6 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
   const int maxx = ( imin(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
   const int maxy = ( imin(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
 
-  const int pitch    = frameBuf->pitch;
-  int* colorBuffer   = frameBuf->cbuffer + miny * pitch;
-  float* depthBuffer = frameBuf->zbuffer + miny * pitch;
-
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;
   int C2 = DY23 * X2 - DX23 * Y2;
@@ -376,8 +370,10 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
   const float areaInv = 1.0f / fabs(float(DY31*DX12 - DX31*DY12));
+  const int pitch     = frameBuf->pitch;
 
   // Loop through blocks
+  #pragma omp parallel for if (maxy - miny >=4) // num_threads(2)
   for (int y = miny; y < maxy; y += blockSize)
   {
     for (int x = minx; x < maxx; x += blockSize)
@@ -411,8 +407,8 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
       if (a == 0x0 || b == 0x0 || c == 0x0)
         continue;
 
-      int*   bufferc = colorBuffer;
-      float* bufferz = depthBuffer;
+      int*   bufferc = frameBuf->cbuffer + y * pitch;
+      float* bufferz = frameBuf->zbuffer + y * pitch;
   
       const int MTX = div<blockSize>(x);
       const int MTY = div<blockSize>(y);
@@ -475,11 +471,10 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
       }
   
       frameBuf->lockbuffer[MTO].clear(std::memory_order_release); // unlock micro tile
-    }
 
-    colorBuffer += blockSize * pitch;
-    depthBuffer += blockSize * pitch;
-  }
+    } // for x
+
+  } // for y
 
 }
 
@@ -533,7 +528,6 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
   const int maxy = ( imin(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
 
   const int pitch  = frameBuf->pitch;
-  int* colorBuffer = frameBuf->cbuffer + miny * pitch;
 
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;
@@ -581,7 +575,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
       if (a == 0x0 || b == 0x0 || c == 0x0)
         continue;
 
-      int *buffer = colorBuffer;
+      int* buffer = frameBuf->cbuffer + y * frameBuf->pitch;
   
       const int MTX = div<blockSize>(x);
       const int MTY = div<blockSize>(y);
@@ -641,7 +635,6 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
       frameBuf->lockbuffer[MTO].clear(std::memory_order_release); // unlock micro tile
     }
 
-    colorBuffer += blockSize * pitch;
   }
 
 }
