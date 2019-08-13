@@ -130,7 +130,8 @@ struct Batch
   std::vector<int>    indicesLines;
   std::vector<int>    indices;
 
-  std::vector<float4, aligned16<float4> > vertPos;
+  std::vector<float4, aligned16<float4> > vertPos;  // original input data
+  std::vector<float4, aligned16<float4> > vertPosT; // transformed
   //std::vector<float4, aligned16<float4> > vertNorm;
   std::vector<float4, aligned16<float4> > vertColor;
   std::vector<float2, aligned16<float2> > vertTexCoord;
@@ -412,6 +413,90 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
                                    const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB);
 
 void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
+
+
+template<typename InitTriangleType>
+inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatch, int i1, int i2, int i3,
+                              int frameBufferId,
+                              InitTriangleType *pTri)
+{
+  pTri->v1 = pBatch->vertPosT[i1];
+  pTri->v2 = pBatch->vertPosT[i2];
+  pTri->v3 = pBatch->vertPosT[i3];
+
+  pTri->c1 = pBatch->vertColor[i1];
+  pTri->c2 = pBatch->vertColor[i2];
+  pTri->c3 = pBatch->vertColor[i3];
+
+  pTri->t1 = pBatch->vertTexCoord[i1];
+  pTri->t2 = pBatch->vertTexCoord[i2];
+  pTri->t3 = pBatch->vertTexCoord[i3];
+
+  pTri->ropId = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(*pTri));
+  pTri->bopId = BlendOp_None;
+  pTri->fbId  = frameBufferId;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const float4& v1 = pTri->v1;
+  const float4& v2 = pTri->v2;
+  const float4& v3 = pTri->v3;
+
+  pTri->bb_iminX = (int)(fmin(v1.x, fmin(v2.x, v3.x)) - 1.0f); // 1.0 is correct, don't try 0.5f
+  pTri->bb_imaxX = (int)(fmax(v1.x, fmax(v2.x, v3.x)) + 1.0f); // 1.0 is correct, don't try 0.5f
+
+  pTri->bb_iminY = (int)(fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f); // 1.0 is correct, don't try 0.5f
+  pTri->bb_imaxY = (int)(fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f); // 1.0 is correct, don't try 0.5f
+
+  const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
+
+  if (triangleIsTextured)
+  {
+    const SWGL_TextureStorage& tex = a_pContext->m_textures[pBatch->state.slot_GL_TEXTURE_2D];
+
+    pTri->texS.pitch = tex.pitch;   // tex.w; // !!! this is for textures with billet
+    pTri->texS.w     = tex.w;       // tex.w; // !!! this is for textures with billet
+    pTri->texS.h     = tex.h;
+    pTri->texS.data  = tex.texdata; // &tex.data[0]; // !!! this is for textures with billet
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////// FUCKING FUCK! FUCK LEGACY STATES! FUCK OPENGL!
+    if (tex.modulateMode == GL_REPLACE) // don't apply vertex color, just take color from texture
+    {
+      if (tex.format == GL_RGBA)
+      {
+        pTri->c1 = float4(1, 1, 1, 1);
+        pTri->c2 = float4(1, 1, 1, 1);
+        pTri->c3 = float4(1, 1, 1, 1);
+      }
+      else if (tex.format == GL_ALPHA)
+      {
+        pTri->c1.w = 1.0f;
+        pTri->c2.w = 1.0f;
+        pTri->c3.w = 1.0f;
+      }
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////// FUCKING FUCK! FUCK LEGACY STATES! FUCK OPENGL!
+
+  }
+
+#ifdef PERSP_CORRECT
+
+  if (pBatch->state.depthTestEnabled)
+  {
+    pTri->c1 *= v1.z; // div by z, not mult!
+    pTri->c2 *= v2.z; // div by z, not mult!
+    pTri->c3 *= v3.z; // div by z, not mult!
+
+    pTri->t1 *= v1.z; // div by z, not mult!
+    pTri->t2 *= v2.z; // div by z, not mult!
+    pTri->t3 *= v3.z; // div by z, not mult!
+  }
+
+#endif
+
+}
 
 static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext != nullptr)
 {

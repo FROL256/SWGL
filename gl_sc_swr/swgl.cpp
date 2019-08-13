@@ -96,7 +96,7 @@ void SWGL_Context::InitCommon()
   m_textures.resize(1024); // max 1024 tex
 
   m_useTiledFB  = false;
-  m_useTriQueue = true;
+  m_useTriQueue = false;
 
   if(m_useTiledFB)
     swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
@@ -531,6 +531,9 @@ void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch) // pre (a
   Timer timer(true);
 #endif
 
+  if(pBatch->vertPosT.size() < pBatch->vertPos.size())
+    pBatch->vertPosT.resize(pBatch->vertPos.size());
+
   const float viewportf[4] = { (float)pBatch->state.viewport[0], 
                                (float)pBatch->state.viewport[1], 
                                (float)pBatch->state.viewport[2], 
@@ -538,7 +541,7 @@ void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch) // pre (a
 
   pBatch->state.worldViewProjMatrix = mul(pBatch->state.projMatrix, pBatch->state.worldViewMatrix);
 
-  HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPos.data(), int(pBatch->vertPos.size()),
+  HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPosT.data(), int(pBatch->vertPos.size()),
                         viewportf, pBatch->state.worldViewProjMatrix.L());
 
 #ifdef MEASURE_STATS
@@ -637,11 +640,11 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Triangle localTri;
-    localTri.psoId      = psoId;
-    //localTri.curr_sval  = pBatch->state.stencilValue;
-    //localTri.curr_smask = pBatch->state.stencilMask;
-    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3, &localTri);
-    clampTriBBox(&localTri, frameBuff);                        // need this to prevent out of border
+    localTri.psoId = psoId;
+    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0,
+                      &localTri);
+
+    clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -690,21 +693,17 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
   Timer timer(true);
 #endif
 
-  float timeAccumTriSetUp  = 0.0f;
-  float timeAccumTriRaster = 0.0f;
-
   const int triNum = int(indices.size() / 3);
 
-  //#pragma omp parallel for if(triNum > 16)
   for (int triId = 0; triId < triNum; triId++)
   {
-    int   i1 = indices[triId * 3 + 0];
-    int   i2 = indices[triId * 3 + 1];
-    int   i3 = indices[triId * 3 + 2];
+    int i1 = indices[triId * 3 + 0];
+    int i2 = indices[triId * 3 + 1];
+    int i3 = indices[triId * 3 + 2];
 
-    const float4 v1 = pBatch->vertPos[i1];
-    const float4 v2 = pBatch->vertPos[i2];
-    const float4 v3 = pBatch->vertPos[i3];
+    const float4 v1 = pBatch->vertPosT[i1];
+    const float4 v2 = pBatch->vertPosT[i2];
+    const float4 v3 = pBatch->vertPosT[i3];
 
     const float4 u = v2 - v1;
     const float4 v = v3 - v1;
@@ -724,16 +723,14 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     else if (nz < 0.0f)
       std::swap(i2, i3);
 
+    if(v1.w <= 0 || v2.w <= 0 || v3.w <= 0) // face clipping ...
+      continue;
+
     ////////////////////////////////////////////////////////////////////
     ////
     Triangle localTri;
-    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3,
-                          &localTri);
-    
-    const auto stateId = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
-    localTri.ropId     = stateId;
-    ////
-    ////////////////////////////////////////////////////////////////////
+    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0,
+                      &localTri);
     
     clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
     
@@ -774,17 +771,14 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 
   //// process triangles and append them to triangle queue
   //
-  float timeAccumTriSetUp  = 0.0f;
-  float timeAccumTriRaster = 0.0f;
-
   const int triNum = int(indices.size() / 3);
 
   #pragma omp parallel for if(triNum > 1000) num_threads(2)
   for (int triId = 0; triId < triNum; triId++)
   {
-    int   i1 = indices[triId * 3 + 0];
-    int   i2 = indices[triId * 3 + 1];
-    int   i3 = indices[triId * 3 + 2];
+    int i1 = indices[triId * 3 + 0];
+    int i2 = indices[triId * 3 + 1];
+    int i3 = indices[triId * 3 + 2];
 
     const float4 v1 = pBatch->vertPos[i1];
     const float4 v2 = pBatch->vertPos[i2];
@@ -813,12 +807,10 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
       continue;
 
     Triangle localTri;
-    HWImpl::TriangleSetUp(a_pContext, pBatch, i1, i2, i3,
-                          &localTri);
+    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, frameBufferId,
+                      &localTri);
 
-    localTri.ropId     = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
-    localTri.bopId     = BlendOp_None;
-    localTri.fbId      = frameBufferId;
+    clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border
 
     a_pContext->m_tqueue.enqueue(localTri);
   }
@@ -922,22 +914,14 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    const auto& pBatch = &dummy;
+
     Triangle localTri;
-    HWImpl::TriangleSetUp(a_pContext, &dummy, i1, i2, i3,
-                          &localTri);
+    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, frameBufferId,
+                      &localTri);
 
-    localTri.ropId     = swglStateIdFromPSO(&a_input.batchState, a_pContext, HWImpl::TriVertsAreOfSameColor(localTri));
-    localTri.bopId     = BlendOp_None;
-    localTri.fbId      = frameBufferId;
+    clampTriBBox(&localTri, fb);  // need this to prevent out of border
 
-    //if(a_pContext->m_tqueue.size_approx() >= 50) // if queue grows, draw triangle now instead of pushing it to queue //#NOTE: does not helps!
-    //{
-    //  auto& fb = a_pContext->batchFrameBuffers[localTri.fbId];
-    //  clampTriBBox(&localTri, fb);
-    //  HWImpl::RasterizeTriangle(localTri, 0, 0,
-    //                            &fb);
-    //}
-    //else
     a_pContext->m_tqueue.enqueue(localTri);
   }
 
