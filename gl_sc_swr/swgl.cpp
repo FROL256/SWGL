@@ -731,9 +731,9 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     {
       // (1) fetch non transformed vertices
       //
-      localTri.v1 = pBatch->vertPos[i1];
-      localTri.v2 = pBatch->vertPos[i2];
-      localTri.v3 = pBatch->vertPos[i3];
+      localTri.v1 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i1]);
+      localTri.v2 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i2]);
+      localTri.v3 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i3]);
 
       // (2) clip triangle
       //
@@ -749,14 +749,13 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
       for(int i=0;i<gotTriangles;i++)
       {
-        float* vpos = (float*)&clipTris[i].v1; // #NOTE: this code assume that v1,v2 and v3 lie in memory sequentially.
-
+        float* vpos = (float*)&clipTris[i].v1;
         {
-          assert((&clipTris[i].v1)+1 == (&clipTris[i].v2));
-          assert((&clipTris[i].v2)+1 == (&clipTris[i].v3));
+          assert((&clipTris[i].v1)+1 == (&clipTris[i].v2)); // #NOTE: this code assume that v1,v2 and v3 lie in memory sequentially.
+          assert((&clipTris[i].v2)+1 == (&clipTris[i].v3)); //
         }
 
-        HWImpl::VertexShader(vpos, vpos, 3, viewportf, pBatch->state.worldViewProjMatrix.L());
+        HWImpl::VertexShader(vpos, vpos, 3, viewportf, pBatch->state.projMatrix.L());
 
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
