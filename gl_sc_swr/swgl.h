@@ -415,10 +415,9 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
 void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 
 
-template<typename InitTriangleType>
-inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatch, int i1, int i2, int i3,
-                              int frameBufferId,
-                              InitTriangleType *pTri)
+template<typename SetupTriangleType>
+inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatch, int i1, int i2, int i3, int frameBufferId,
+                              SetupTriangleType *pTri)
 {
   pTri->v1 = pBatch->vertPosT[i1];
   pTri->v2 = pBatch->vertPosT[i2];
@@ -497,6 +496,15 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 #endif
 
 }
+
+template<typename ClipTriangleType>
+static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangleType outTris[2])
+{
+  outTris[0] = a_inTri;
+  outTris[1] = a_inTri;
+  return 2;
+}
+
 
 static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext != nullptr)
 {

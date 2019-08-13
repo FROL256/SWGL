@@ -723,19 +723,56 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     else if (nz < 0.0f)
       std::swap(i2, i3);
 
-    if(v1.w <= 0 || v2.w <= 0 || v3.w <= 0) // face clipping ...
-      continue;
-
-    ////////////////////////////////////////////////////////////////////
-    ////
     Triangle localTri;
     swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0,
                       &localTri);
-    
-    clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
-    
-    HWImpl::RasterizeTriangle(localTri, 0, 0,
-                              &frameBuff);
+
+    if(v1.w <= 0 || v2.w <= 0 || v3.w <= 0) // face clipping ...
+    {
+      // (1) fetch non transformed vertices
+      //
+      localTri.v1 = pBatch->vertPos[i1];
+      localTri.v2 = pBatch->vertPos[i2];
+      localTri.v3 = pBatch->vertPos[i3];
+
+      // (2) clip triangle
+      //
+      Triangle clipTris[2];
+      int gotTriangles = swglClipTriangle(localTri, clipTris);
+
+      // (3) transform vertices for each triangle separately and draw it
+      //
+      const float viewportf[4] = { (float)pBatch->state.viewport[0],
+                                   (float)pBatch->state.viewport[1],
+                                   (float)pBatch->state.viewport[2],
+                                   (float)pBatch->state.viewport[3] };
+
+      for(int i=0;i<gotTriangles;i++)
+      {
+        float* vpos = (float*)&clipTris[i].v1; // #NOTE: this code assume that v1,v2 and v3 lie in memory sequentially.
+
+        {
+          assert((&clipTris[i].v1)+1 == (&clipTris[i].v2));
+          assert((&clipTris[i].v2)+1 == (&clipTris[i].v3));
+        }
+
+        HWImpl::VertexShader(vpos, vpos, 3, viewportf, pBatch->state.worldViewProjMatrix.L());
+
+        clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border, can be done in separate thread
+
+        HWImpl::RasterizeTriangle(clipTris[i], 0, 0,
+                                  &frameBuff);
+      }
+
+    }
+    else
+    {
+      clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
+
+      HWImpl::RasterizeTriangle(localTri, 0, 0,
+                                &frameBuff);
+    }
+
   }
 
 #ifdef MEASURE_STATS
