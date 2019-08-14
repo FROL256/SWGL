@@ -576,6 +576,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
     outTris[0].v3 = to_float4(verts[2], 1.0f);
     outTris[0].c3 = colors[2];
     outTris[0].t3 = texcrs[2];
+
     return 1;
   }
   else if (B.z <= 0 && C.z <= 0)
@@ -591,6 +592,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
     outTris[0].v3 = to_float4(split[1].pos, 1.0f);
     outTris[0].c3 = split[1].clr;
     outTris[0].t3 = split[1].tex;
+
     return 1;
   }
   else if (C.z <= 0 && A.z <= 0)
@@ -611,15 +613,87 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
   }
   else if (A.z <= 0) // swap ?
   {
+    outTris[0].v1 = to_float4(split[0].pos, 1.0f);
+    outTris[0].c1 = split[0].clr;
+    outTris[0].t1 = split[0].tex;
 
+    outTris[0].v2 = to_float4(verts[1], 1.0f);
+    outTris[0].c2 = colors[1];
+    outTris[0].t2 = texcrs[1];
+
+    outTris[0].v3 = to_float4(verts[2], 1.0f);
+    outTris[0].c3 = colors[2];
+    outTris[0].t3 = texcrs[2];
+
+    outTris[1].v1 = to_float4(split[0].pos, 1.0f);
+    outTris[1].c1 = split[0].clr;
+    outTris[1].t1 = split[0].tex;
+
+    outTris[1].v2 = to_float4(verts[2], 1.0f);
+    outTris[1].c2 = colors[2];
+    outTris[1].t2 = texcrs[2];
+
+    outTris[1].v3 = to_float4(split[1].pos, 1.0f);
+    outTris[1].c3 = split[1].clr;
+    outTris[1].t3 = split[1].tex;
+
+    return 2;
   }
   else if (B.z <= 0) // swap ?
   {
+    outTris[0].v1 = to_float4(verts[0], 1.0f);
+    outTris[0].c1 = colors[0];
+    outTris[0].t1 = texcrs[0];
 
+    outTris[0].v2 = to_float4(split[1].pos, 1.0f);
+    outTris[0].c2 = split[1].clr;
+    outTris[0].t2 = split[1].tex;
+
+    outTris[0].v3 = to_float4(verts[2], 1.0f);
+    outTris[0].c3 = colors[2];
+    outTris[0].t3 = texcrs[2];
+
+    outTris[1].v1 = to_float4(verts[0], 1.0f);
+    outTris[1].c1 = colors[0];
+    outTris[1].t1 = texcrs[0];
+
+    outTris[1].v2 = to_float4(split[0].pos, 1.0f);
+    outTris[1].c2 = split[0].clr;
+    outTris[1].t2 = split[0].tex;
+
+    outTris[1].v3 = to_float4(split[1].pos, 1.0f);
+    outTris[1].c3 = split[1].clr;
+    outTris[1].t3 = split[1].tex;
+
+    return 2;
   }
   else if (C.z <= 0) // swap ?
   {
+    outTris[0].v1 = to_float4(verts[0], 1.0f);
+    outTris[0].c1 = colors[0];
+    outTris[0].t1 = texcrs[0];
 
+    outTris[0].v2 = to_float4(verts[1], 1.0f);
+    outTris[0].c2 = colors[1];
+    outTris[0].t2 = texcrs[1];
+
+    outTris[0].v3 = to_float4(split[0].pos, 1.0f);
+    outTris[0].c3 = split[0].clr;
+    outTris[0].t3 = split[0].tex;
+
+    outTris[1].v1 = to_float4(verts[1], 1.0f);
+    outTris[1].c1 = colors[1];
+    outTris[1].t1 = texcrs[1];
+
+    outTris[1].v2 = to_float4(split[1].pos, 1.0f);
+    outTris[1].c2 = split[1].clr;
+    outTris[1].t2 = split[1].tex;
+
+    outTris[1].v2 = to_float4(split[0].pos, 1.0f);
+    outTris[1].c3 = split[0].clr;
+    outTris[1].t3 = split[0].tex;
+
+    return 2;
   }
 
   return 0;

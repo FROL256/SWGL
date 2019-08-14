@@ -758,7 +758,19 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
         HWImpl::VertexShader(vpos, vpos, 3, viewportf, pBatch->state.projMatrix.L());
 
-        // (!) perform perspective correction mult!
+        // perform perspective correction div
+        #ifdef PERSP_CORRECT
+        if(pBatch->state.depthTestEnabled) // 3D mode
+        {
+          clipTris[i].c1 *= clipTris[i].v1.z; // div by z, not mult!
+          clipTris[i].c2 *= clipTris[i].v2.z; // div by z, not mult!
+          clipTris[i].c3 *= clipTris[i].v3.z; // div by z, not mult!
+
+          clipTris[i].t1 *= clipTris[i].v1.z; // div by z, not mult!
+          clipTris[i].t2 *= clipTris[i].v2.z; // div by z, not mult!
+          clipTris[i].t3 *= clipTris[i].v3.z; // div by z, not mult!
+        }
+        #endif
 
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
