@@ -416,7 +416,7 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 
 
 template<typename SetupTriangleType>
-inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatch, int i1, int i2, int i3, int frameBufferId,
+inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatch, int i1, int i2, int i3, int frameBufferId, const bool a_perspCorrect,
                               SetupTriangleType *pTri)
 {
   pTri->v1 = pBatch->vertPosT[i1];
@@ -482,7 +482,7 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 
 #ifdef PERSP_CORRECT
 
-  if (pBatch->state.depthTestEnabled)
+  if (a_perspCorrect)
   {
     pTri->c1 *= v1.z; // div by z, not mult!
     pTri->c2 *= v2.z; // div by z, not mult!
@@ -500,9 +500,107 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 template<typename ClipTriangleType>
 static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangleType outTris[2])
 {
-  outTris[0] = a_inTri;
-  outTris[1] = a_inTri;
-  return 2;
+  float3 verts[3]  = {to_float3(a_inTri.v1), to_float3(a_inTri.v2), to_float3(a_inTri.v3)};
+  float4 colors[3] = {a_inTri.c1, a_inTri.c2, a_inTri.c3};
+  float2 texcrs[3] = {a_inTri.t1, a_inTri.t2, a_inTri.t3};
+
+  // note that we have preserved order
+  //
+  float3 edgesP[3][2] = { {verts[0], verts[1]},
+                          {verts[2], verts[0]},
+                          {verts[1], verts[2]} };
+
+  float4 edgesC[3][2] = {  {colors[0], colors[1]},
+                           {colors[2], colors[0]},
+                           {colors[1], colors[2]} };
+
+  float2 edgesT[3][2] = {  {texcrs[0], texcrs[1]},
+                           {texcrs[2], texcrs[0]},
+                           {texcrs[1], texcrs[2]} };
+
+
+  struct LocalVertex
+  {
+    float3 pos;
+    float4 clr;
+    float2 tex;
+  };
+
+  LocalVertex split[3];
+
+  constexpr float splitPos = 0.0f;
+
+  int top=0;
+  for (int i=0;i<3;i++)
+  {
+    float v0p = edgesP[i][0].z;
+    float v1p = edgesP[i][1].z;
+
+    // Edge intersects the plane => insert intersection to both boxes.
+    //
+    if ((v0p < splitPos && v1p > splitPos) || (v0p > splitPos && v1p < splitPos))
+    {
+      const float t   = ::clamp((splitPos - v0p) / (v1p - v0p), 0.0f, 1.0f);
+      float3 splitPos = lerp(edgesP[i][0], edgesP[i][1], t);
+      float4 splitCol = lerp(edgesC[i][0], edgesC[i][1], t);
+      float2 splitTex = lerp(edgesT[i][0], edgesT[i][1], t);
+
+      splitPos.z = 1e-5f;
+
+      split[top].pos = splitPos;
+      split[top].clr = splitCol;
+      split[top].tex = splitTex;
+      top++;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const float3& A = verts[0];
+  const float3& B = verts[1];
+  const float3& C = verts[2];
+
+  // we should preserve input order of vertices. So, sorting them is not allowed.
+  //
+  if(A.z <= 0 && B.z <= 0)
+  {
+    outTris[0].v1 = to_float4(split[0].pos, 1.0f);
+    outTris[0].c1 = split[0].clr;
+    outTris[0].t1 = split[0].tex;
+
+    outTris[0].v2 = to_float4(split[1].pos, 1.0f);
+    outTris[0].c2 = split[1].clr;
+    outTris[0].t2 = split[1].tex;
+
+    outTris[0].v3 = to_float4(verts[2], 1.0f);
+    outTris[0].c3 = colors[2];
+    outTris[0].t3 = texcrs[2];
+    return 1;
+  }
+  else if (B.z <= 0 && C.z <= 0)
+  {
+    
+    return 1;
+  }
+  else if (C.z <= 0 && A.z <= 0)
+  {
+
+  }
+  else if (A.z <= 0) // swap ?
+  {
+
+  }
+  else if (B.z <= 0) // swap ?
+  {
+
+  }
+  else if (C.z <= 0) // swap ?
+  {
+
+  }
+
+  return 0;
 }
 
 

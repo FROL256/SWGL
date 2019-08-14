@@ -641,7 +641,7 @@ void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_p
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Triangle localTri;
     localTri.psoId = psoId;
-    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0,
+    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0, pBatch->state.depthTestEnabled,
                       &localTri);
 
     clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border
@@ -723,12 +723,13 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     else if (nz < 0.0f)
       std::swap(i2, i3);
 
-    Triangle localTri;
-    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0,
-                      &localTri);
 
     if(v1.w <= 0 || v2.w <= 0 || v3.w <= 0) // face clipping ...
     {
+      Triangle localTri;
+      swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0, false,
+                        &localTri);
+
       // (1) fetch non transformed vertices
       //
       localTri.v1 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i1]);
@@ -757,6 +758,8 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
         HWImpl::VertexShader(vpos, vpos, 3, viewportf, pBatch->state.projMatrix.L());
 
+        // (!) perform perspective correction mult!
+
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
         HWImpl::RasterizeTriangle(clipTris[i], 0, 0,
@@ -766,6 +769,10 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     }
     else
     {
+      Triangle localTri;
+      swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0, pBatch->state.depthTestEnabled,
+                        &localTri);
+
       clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
       HWImpl::RasterizeTriangle(localTri, 0, 0,
@@ -843,7 +850,7 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
       continue;
 
     Triangle localTri;
-    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, frameBufferId,
+    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, frameBufferId, pBatch->state.depthTestEnabled,
                       &localTri);
 
     clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border
@@ -953,7 +960,7 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     const auto& pBatch = &dummy;
 
     Triangle localTri;
-    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, frameBufferId,
+    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, frameBufferId, pBatch->state.depthTestEnabled,
                       &localTri);
 
     clampTriBBox(&localTri, fb);  // need this to prevent out of border
