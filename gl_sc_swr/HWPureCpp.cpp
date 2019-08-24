@@ -93,12 +93,12 @@ void HWImplementationPureCpp::VertexShader(const float* v_in4f, float* v_out4f, 
   const float4* inVert  = (const float4*)v_in4f;
   float4* outVert       = (float4*)v_out4f;
 
-  for (int i = 0; i < a_numVert; i++)
+  for (int i = 0; i < a_numVert; i++) // this implementations became broken if posCamSpace.z > -1.0f ...
   {
     const float4 clipSpace = mul(worldViewProjMatrix, inVert[i]);
     if(clipSpace.w > 0.0f)
     {
-      const float invW          = 1.0f/clipSpace.w;
+      const float invW          = clipSpace.w > 1.0f ? 1.0f/clipSpace.w : 1.0f;
       const float4 vClipSpace   = float4(clipSpace.x * invW, clipSpace.y * invW, invW, 1.0f);
       const float4 vScreenSpace = swglClipSpaceToScreenSpaceTransform(vClipSpace, viewportf);
       outVert[i]                = vScreenSpace;
