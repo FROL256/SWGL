@@ -689,7 +689,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
     outTris[1].c2 = split[1].clr;
     outTris[1].t2 = split[1].tex;
 
-    outTris[1].v2 = to_float4(split[0].pos, 1.0f);
+    outTris[1].v3 = to_float4(split[0].pos, 1.0f);
     outTris[1].c3 = split[0].clr;
     outTris[1].t3 = split[0].tex;
 
