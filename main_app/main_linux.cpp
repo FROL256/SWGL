@@ -127,7 +127,8 @@ void ExposeFunc()
     //demo04_pyramid_and_cube_3d(wa.width, wa.height, 20, 30);
     //test11_alpha_tex_and_transp(); // 2D Blending test ...
 
-    test25_clip_triangles(wa.width, wa.height, 0.0f);
+    test25_clip_triangles(wa.width, wa.height, angle1);
+    //test25_clip_triangles(wa.width, wa.height, 0.0f);
 
     angle1 += 25.0f/(FPS+1.0f);
     angle2 += 50.0f/(FPS+1.0f);

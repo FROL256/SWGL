@@ -98,7 +98,7 @@ void HWImplementationPureCpp::VertexShader(const float* v_in4f, float* v_out4f, 
     const float4 clipSpace = mul(worldViewProjMatrix, inVert[i]);
     if(clipSpace.w > 0.0f)
     {
-      const float invW          = clipSpace.w > 1.0f ? 1.0f/clipSpace.w : 1.0f;
+      const float invW          = 1.0f/fmax(clipSpace.w, 1.0f);
       const float4 vClipSpace   = float4(clipSpace.x * invW, clipSpace.y * invW, invW, 1.0f);
       const float4 vScreenSpace = swglClipSpaceToScreenSpaceTransform(vClipSpace, viewportf);
       outVert[i]                = vScreenSpace;
