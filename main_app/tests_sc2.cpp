@@ -1787,12 +1787,14 @@ void test25_clip_triangles(int width, int height, float a_rot)
   glDisable(GL_TEXTURE_2D);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
 
-  glTranslatef(0.0f, -0.25f, 0.0f);
+  //glTranslatef(0.0f, -0.25f, 0.0f);
   glRotatef(a_rot, 0,1,0);
 
-  const float nearCoord = -20.0f;
+  //const float nearCoord = -10.0f;   // this is visiable due to in OpenGL Z axis direction
   //const float farCoord  = -1.0f;
-  const float farCoord  = +1.0f;
+
+  const float nearCoord = -10.0f; // this is visiable due to in OpenGL Z axis direction
+  const float farCoord  = +10.0f;
 
   glBegin(GL_TRIANGLES);
   glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(-0.5f - 0.5f, -0.5f, farCoord);
