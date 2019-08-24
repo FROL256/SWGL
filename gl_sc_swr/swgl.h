@@ -497,6 +497,8 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 
 }
 
+constexpr float NEAR_CLIP_PLANE = -1.0e-5f;// -1.0f; // OpenGL Z axis looks to (0,0,-1)
+
 template<typename ClipTriangleType>
 static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangleType outTris[2])
 {
@@ -528,7 +530,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
   LocalVertex split[3];
 
-  constexpr float splitPos = -1e-5f; // OpenGL Z axis looks to (0,0,-1)
+  constexpr float splitPos = NEAR_CLIP_PLANE; 
 
   int top=0;
   for (int i=0;i<3;i++)
@@ -561,7 +563,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
   // we should preserve input order of vertices. So, sorting them is not allowed.
   //
-  if(A.z >= 0 && B.z >= 0) // OpenGL Z axis looks to (0,0,-1)
+  if(A.z >= -NEAR_CLIP_PLANE && B.z >= -NEAR_CLIP_PLANE) // OpenGL Z axis looks to (0,0,-1)
   {
     outTris[0].v1 = to_float4(split[0].pos, 1.0f);
     outTris[0].c1 = split[0].clr;
@@ -577,7 +579,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 1;
   }
-  else if (B.z >= 0 && C.z >= 0)
+  else if (B.z >= -NEAR_CLIP_PLANE && C.z >= -NEAR_CLIP_PLANE)
   {
     outTris[0].v1 = to_float4(verts[0], 1.0f);
     outTris[0].c1 = colors[0];
@@ -593,7 +595,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 1;
   }
-  else if (C.z >= 0 && A.z >= 0)
+  else if (C.z >= -NEAR_CLIP_PLANE && A.z >= -NEAR_CLIP_PLANE)
   {
     outTris[0].v1 = to_float4(split[0].pos, 1.0f);
     outTris[0].c1 = split[0].clr;
@@ -609,7 +611,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 1;
   }
-  else if (A.z >= 0) // swap ?
+  else if (A.z >= -NEAR_CLIP_PLANE) // swap ?
   {
     outTris[0].v1 = to_float4(split[0].pos, 1.0f);
     outTris[0].c1 = split[0].clr;
@@ -637,7 +639,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 2;
   }
-  else if (B.z >= 0) // swap ?
+  else if (B.z >= -NEAR_CLIP_PLANE) // swap ?
   {
     outTris[0].v1 = to_float4(verts[0], 1.0f);
     outTris[0].c1 = colors[0];
@@ -665,7 +667,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 2;
   }
-  else if (C.z >= 0) // swap ?
+  else if (C.z >= -NEAR_CLIP_PLANE) // swap ?
   {
     outTris[0].v1 = to_float4(verts[0], 1.0f);
     outTris[0].c1 = colors[0];

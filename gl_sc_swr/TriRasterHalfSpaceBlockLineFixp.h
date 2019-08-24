@@ -373,7 +373,11 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
   const int pitch     = frameBuf->pitch;
 
   // Loop through blocks
+  #ifdef WIN32
+  #pragma omp parallel for num_threads(2)
+  #else
   #pragma omp parallel for collapse(2) num_threads(2)
+  #endif
   for (int y = miny; y < maxy; y += blockSize)
   {
     for (int x = minx; x < maxx; x += blockSize)

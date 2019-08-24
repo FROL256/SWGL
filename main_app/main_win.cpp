@@ -102,7 +102,7 @@ int DrawGLScene(GLvoid)
   //test11_alpha_tex_and_transp();
   //test12_rect_tex();
   //demo14_transparent_cube(g_width, g_height, rtri, rquad);
-  demo19_cubes(g_width, g_height, rtri, rquad);
+  //demo19_cubes(g_width, g_height, rtri, rquad);
   //demo24_draw_elements_terrain(g_width, g_height, rtri, rquad);
 
 
@@ -110,6 +110,7 @@ int DrawGLScene(GLvoid)
   //demo26_teapots9(g_width, g_height, rtri, rquad);
 
   //test03_several_triangles();
+  test25_clip_triangles(g_width, g_height, rtri);
 
   //test17_line_strip();
   //test15_simple_stencil();

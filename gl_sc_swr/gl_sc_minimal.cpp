@@ -631,8 +631,8 @@ struct TileRef
 };
 
 std::vector<TileRef> g_tileRefs;
-std::thread          g_threads[NUM_THREADS_AUX];
-int                  g_active [NUM_THREADS_AUX]; //#TODO: use std::atomics
+std::thread          g_threads[NUM_THREADS];
+int                  g_active [NUM_THREADS]; //#TODO: use std::atomics
 
 bool          g_initialized_rast = false;
 bool          g_kill_all         = false;
