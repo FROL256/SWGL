@@ -738,7 +738,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
       // (2) clip triangle
       //
-      Triangle clipTris[2];
+      Triangle clipTris[2] = {localTri, localTri};
       int gotTriangles = swglClipTriangle(localTri, clipTris);
 
       // (3) transform vertices for each triangle separately and draw it
@@ -773,11 +773,6 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
         #endif
 
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border, can be done in separate thread
-
-        clipTris[i].fbId  = localTri.fbId;
-        clipTris[i].bopId = localTri.bopId;
-        clipTris[i].ropId = localTri.ropId;
-        clipTris[i].psoId = localTri.psoId;
 
         HWImpl::RasterizeTriangle(clipTris[i], 0, 0,
                                   &frameBuff);

@@ -528,7 +528,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
   LocalVertex split[3];
 
-  constexpr float splitPos = 0.0f;
+  constexpr float splitPos = -1e-5f; //0.0f;
 
   int top=0;
   for (int i=0;i<3;i++)
@@ -545,7 +545,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
       float4 splitCol = lerp(edgesC[i][0], edgesC[i][1], t);
       float2 splitTex = lerp(edgesT[i][0], edgesT[i][1], t);
 
-      splitPos.z = -1e-5f; // OpenGL Z axis looks to (0,0,-1)
+      //splitPos.z = -1e-5f; // OpenGL Z axis looks to (0,0,-1)
 
       split[top].pos = splitPos;
       split[top].clr = splitCol;
