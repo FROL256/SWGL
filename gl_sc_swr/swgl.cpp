@@ -774,6 +774,11 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border, can be done in separate thread
 
+        clipTris[i].fbId  = localTri.fbId;
+        clipTris[i].bopId = localTri.bopId;
+        clipTris[i].ropId = localTri.ropId;
+        clipTris[i].psoId = localTri.psoId;
+
         HWImpl::RasterizeTriangle(clipTris[i], 0, 0,
                                   &frameBuff);
       }

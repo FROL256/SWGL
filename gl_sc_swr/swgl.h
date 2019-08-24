@@ -545,7 +545,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
       float4 splitCol = lerp(edgesC[i][0], edgesC[i][1], t);
       float2 splitTex = lerp(edgesT[i][0], edgesT[i][1], t);
 
-      splitPos.z = 1e-5f;
+      splitPos.z = -1e-5f; // OpenGL Z axis looks to (0,0,-1)
 
       split[top].pos = splitPos;
       split[top].clr = splitCol;
@@ -563,7 +563,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
   // we should preserve input order of vertices. So, sorting them is not allowed.
   //
-  if(A.z <= 0 && B.z <= 0)
+  if(A.z >= 0 && B.z >= 0) // OpenGL Z axis looks to (0,0,-1)
   {
     outTris[0].v1 = to_float4(split[0].pos, 1.0f);
     outTris[0].c1 = split[0].clr;
@@ -579,7 +579,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 1;
   }
-  else if (B.z <= 0 && C.z <= 0)
+  else if (B.z >= 0 && C.z >= 0)
   {
     outTris[0].v1 = to_float4(verts[0], 1.0f);
     outTris[0].c1 = colors[0];
@@ -595,7 +595,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 1;
   }
-  else if (C.z <= 0 && A.z <= 0)
+  else if (C.z >= 0 && A.z >= 0)
   {
     outTris[0].v1 = to_float4(split[0].pos, 1.0f);
     outTris[0].c1 = split[0].clr;
@@ -611,7 +611,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 1;
   }
-  else if (A.z <= 0) // swap ?
+  else if (A.z >= 0) // swap ?
   {
     outTris[0].v1 = to_float4(split[0].pos, 1.0f);
     outTris[0].c1 = split[0].clr;
@@ -639,7 +639,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 2;
   }
-  else if (B.z <= 0) // swap ?
+  else if (B.z >= 0) // swap ?
   {
     outTris[0].v1 = to_float4(verts[0], 1.0f);
     outTris[0].c1 = colors[0];
@@ -667,7 +667,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
     return 2;
   }
-  else if (C.z <= 0) // swap ?
+  else if (C.z >= 0) // swap ?
   {
     outTris[0].v1 = to_float4(verts[0], 1.0f);
     outTris[0].c1 = colors[0];
