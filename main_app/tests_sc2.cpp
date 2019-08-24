@@ -1791,7 +1791,8 @@ void test25_clip_triangles(int width, int height, float a_rot)
   glRotatef(a_rot, 0,1,0);
 
   //const float nearCoord = -10.0f;   // this is visiable due to in OpenGL Z axis direction
-  //const float farCoord  = -1.0f;
+  //////const float farCoord  = -1.0f;
+  //const float farCoord  = -0.01f;
 
   const float nearCoord = -10.0f; // this is visiable due to in OpenGL Z axis direction
   const float farCoord  = +10.0f;

@@ -528,7 +528,7 @@ static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangle
 
   LocalVertex split[3];
 
-  constexpr float splitPos = -1e-5f; //0.0f;
+  constexpr float splitPos = -1.0f; // -1e-5f; //0.0f;
 
   int top=0;
   for (int i=0;i<3;i++)
