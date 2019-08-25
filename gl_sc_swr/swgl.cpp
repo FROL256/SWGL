@@ -739,6 +739,11 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
       localTri.v2 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i2]);
       localTri.v3 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i3]);
 
+      if(triId == 1)
+      {
+        int a = 2;
+      }
+
       // (2) clip triangle
       //
       Triangle clipTris[2] = {localTri, localTri};
@@ -775,9 +780,10 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
         }
         #endif
 
+        calcTriBoundingBox(clipTris + i);
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border
-        clipTris[i].bb_imaxX = frameBuff.w-1; // unknown bug fix; for some reason we can't evaluate correct bb_imaxX for clipped triangles #TODO: try to fix that.
 
+        //if(triId == 1)
         HWImpl::RasterizeTriangle(clipTris[i], 0, 0,
                                   &frameBuff);
       }

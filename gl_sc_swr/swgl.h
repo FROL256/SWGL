@@ -416,6 +416,20 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 
 
 template<typename SetupTriangleType>
+inline void calcTriBoundingBox(SetupTriangleType *pTri)
+{
+  const auto& v1 = pTri->v1;
+  const auto& v2 = pTri->v2;
+  const auto& v3 = pTri->v3;
+
+  pTri->bb_iminX = (int)(fmin(v1.x, fmin(v2.x, v3.x)) - 1.0f); // 1.0 is correct, don't try 0.5f
+  pTri->bb_imaxX = (int)(fmax(v1.x, fmax(v2.x, v3.x)) + 1.0f); // 1.0 is correct, don't try 0.5f
+
+  pTri->bb_iminY = (int)(fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f); // 1.0 is correct, don't try 0.5f
+  pTri->bb_imaxY = (int)(fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f); // 1.0 is correct, don't try 0.5f
+}
+
+template<typename SetupTriangleType>
 inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatch, int i1, int i2, int i3, int frameBufferId, const bool a_perspCorrect,
                               SetupTriangleType *pTri)
 {
@@ -439,15 +453,7 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const float4& v1 = pTri->v1;
-  const float4& v2 = pTri->v2;
-  const float4& v3 = pTri->v3;
-
-  pTri->bb_iminX = (int)(fmin(v1.x, fmin(v2.x, v3.x)) - 1.0f); // 1.0 is correct, don't try 0.5f
-  pTri->bb_imaxX = (int)(fmax(v1.x, fmax(v2.x, v3.x)) + 1.0f); // 1.0 is correct, don't try 0.5f
-
-  pTri->bb_iminY = (int)(fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f); // 1.0 is correct, don't try 0.5f
-  pTri->bb_imaxY = (int)(fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f); // 1.0 is correct, don't try 0.5f
+  calcTriBoundingBox(pTri);
 
   const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 
@@ -484,13 +490,13 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 
   if (a_perspCorrect)
   {
-    pTri->c1 *= v1.z; // div by z, not mult!
-    pTri->c2 *= v2.z; // div by z, not mult!
-    pTri->c3 *= v3.z; // div by z, not mult!
+    pTri->c1 *= pTri->v1.z; // div by z, not mult!
+    pTri->c2 *= pTri->v2.z; // div by z, not mult!
+    pTri->c3 *= pTri->v3.z; // div by z, not mult!
 
-    pTri->t1 *= v1.z; // div by z, not mult!
-    pTri->t2 *= v2.z; // div by z, not mult!
-    pTri->t3 *= v3.z; // div by z, not mult!
+    pTri->t1 *= pTri->v1.z; // div by z, not mult!
+    pTri->t2 *= pTri->v2.z; // div by z, not mult!
+    pTri->t3 *= pTri->v3.z; // div by z, not mult!
   }
 
 #endif
