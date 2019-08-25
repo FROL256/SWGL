@@ -497,7 +497,8 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 
 }
 
-constexpr float NEAR_CLIP_PLANE = 1.0f; // OpenGL Z axis looks to (0,0,-1)
+constexpr float NEAR_CLIP_PLANE  = 1.0f;                    // OpenGL Z axis looks to (0,0,-1)
+constexpr float NEAR_CLIP_PLANE2 = NEAR_CLIP_PLANE*0.99995f; // the trick wich has unknown nature ...
 
 template<typename ClipTriangleType>
 static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangleType outTris[2])
