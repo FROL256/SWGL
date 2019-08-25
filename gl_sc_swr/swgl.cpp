@@ -747,7 +747,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
       // (2) clip triangle
       //
       Triangle clipTris[2] = {localTri, localTri};
-      int gotTriangles = swglClipTriangle(localTri, clipTris);
+      int gotTriangles = clipTriangle(localTri, clipTris);
 
       // (3) transform vertices for each triangle separately and draw it
       //

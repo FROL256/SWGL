@@ -507,7 +507,7 @@ constexpr float NEAR_CLIP_PLANE  = 0.9995f;                 // OpenGL Z axis loo
 constexpr float NEAR_CLIP_PLANE2 = NEAR_CLIP_PLANE*0.9995f; // the trick wich has unknown nature ...
 
 template<typename ClipTriangleType>
-static inline int swglClipTriangle(const ClipTriangleType& a_inTri, ClipTriangleType outTris[2])
+static inline int clipTriangle(const ClipTriangleType &a_inTri, ClipTriangleType *outTris)
 {
   float3 verts[3]  = {to_float3(a_inTri.v1), to_float3(a_inTri.v2), to_float3(a_inTri.v3)};
   float4 colors[3] = {a_inTri.c1, a_inTri.c2, a_inTri.c3};
