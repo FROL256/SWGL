@@ -1851,10 +1851,7 @@ void test26_clip_triangles2(int width, int height, float a_rot)
    //glDisable(GL_TEXTURE_2D);
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
-
-
    glTranslatef(0.0f, -0.5f, -3.0f);
-   //glTranslatef(0.0f, -0.5f, -5.0f);
 
    glRotatef(20.0f, 1.0f, 0.0f, 0.0f);
    glRotatef(a_rot, 0.0f, 1.0f, 0.0f);

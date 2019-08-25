@@ -1,10 +1,12 @@
 #pragma once
+
 #define NUM_THREADS     1
 #define NUM_THREADS_AUX (NUM_THREADS-1)
 
 #define NUM_THREADS_CLS 2
 
-//#define TEX_NEAREST
+#define NOWINDOW false
+
 #define FILL_COLOR_ONLY
 
 #define PERSP_CORRECT
@@ -20,7 +22,11 @@
 
 #define FB_BILLET_SIZE 8
 
-#define NOWINDOW false
+
+static constexpr int   SUBPIXELBITS  = 2;
+static constexpr int   SUBPIXELMULTI = (1 << SUBPIXELBITS);
+static constexpr float SUBPIXELMULTF = float(SUBPIXELMULTI);
+
 
 struct SWGL_Timings
 {

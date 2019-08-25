@@ -72,10 +72,6 @@ struct VROP_FIXP
       const vint w2 = (areaInv * LineOffs<vint, n>::w(CX2, FDY23)) >> 8;
       const vint w3 = (splat((unsigned int)255) - w1 - w2);
 
-      //const vint r = ( (tri.c1.x)*w1 + (tri.c2.x)*w2 + (tri.c3.x)*w3 ) >> 8;
-      //const vint g = ( (tri.c1.y)*w1 + (tri.c2.y)*w2 + (tri.c3.y)*w3 ) >> 8;
-      //const vint b = ( (tri.c1.z)*w1 + (tri.c2.z)*w2 + (tri.c3.z)*w3 ) >> 8;
-
       const vint r = ((255) * w1 + (0  ) * w2 + (0  ) * w3) >> 8;
       const vint g = ((0  ) * w1 + (255) * w2 + (0  ) * w3) >> 8;
       const vint b = ((0  ) * w1 + (0  ) * w2 + (255) * w3) >> 8;
@@ -87,9 +83,17 @@ struct VROP_FIXP
       store_u(pLineColor, res);
     }
 
-    static inline int Pixel(const TriangleT &tri, const int CX1, const int CX2, const float areaInv)
+    static inline unsigned int Pixel(const TriangleT &tri, const int CX1, const int CX2, const unsigned int areaInv)
     {
-      return 0xFFFFFFFF;
+      const unsigned int w1 = (areaInv * (CX1 >> 16)) >> 8;
+      const unsigned int w2 = (areaInv * (CX2 >> 16)) >> 8;
+      const unsigned int w3 = ((unsigned int)255 - w1 - w2);
+
+      const unsigned int r = ((255) * w1 + (0  ) * w2 + (0  ) * w3) >> 8;
+      const unsigned int g = ((0  ) * w1 + (255) * w2 + (0  ) * w3) >> 8;
+      const unsigned int b = ((0  ) * w1 + (0  ) * w2 + (255) * w3) >> 8;
+
+      return (r << 16) | (g << 8) | (b << 0);
     }
 
   };

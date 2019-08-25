@@ -377,25 +377,6 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
   return frameBuff;
 }
 
-
-static inline float4 swglVertexShaderTransform2D(Batch* pBatch, float4 a_pos) // pre (pBatch != nullptr)
-{
-  return mul(pBatch->state.worldViewMatrix, a_pos);
-}
-
-
-static inline float4 swglVertexShaderTransform(Batch* pBatch, float4 a_pos) // pre (pBatch != nullptr)
-{
-  //const float4 viewPos   = mul(pBatch->state.worldViewMatrix, a_pos);
-  //const float4 clipSpace = mul(pBatch->state.projMatrix, viewPos);
-
-  const float4 clipSpace   = mul(pBatch->state.worldViewProjMatrix, a_pos);
-
-  const float invW = (1.0f / fmax(clipSpace.w, 1e-20f));
-
-  return float4(clipSpace.x*invW, clipSpace.y*invW, invW, 1.0f);
-}
-
 static inline float4 swglClipSpaceToScreenSpaceTransform(float4 a_pos, const float4 viewportf) // pre (g_pContext != nullptr)
 {
   const float fw = viewportf.z;
