@@ -47,6 +47,7 @@ void test23_draw_elements();
 //void test24_draw_elements_terrain();
 
 void test25_clip_triangles(int width, int height, float a_rot);
+void test26_clip_triangles2(int width, int height, float a_rot);
 
 void test_box_tri_overlap();
 

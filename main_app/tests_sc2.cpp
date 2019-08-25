@@ -1809,3 +1809,73 @@ void test25_clip_triangles(int width, int height, float a_rot)
   glEnd();
 }
 
+void test26_clip_triangles2(int width, int height, float a_rot)
+{
+   static bool firstFrame = true;
+   static GLuint texture2 = (GLuint)(-1);
+
+   if (firstFrame)
+   {
+     int w, h;
+     std::vector<int> pixels = LoadBMP(L"data/board10.bmp", &w, &h);
+
+     glGenTextures(1, &texture2);					// Create The Texture
+
+     // Typical Texture Generation Using Data From The Bitmap
+     glBindTexture(GL_TEXTURE_2D, texture2);
+     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+     firstFrame = false;
+   }
+
+   glMatrixMode(GL_PROJECTION);			// Select The Projection Matrix
+   glLoadIdentity();									// Reset The Projection Matrix
+
+   // Calculate The Aspect Ratio Of The Window
+   gluPerspective2(45.0f, (GLfloat)width / (GLfloat)height, 0.01f, 1000.0f);
+
+   glMatrixMode(GL_MODELVIEW);			       // Select The Modelview Matrix
+   glLoadIdentity();									     // Reset The Modelview Matrix
+
+   glShadeModel(GL_SMOOTH);							 // Enable Smooth Shading
+   glClearColor(0.0f, 0.0f, 0.0f, 0.5f);	 // Black Background
+   glClearDepth(1.0f);									   // Depth Buffer Setup
+   glEnable(GL_DEPTH_TEST);							 // Enables Depth Testing
+   glDepthFunc(GL_LEQUAL);								 // The Type Of Depth Testing To Do
+   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Really Nice Perspective Calculations
+
+
+   glEnable(GL_TEXTURE_2D);
+   //glDisable(GL_TEXTURE_2D);
+
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
+
+
+   glTranslatef(0.0f, -0.5f, -3.0f);
+   //glTranslatef(0.0f, -0.5f, -5.0f);
+
+   glRotatef(20.0f, 1.0f, 0.0f, 0.0f);
+   glRotatef(a_rot, 0.0f, 1.0f, 0.0f);
+
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
+
+   // draw floor
+   glColor4f(0.75f, 0.75f, 0.75f, 0.0);
+   glBindTexture(GL_TEXTURE_2D, texture2);
+
+   glPushMatrix();
+     glTranslatef(0.0f, 3.0f, 0.0f);
+     glScalef(3.0f, 3.0f, 3.0f);
+
+     glBegin(GL_QUADS);
+     glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 1.0f);
+     glTexCoord2f(0.0f, 0.0f); glVertex3f(1.0f, -1.0f, 1.0f);
+     glTexCoord2f(0.0f, 1.0f); glVertex3f(1.0f, -1.0f, -1.0f);
+     glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+     glEnd();
+   glPopMatrix();
+
+}
