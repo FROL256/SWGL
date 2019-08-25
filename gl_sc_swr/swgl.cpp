@@ -724,7 +724,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
       std::swap(i2, i3);
 
 
-    if(v1.w <= 0.0f || v2.w <= 0.0f || v3.w <= 0.0f) // face clipping ...
+    if(v1.w <= NEAR_CLIP_PLANE || v2.w <= NEAR_CLIP_PLANE || v3.w <= NEAR_CLIP_PLANE) // face clipping ...
     {
       if(v1.w <= 0.0f && v2.w <= 0.0f && v3.w <= 0.0f)
         continue;
