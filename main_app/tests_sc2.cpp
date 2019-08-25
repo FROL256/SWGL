@@ -1864,8 +1864,8 @@ void test26_clip_triangles2(int width, int height, float a_rot)
    glBindTexture(GL_TEXTURE_2D, texture2);
 
    glPushMatrix();
-     glTranslatef(0.0f, 3.0f, 0.0f);
-     glScalef(3.0f, 3.0f, 3.0f);
+     glTranslatef(0.0f, 2.0f, 0.0f);
+     glScalef(10.0f, 1.0f, 10.0f);
 
      glBegin(GL_QUADS);
      glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 1.0f);
