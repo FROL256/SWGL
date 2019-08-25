@@ -416,7 +416,7 @@ void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuf
 
 
 template<typename SetupTriangleType>
-inline void calcTriBoundingBox(SetupTriangleType *pTri)
+inline void calcTriBBox(SetupTriangleType *pTri)
 {
   const auto& v1 = pTri->v1;
   const auto& v2 = pTri->v2;
@@ -453,7 +453,7 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  calcTriBoundingBox(pTri);
+  calcTriBBox(pTri);
 
   const bool triangleIsTextured = pBatch->state.texure2DEnabled && (pBatch->state.slot_GL_TEXTURE_2D < (GLuint)a_pContext->m_texTop);
 

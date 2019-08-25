@@ -780,7 +780,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
         }
         #endif
 
-        calcTriBoundingBox(clipTris + i);
+        calcTriBBox(clipTris + i);
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border
 
         //if(triId == 1)
