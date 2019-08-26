@@ -42,6 +42,8 @@ ALIGNED(16) struct HWImplementationPureCpp
     int bb_iminY;
     int bb_imaxY;
 
+    float      triSize; // it is important for fixpoint rasterizer to know triangle size.  VL triangles have to be clipped again.
+
     int        psoId;
     TexSampler texS;
     RasterOp   ropId;

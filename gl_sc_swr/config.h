@@ -22,12 +22,6 @@
 
 #define FB_BILLET_SIZE 8
 
-
-static constexpr int   SUBPIXELBITS  = 2;
-static constexpr int   SUBPIXELMULTI = (1 << SUBPIXELBITS);
-static constexpr float SUBPIXELMULTF = float(SUBPIXELMULTI);
-
-
 struct SWGL_Timings
 {
   SWGL_Timings() { clear(); }

@@ -403,11 +403,16 @@ inline void calcTriBBox(SetupTriangleType *pTri)
   const auto& v2 = pTri->v2;
   const auto& v3 = pTri->v3;
 
-  pTri->bb_iminX = (int)(fmin(v1.x, fmin(v2.x, v3.x)) - 1.0f); // 1.0 is correct, don't try 0.5f
-  pTri->bb_imaxX = (int)(fmax(v1.x, fmax(v2.x, v3.x)) + 1.0f); // 1.0 is correct, don't try 0.5f
+  const float minX = (fmin(v1.x, fmin(v2.x, v3.x)) - 1.0f); // 1.0 is correct, don't try 0.5f
+  const float maxX = (fmax(v1.x, fmax(v2.x, v3.x)) + 1.0f); // 1.0 is correct, don't try 0.5f
+  const float minY = (fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f);
+  const float maxY = (fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f);
 
-  pTri->bb_iminY = (int)(fmin(v1.y, fmin(v2.y, v3.y)) - 1.0f); // 1.0 is correct, don't try 0.5f
-  pTri->bb_imaxY = (int)(fmax(v1.y, fmax(v2.y, v3.y)) + 1.0f); // 1.0 is correct, don't try 0.5f
+  pTri->bb_iminX = (int)minX;
+  pTri->bb_imaxX = (int)maxX;
+  pTri->bb_iminY = (int)minY;
+  pTri->bb_imaxY = (int)maxY;
+  pTri->triSize  = fmax(maxX - minX, maxY - minY);
 }
 
 template<typename SetupTriangleType>

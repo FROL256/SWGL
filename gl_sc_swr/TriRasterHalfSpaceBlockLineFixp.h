@@ -22,6 +22,10 @@ void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, in
   constexpr int blockSize = ROP::n;
   typedef typename ROP::Triangle Triangle;
 
+  constexpr int   SUBPIXELBITS  = 4;
+  constexpr int   SUBPIXELMULTI = (1 << SUBPIXELBITS);
+  constexpr float SUBPIXELMULTF = float(SUBPIXELMULTI);
+
   // 28.4 fixed-point coordinates
   const int Y1 = iround(SUBPIXELMULTF * tri.v3.y) - 16*SUBPIXELMULTI;
   const int Y2 = iround(SUBPIXELMULTF * tri.v2.y) - 16*SUBPIXELMULTI;
@@ -174,6 +178,10 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
   constexpr int blockSize = ROP::n;
   typedef typename ROP::Triangle Triangle;
 
+  constexpr int   SUBPIXELBITS  = 4;
+  constexpr int   SUBPIXELMULTI = (1 << SUBPIXELBITS);
+  constexpr float SUBPIXELMULTF = float(SUBPIXELMULTI);
+
   // 28.4 fixed-point coordinates
   const int Y1 = iround(SUBPIXELMULTF * tri.v3.y) - SUBPIXELMULTI*tileMinY;
   const int Y2 = iround(SUBPIXELMULTF * tri.v2.y) - SUBPIXELMULTI*tileMinY;
@@ -319,6 +327,17 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
 
 }
 
+template<typename T>
+int EvalSubpixelBits(const T& tri) // #TODO: implement this carefully
+{
+  if (tri.triSize < 32768.0f)
+    return 3;
+  else if (tri.triSize < 65536.0f)
+    return 2;
+  else
+    return 0;
+}
+
 template<typename ROP>
 void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
                                           FrameBuffer *frameBuf)
@@ -328,6 +347,10 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
 
   // 28.4 or 30.2 or else fixed-point coordinates
   //
+  const int   SUBPIXELBITS  = EvalSubpixelBits(tri); // clipped (by a nearest clipping plane) triangles could be very big, so we have to estimate this or clip triangle also in 2D.
+  const int   SUBPIXELMULTI = (1 << SUBPIXELBITS);
+  const float SUBPIXELMULTF = float(SUBPIXELMULTI);
+
   const int Y1 = iround(tri.v3.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
   const int Y2 = iround(tri.v2.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
   const int Y3 = iround(tri.v1.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
@@ -493,8 +516,8 @@ void RasterizeTriHalfSpaceBlockLineFixp3D(const typename ROP::Triangle &tri, int
 
 
 template<typename ROP>
-void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
-                                                   FrameBuffer *frameBuf)
+void RasterizeTriHalfSpaceBlockLineFixp2D_FixpPixel(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
+                                                    FrameBuffer *frameBuf)
 {
   constexpr int blockSize = ROP::n;
   typedef typename ROP::Triangle Triangle;
