@@ -5,7 +5,7 @@ project(swgl)
 set(CMAKE_CXX_STANDARD 14)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon-vfpv4 -ffast-math") #  -mfpu=neon-vfpv4
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -ffast-math") #  -mfpu=neon-vfpv4
 
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
