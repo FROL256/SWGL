@@ -708,7 +708,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
     const float4 u = v2 - v1;
     const float4 v = v3 - v1;
-    const float nz = u.x*v.y - u.y*v.x;
+    const float nz = u.x*v.y - u.y*v.x; // todo: use extract functions for accesing members
 
     if (pBatch->state.cullFaceEnabled && pBatch->state.cullFaceMode != 0)
     {

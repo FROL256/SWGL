@@ -132,11 +132,9 @@ struct Batch
   std::vector<int>    indicesLines;
   std::vector<int>    indices;
 
-  std::vector<float4, aligned16<float4> > vertPos;
-  //std::vector<float4, aligned16<float4> > vertNorm;
-  std::vector<float4, aligned16<float4> > vertColor;
-  std::vector<float2, aligned16<float2> > vertTexCoord;
-
+  std::vector<float4, aligned<float4, 16> > vertPos;
+  std::vector<float4, aligned<float4, 16> > vertColor;
+  std::vector<float2, aligned<float4, 16> > vertTexCoord;
 
   Pipeline_State_Object state; // curr PSO. if changed, switch to next batch ...
 };
