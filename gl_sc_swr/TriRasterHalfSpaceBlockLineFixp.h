@@ -9,11 +9,11 @@ static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
 
-template<int value> static inline int div    (int a_arg) { return a_arg/value; }
-template<>          static inline int div<2> (int a_arg) { return a_arg >> 1; }
-template<>          static inline int div<4> (int a_arg) { return a_arg >> 2; }
-template<>          static inline int div<8> (int a_arg) { return a_arg >> 3; }
-template<>          static inline int div<16>(int a_arg) { return a_arg >> 4; }
+template<int value> inline int div    (int a_arg) { return a_arg/value; }
+template<>          inline int div<2> (int a_arg) { return a_arg >> 1; }
+template<>          inline int div<4> (int a_arg) { return a_arg >> 2; }
+template<>          inline int div<8> (int a_arg) { return a_arg >> 3; }
+template<>          inline int div<16>(int a_arg) { return a_arg >> 4; }
 
 template<typename ROP>
 void RasterizeTriHalfSpaceBlockFixp2D_Fill(const typename ROP::Triangle& tri, int tileMinX, int tileMinY,
@@ -202,10 +202,10 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
   const int FDY31 = DY31 << 4;
 
   // Bounding rectangle
-  const int minx = ( imax(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
-  const int miny = ( imax(tri.bb_iminY - tileMinY, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
-  const int maxx = ( imin(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
-  const int maxy = ( imin(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
+  const int minx = ( LiteMath::max(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
+  const int miny = ( LiteMath::max(tri.bb_iminY - tileMinY, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
+  const int maxx = ( LiteMath::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
+  const int maxy = ( LiteMath::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
 
   const int pitch  = frameBuf->pitch;
   int* colorBuffer = frameBuf->cbuffer + miny * pitch;

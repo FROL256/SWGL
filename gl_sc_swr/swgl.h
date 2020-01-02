@@ -11,6 +11,8 @@
 #include "SWGL_TiledFrameBuffer.h"
 
 #include "LiteMath.h"
+using namespace LiteMath;
+
 #include <cstdint>
 #include <vector>
 #include <memory>
@@ -219,7 +221,7 @@ struct SWGL_Input
 
 };
 
-struct ALIGNED(16) SWGL_TextureStorage
+struct CVEX_ALIGNED(16) SWGL_TextureStorage
 {
   SWGL_TextureStorage()
   {
@@ -379,7 +381,7 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
 
 static inline float4 swglVertexShaderTransform2D(Batch* pBatch, float4 a_pos) // pre (pBatch != nullptr)
 {
-  return mul(pBatch->state.worldViewMatrix, a_pos);
+  return pBatch->state.worldViewMatrix*a_pos;
 }
 
 
@@ -388,7 +390,7 @@ static inline float4 swglVertexShaderTransform(Batch* pBatch, float4 a_pos) // p
   //const float4 viewPos   = mul(pBatch->state.worldViewMatrix, a_pos);
   //const float4 clipSpace = mul(pBatch->state.projMatrix, viewPos);
 
-  const float4 clipSpace   = mul(pBatch->state.worldViewProjMatrix, a_pos);
+  const float4 clipSpace   = pBatch->state.worldViewProjMatrix*a_pos;
 
   const float invW = (1.0f / fmax(clipSpace.w, 1e-20f));
 

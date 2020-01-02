@@ -35,9 +35,6 @@ using cvex::to_int32;
 #ifndef WIN32
 using cvex::to_uint32;
 #endif
-using cvex::make_vint;
-using cvex::make_vuint;
-
 
 using cvex::load_u;
 using cvex::store_u;
@@ -45,7 +42,6 @@ using cvex::rcp_e;
 using cvex::blend;
 using cvex::test_bits_any;
 
-using cvex::vclamp;
 using cvex::store;
 using cvex::prefetch;
 

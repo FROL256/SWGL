@@ -112,7 +112,7 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
     const float vald   = 1.0f - a_pContext->input.clearDepth;
 
     cvex::vfloat4 depthVal4 = {vald, vald, vald, vald};
-    cvex::vint4   colorVal4 = cvex::make_vint(val, val, val, val);
+    cvex::vint4   colorVal4 = {val, val, val, val};
 
     cvex::vfloat4* depth = (cvex::vfloat4*)a_pContext->m_zbuffer;
     cvex::vint4*   color = (cvex::vint4*)a_pContext->m_pixels2;
@@ -223,7 +223,7 @@ GLAPI void APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GL
   auto& state = g_pContext->input;
 
   state.clearColor4f = float4(red, green, blue, alpha);
-  state.clearColor1u = RealColorToUint32_BGRA(state.clearColor4f);
+  state.clearColor1u = color_pack_bgra(state.clearColor4f);
 }
 
 GLAPI void APIENTRY glClearDepthf(GLclampf a_depth)
@@ -926,10 +926,10 @@ GLAPI void APIENTRY glGetFloatv(GLenum pname, GLfloat *params)
     for (int i = 0; i < 4; i++)
     {
       for (int j = 0; j < 4; j++)
-        m2.M(i, j) = m1.M(j, i);
+        m2(i, j) = m1(j, i);
     }
 
-    memcpy(params, m2.L(), 16 * sizeof(float));
+    memcpy(params, &m2, 16 * sizeof(float));
   }
   else if (pname == GL_VIEWPORT)
   {
@@ -1048,14 +1048,7 @@ GLAPI void APIENTRY glLoadMatrixf(const GLfloat *m) // pre (g_pContext->state.in
     *(g_pContext->m_pLog) << "glLoadMatrixf(" << m << ")" << std::endl;
 
   float4x4* pmatrix = swglGetCurrMatrix(g_pContext);
-
-  // opengl use transpose matrix layout
-  //
-  pmatrix->row[0] = float4(m[0], m[4], m[8],  m[12]);
-  pmatrix->row[1] = float4(m[1], m[5], m[9],  m[13]);
-  pmatrix->row[2] = float4(m[2], m[6], m[10], m[14]);
-  pmatrix->row[3] = float4(m[3], m[7], m[11], m[15]);
-
+  memcpy(pmatrix, m, 16*sizeof(float)); // opengl use transpose matrix layout
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// matrix
@@ -1485,12 +1478,12 @@ GLAPI void APIENTRY glMultMatrixf(const GLfloat *m)
 
   // opengl use transpose matrix layout
   //
-  newMat.row[0] = float4(m[0], m[4], m[8], m[12]);
-  newMat.row[1] = float4(m[1], m[5], m[9], m[13]);
-  newMat.row[2] = float4(m[2], m[6], m[10], m[14]);
-  newMat.row[3] = float4(m[3], m[7], m[11], m[15]);
+  newMat.col(0) = float4(m[0], m[1], m[2], m[3]);
+  newMat.col(1) = float4(m[4], m[5], m[6], m[7]);
+  newMat.col(2) = float4(m[8], m[9], m[10],m[11]);
+  newMat.col(3) = float4(m[12],m[13],m[14],m[15]);
 
-  (*pmatrix) = mul((*pmatrix), newMat);
+  (*pmatrix) = (*pmatrix)*newMat;
 
 }
 
@@ -1512,12 +1505,12 @@ GLAPI void APIENTRY glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 
   float4x4 newMat;
 
-  newMat.row[0].x = v.x*v.x*(1.0f - c) + c;     newMat.row[0].y = v.x*v.y*(1.0f - c) - v.z*s;  newMat.row[0].z = v.x*v.z*(1.0f - c) + v.y*s; newMat.row[0].w = 0.0f;
-  newMat.row[1].x = v.y*v.x*(1.0f - c) + v.z*s; newMat.row[1].y = v.y*v.y*(1.0f - c) + c;      newMat.row[1].z = v.y*v.z*(1.0f - c) - v.x*s; newMat.row[1].w = 0.0f;
-  newMat.row[2].x = v.x*v.z*(1.0f - c) - v.y*s; newMat.row[2].y = v.y*v.z*(1.0f - c) + v.x*s;  newMat.row[2].z = v.z*v.z*(1.0f - c) + c;     newMat.row[2].w = 0.0f;
-  newMat.row[3].x = 0.0f;                       newMat.row[3].y = 0.0f;                        newMat.row[3].z = 0.0f;                       newMat.row[3].w = 1.0f;
+  newMat(0,0) = v.x*v.x*(1.0f - c) + c;     newMat(0,1) = v.x*v.y*(1.0f - c) - v.z*s;  newMat(0,2) = v.x*v.z*(1.0f - c) + v.y*s; newMat(0,3) = 0.0f;
+  newMat(1,0) = v.y*v.x*(1.0f - c) + v.z*s; newMat(1,1) = v.y*v.y*(1.0f - c) + c;      newMat(1,2) = v.y*v.z*(1.0f - c) - v.x*s; newMat(1,3) = 0.0f;
+  newMat(2,0) = v.x*v.z*(1.0f - c) - v.y*s; newMat(2,1) = v.y*v.z*(1.0f - c) + v.x*s;  newMat(2,2) = v.z*v.z*(1.0f - c) + c;     newMat(2,3) = 0.0f;
+  newMat(3,0) = 0.0f;                       newMat(3,1) = 0.0f;                        newMat(3,2) = 0.0f;                       newMat(3,3) = 1.0f;
 
-  (*pmatrix) = mul((*pmatrix), newMat);
+  (*pmatrix) = (*pmatrix)*newMat;
 }
 
 GLAPI void APIENTRY glScalef(GLfloat x, GLfloat y, GLfloat z)
@@ -1529,13 +1522,9 @@ GLAPI void APIENTRY glScalef(GLfloat x, GLfloat y, GLfloat z)
     *(g_pContext->m_pLog) << "glScalef(" << x << "," << y << ", " << z << ")" << std::endl;
 
   float4x4* pmatrix = swglGetCurrMatrix(g_pContext);
+  float4x4  newMat  = scale4x4(float3(x,y,z));
 
-  float4x4 newMat;
-  newMat.row[0].x = x;
-  newMat.row[1].y = y;
-  newMat.row[2].z = z;
-
-  (*pmatrix) = mul((*pmatrix), newMat);
+  (*pmatrix) = (*pmatrix)*newMat;
 }
 
 GLAPI void APIENTRY glTranslatef(GLfloat x, GLfloat y, GLfloat z)
@@ -1547,15 +1536,8 @@ GLAPI void APIENTRY glTranslatef(GLfloat x, GLfloat y, GLfloat z)
     *(g_pContext->m_pLog) << "glTranslatef(" << x << "," << y << ", " << z << ")" << std::endl;
 
   float4x4* pmatrix = swglGetCurrMatrix(g_pContext);
+  float4x4  newMat  = translate4x4(float3(x,y,z));
 
-  float4x4 newMat;
-  newMat.row[0].w = x;
-  newMat.row[1].w = y;
-  newMat.row[2].w = z;
-
-  (*pmatrix) = mul((*pmatrix), newMat);
-
+  (*pmatrix) = (*pmatrix)*newMat;
 }
-
-
 

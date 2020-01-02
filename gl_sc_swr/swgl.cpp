@@ -536,10 +536,10 @@ void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch) // pre (a
                                (float)pBatch->state.viewport[2], 
                                (float)pBatch->state.viewport[3] };
 
-  pBatch->state.worldViewProjMatrix = mul(pBatch->state.projMatrix, pBatch->state.worldViewMatrix);
+  pBatch->state.worldViewProjMatrix = pBatch->state.projMatrix*pBatch->state.worldViewMatrix;
 
   HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPos.data(), int(pBatch->vertPos.size()),
-                        viewportf, pBatch->state.worldViewProjMatrix.L());
+                        viewportf, pBatch->state.worldViewProjMatrix);
 
 #ifdef MEASURE_STATS
   a_pContext->m_timeStats.msVertexShader += timer.getElapsed()*1000.0f;
@@ -863,7 +863,7 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
                                (float)a_input.batchState.viewport[3] };
 
   dummy.state = a_input.batchState;
-  dummy.state.worldViewProjMatrix = mul(dummy.state.projMatrix, dummy.state.worldViewMatrix);
+  dummy.state.worldViewProjMatrix = dummy.state.projMatrix*dummy.state.worldViewMatrix;
 
 
   ////
@@ -893,7 +893,7 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     dummy.vertTexCoord[2] = vtexf2[i3];
 
     HWImpl::VertexShader((const float*)dummy.vertPos.data(), (float*)dummy.vertPos.data(), 3,
-                         viewportf, dummy.state.worldViewProjMatrix.L());
+                         viewportf, dummy.state.worldViewProjMatrix);
 
     i1 = 0;
     i2 = 1;

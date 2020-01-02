@@ -1,6 +1,11 @@
 #include "tests_sc1.h"
 #include "../gl_sc_swr/LiteMath.h"
 
+using LiteMath::rnd;
+using LiteMath::float2;
+using LiteMath::float3;
+using LiteMath::float4;
+
 #ifdef USE_SWGL
   #include "../gl_sc_swr/gl_sc.h"
   #include "../gl_sc_swr/gl_std.h"
@@ -995,6 +1000,7 @@ void demo07_triangle_fan(int width, int height, const float xRot, const float yR
   glEnd();
 
 }
+
 
 
 void demo03_many_small_dynamic_triangles()

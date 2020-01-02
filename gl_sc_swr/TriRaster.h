@@ -2,6 +2,7 @@
 #define TRI_RASTER_GUARDIAN
 
 #include "LiteMath.h"
+
 #include <cstdint>
 #include <atomic>
 
@@ -32,7 +33,7 @@ enum BlendOp { BlendOp_None               = 0, // no blending, replace color
 
 #define HALF_SPACE_EPSILON (-1e-4f)
 
-static inline float edgeFunction(float2 a, float2 b, float2 c) // actuattly just a mixed product ... :)
+static inline float edgeFunction(LiteMath::float2 a, LiteMath::float2 b, LiteMath::float2 c) // actuattly just a mixed product ... :)
 {
   return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
 }
@@ -72,7 +73,7 @@ struct FrameBuffer
   std::atomic_flag* lockbuffer;
 };
 
-struct ALIGNED(16) TexSampler
+struct CVEX_ALIGNED(16) TexSampler
 {
   int w;
   int h;

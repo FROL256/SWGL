@@ -15,7 +15,7 @@ struct LineOffs
 {
   static inline vint w(const int CX1, const int FDY12)
   {
-    ALIGNED(n*4) int w1i[n];
+    CVEX_ALIGNED(n*4) int w1i[n];
 
     #pragma GCC ivdep
     for(int i=0;i<n;i++)
@@ -30,7 +30,10 @@ struct LineOffs<vint, 4>
 {
   static inline vint w(const int CX1, const int FDY12)
   {
-    return make_vuint((unsigned int)CX1, (unsigned int)(CX1 - FDY12), (unsigned int)(CX1 - FDY12*2), (unsigned int)(CX1 - FDY12*3)) >> 16; // #TODO: conver this to vuint16
+    return vint{ (int)CX1, 
+                 (int)(CX1 - FDY12), 
+                 (int)(CX1 - FDY12*2), 
+                 (int)(CX1 - FDY12*3) >> 16}; // #TODO: conver this to vuint16
   }
 
 };
