@@ -122,8 +122,8 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
   m_zbuffer = (float*)  aligned_alloc(64, (width + FB_BILLET_SIZE)*height*sizeof(float));
   m_sbuffer = (uint8_t*)aligned_alloc(64, (width + FB_BILLET_SIZE)*height*sizeof(uint8_t));
   
-  m_tiledFrameBuffer.Resize(m_width, m_height);
-  m_tiledFrameBuffer.TestClearChessBoard();
+  m_tiledFb2.Resize(m_width, m_height);
+  m_tiledFb2.TestClearChessBoard();
   
   const size_t tilesNum = (m_width / BIN_SIZE) * (m_height / BIN_SIZE);
   if(m_bintoks.size() != tilesNum)
@@ -158,21 +158,7 @@ void SWGL_Context::Destroy()
 
 void SWGL_Context::CopyToScreeen()
 {
-  if (m_useTiledFB)
-    m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
-  else 
-  {
-    const int pitch = (m_width + FB_BILLET_SIZE);
-
-    for (int y = 0; y < m_height; y++)
-    {
-      int offset0 = y * m_width;
-      int offset1 = (m_height - y - 1) * pitch;
-
-      for (int x = 0; x < m_width; x++)
-        m_pixels[offset0 + x] = m_pixels2[offset1 + x];
-    }
-  }
+  m_tiledFb2.CopyToPitchLinear((uint32_t*)m_pixels, m_width);
 }
 
 #define MAX_CONTEXTS_COUNT 2

@@ -246,7 +246,15 @@ namespace cvex
 
   static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO); }
 
+  static inline void stream(int* p,       vint4   a_val)   { _mm_stream_ps((float*)p, as_float32(a_val)); }
+  static inline void stream(_uint32_t* p, vuint4  a_val)   { _mm_stream_ps((float*)p, as_float32(a_val)); }
+  static inline void stream(float* p,     vfloat4 a_val)   { _mm_stream_ps(p, a_val); }
+
   #else
+  static inline void stream(int* p,       vint4   a_val)   { *((vint4*)(p))   = a_val; }
+  static inline void stream(_uint32_t* p, vuint4  a_val)   { *((vuint4*)(p))  = a_val; }
+  static inline void stream(float* p,     vfloat4 a_val)   { *((vfloat4*)(p)) = a_val; }
+
   static inline float   dot3f(const vfloat4 a, const vfloat4 b) 
   {
     const vfloat4 mres = a*b; 

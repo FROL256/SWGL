@@ -311,7 +311,7 @@ struct SWGL_Context
 
   SWGL_DrawList        m_drawList;
   SWGL_Timings         m_timeStats;
-  SWGL_FrameBuffer     m_tiledFrameBuffer;
+  SWGL_FrameBufferTwoLvl m_tiledFb2;
   
   bool m_useTiledFB;
   bool m_useTriQueue;
@@ -330,7 +330,6 @@ inline float4x4* swglGetCurrMatrix(SWGL_Context* a_pContext) // pre (a_pContext 
   return (a_pContext->input.inputMatrixMode == GL_MODELVIEW) ? &a_pContext->input.batchState.worldViewMatrix : &a_pContext->input.batchState.projMatrix;
 }
 
-void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum);
 void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch);
 
@@ -408,9 +407,6 @@ static inline float4 swglClipSpaceToScreenSpaceTransform(float4 a_pos, const flo
 
 RasterOp swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Context* a_pContext, const bool a_sameColor);
 
-void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch,
-                                   const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB);
-
 void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 
 static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext != nullptr)
@@ -436,9 +432,7 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
 
   swglRunBatchVertexShader(a_pContext, pBatch);
   
-  if (a_pContext->m_useTiledFB)
-    swglAppendTrianglesToDrawList(pDrawList, a_pContext, pBatch, fb, &a_pContext->m_tiledFrameBuffer);
-  else if(a_pContext->m_useTriQueue)
+  if(a_pContext->m_useTriQueue)
     swglEnqueueBatchTriangles(a_pContext, pBatch, fb);
   else
     swglDrawBatchTriangles(a_pContext, pBatch, fb);
