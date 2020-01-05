@@ -11,21 +11,30 @@
 template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>
 struct FrameBufferTwoLvl
 {
+  using ColorType = PackedColor;
+
   void Resize(int a_x, int a_y);
   void CopyToPitchLinear(uint32_t* a_data, int a_pitch);  
 
+  void Clear(uint32_t a_color, float a_depth);
+
   void TestClearCheckerBoard();
 
-private:
+  inline PackedColor* TileColor(int x, int y) { return m_color.data() + TileOffset(x,y); }
+  inline float*       TileDepth(int x, int y) { return m_depth.data() + TileOffset(x,y); }
 
+  inline PackedColor* PixelColor(int x, int y) { return m_color.data() + PixelOffset(x,y); }
+  inline float*       PixelDepth(int x, int y) { return m_depth.data() + PixelOffset(x,y); }
+  
+
+private:
+  
   constexpr static int TILES_IN_BIN_X = FB_BIN_SIZE/FB_TILE_SIZE_X; 
   constexpr static int TILES_IN_BIN_Y = FB_BIN_SIZE/FB_TILE_SIZE_Y;  
   constexpr static int PIXS_IN_TILE   = FB_TILE_SIZE_X*FB_TILE_SIZE_Y;
   constexpr static int TILES_IN_BIN   = TILES_IN_BIN_X*TILES_IN_BIN_Y;
 
   constexpr static int ALIGN_OF_TILE  = sizeof(PackedColor)*(FB_TILE_SIZE_X*FB_TILE_SIZE_Y);
-
-  void FillBinColor(int bx, int by, uint32_t color);
 
   std::vector<cvex::vint4, aligned<cvex::vint4, 16> >         binsMinMax;
 
@@ -34,7 +43,31 @@ private:
 
   int m_binsX;
   int m_binsY;
+
+  void FillBinColor(int bx, int by, uint32_t color);
+ 
+  inline int TileOffset(int x, int y)
+  {
+    const int by = y/FB_BIN_SIZE;     
+    const int bx = x/FB_BIN_SIZE;     
+
+    const int y0 = y%FB_BIN_SIZE;     
+    const int x0 = x%FB_BIN_SIZE;     
+
+    const int ty = y0/TILES_IN_BIN_Y; 
+    const int tx = x0/TILES_IN_BIN_X; 
+
+    const int offToBin  = (by*m_binsX + bx)*(FB_BIN_SIZE*FB_BIN_SIZE);
+    const int offToTile = (ty*TILES_IN_BIN_X + ty)*PIXS_IN_TILE;
+    
+    assert( (offToBin + offToTile) % 16 == 0);
+
+    return offToBin + offToTile;
+  }
+
 };
+
+using FrameBufferType = FrameBufferTwoLvl<uint32_t,64,4,4>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,4 +194,10 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
     }
 
   }
+}
+
+template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>
+void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>::Clear(uint32_t a_color, float a_depth)
+{
+  memset(m_color.data(), 0, m_color.size()*sizeof(PackedColor));
 }

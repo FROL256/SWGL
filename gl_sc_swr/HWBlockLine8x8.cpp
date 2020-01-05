@@ -108,8 +108,8 @@ void HWImplBlockLine8x8_CVEX::RasterizeTriangle(const TriangleType& tri, int til
     #endif
 
     default :
-      RasterizeTriHalfSpaceBlockFixp2D_Fill<ROP_CVEX_FILL>(tri, tileMinX, tileMinY,
-                                                           frameBuf);
+      RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D>(tri, tileMinX, tileMinY,
+                                                        frameBuf);
       break;
   };
 

@@ -276,7 +276,7 @@ struct SWGL_Context
 #else
   
   SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f),
-                   m_locks(nullptr), m_tqueue(MAX_NUM_TRIANGLES_TOTAL), m_useTriQueue(false), m_useTiledFB(false)
+                   m_tqueue(MAX_NUM_TRIANGLES_TOTAL), m_useTriQueue(false), m_useTiledFB(false)
   {
     InitCommon();
   }
@@ -307,15 +307,14 @@ struct SWGL_Context
 
   static std::ofstream* m_pLog;
 
-  SWGL_DrawList     m_drawList;
-  SWGL_Timings      m_timeStats;
-  FrameBufferTwoLvl<uint32_t,64,4,4> m_tiledFb2;
+  SWGL_DrawList   m_drawList;
+  SWGL_Timings    m_timeStats;
+  FrameBufferType m_tiledFb2;
   
   bool m_useTiledFB;
   bool m_useTriQueue;
   int  m_currTileId;
 
-  std::atomic_flag*                                 m_locks;
   moodycamel::ConcurrentQueue<HWImpl::TriangleType> m_tqueue;
   std::vector<FrameBuffer>                          batchFrameBuffers;
 };
@@ -355,7 +354,6 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
   frameBuff.w          = a_pContext->m_width;
   frameBuff.h          = a_pContext->m_height;
   frameBuff.pitch      = frameBuff.w + FB_BILLET_SIZE;
-  frameBuff.lockbuffer = a_pContext->m_locks;
 
   frameBuff.vx = a_state.viewport[0];
   frameBuff.vy = a_state.viewport[1];
@@ -367,6 +365,8 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
 
   if (!a_state.stencilTestEnabled)
     frameBuff.sbuffer = nullptr;
+
+  frameBuff.m_pImpl = &a_pContext->m_tiledFb2;
 
   return frameBuff;
 }

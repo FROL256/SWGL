@@ -190,14 +190,12 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
   Timer timer(true);
 #endif
 
-
-  //swglSlowClear(g_pContext, mask);
-  
+   const auto& state = g_pContext->input;
+   g_pContext->m_tiledFb2.Clear(state.clearColor1u, state.clearDepth);
 
 #ifdef MEASURE_STATS
   g_pContext->m_timeStats.msClear += timer.getElapsed()*1000.0f;
 #endif
-
 }
 
 GLAPI void APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)

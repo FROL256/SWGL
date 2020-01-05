@@ -14,8 +14,6 @@ extern bool g_kill_all;
 SWGL_Context::~SWGL_Context()
 {
   g_kill_all = true;
-  delete [] m_locks;
-  m_locks = nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,20 +94,15 @@ void SWGL_Context::InitCommon()
   m_textures.resize(1024); // max 1024 tex
 
   m_useTiledFB  = false;
-  m_useTriQueue = true;
+  m_useTriQueue = false;
 
   batchFrameBuffers.reserve(100); // approximate "different" batches number
 }
 
 void SWGL_Context::ResizeCommon(int width, int height)
 {
-  delete [] m_locks;
-  
-  const int tileSize = 4; // when we have 8x8 tiles, we just alloc a bit more memory then needed, but it should work fine
-  const int size     = (width/tileSize)*(height/tileSize);
-  m_locks = new std::atomic_flag[size];
-  for(int i=0;i<size;i++)
-    m_locks[i].clear(std::memory_order_release);
+
+
 }
 
 

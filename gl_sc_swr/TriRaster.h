@@ -1,10 +1,7 @@
 #ifndef TRI_RASTER_GUARDIAN
 #define TRI_RASTER_GUARDIAN
 
-#include "LiteMath.h"
-
-#include <cstdint>
-#include <atomic>
+#include "SWGL_TiledFrameBuffer.h"
 
 enum RasterOp { ROP_FillColor = 1,
 
@@ -54,7 +51,7 @@ static inline int nextLine(int y, int w, int h)   { return y + w; }
 struct FrameBuffer
 {
   FrameBuffer() : w(0), h(0), pitch(0), dummy(0), vx(0), vy(0), vw(0), vh(0),
-                  cbuffer(nullptr), zbuffer(nullptr), sbuffer(nullptr), lockbuffer(nullptr) {}
+                  cbuffer(nullptr), zbuffer(nullptr), sbuffer(nullptr) {}
 
   int w;
   int h;
@@ -66,11 +63,16 @@ struct FrameBuffer
   int vw; // viewport width
   int vh; // viewport height
 
-  int*     cbuffer;
-  float*   zbuffer;
-  uint8_t* sbuffer;
-  
-  std::atomic_flag* lockbuffer;
+  int*     cbuffer; // DEPRECATED !!!
+  float*   zbuffer; // DEPRECATED !!!
+  uint8_t* sbuffer; // DEPRECATED !!!
+
+  using ColorType = FrameBufferType::ColorType;
+  FrameBufferType* m_pImpl;  
+
+  inline ColorType* TileColor(int x, int y) { return m_pImpl->TileColor(x,y); }
+  inline float*     TileDepth(int x, int y) { return m_pImpl->TileDepth(x,y); }
+
 };
 
 struct CVEX_ALIGNED(16) TexSampler
