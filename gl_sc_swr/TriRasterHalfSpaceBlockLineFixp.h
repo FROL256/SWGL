@@ -51,7 +51,6 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
   const int maxx = ( LiteMath::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
   const int maxy = ( LiteMath::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
 
-
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;
   int C2 = DY23 * X2 - DX23 * Y2;
@@ -101,7 +100,6 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
       auto* buffer = frameBuf->TileColor(x,y);
       
       //memset(buffer, 255, 16*sizeof(uint32_t));
-
       
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)

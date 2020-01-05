@@ -123,8 +123,6 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
   m_sbuffer = (uint8_t*)aligned_alloc(64, (width + FB_BILLET_SIZE)*height*sizeof(uint8_t));
   
   m_tiledFb2.Resize(m_width, m_height);
-  m_tiledFb2.TestClearCheckerBoard();
-
   
   ResizeCommon(m_width, m_height); //#TODO: move memory allocation inside 'ResizeCommon'
 }
