@@ -123,22 +123,8 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
   m_sbuffer = (uint8_t*)aligned_alloc(64, (width + FB_BILLET_SIZE)*height*sizeof(uint8_t));
   
   m_tiledFb2.Resize(m_width, m_height);
-  m_tiledFb2.TestClearChessBoard();
-  
-  const size_t tilesNum = (m_width / BIN_SIZE) * (m_height / BIN_SIZE);
-  if(m_bintoks.size() != tilesNum)
-  {
-    for(auto& pToken : m_bintoks)
-    {
-      delete pToken;
-      pToken = nullptr;
-    }
-    
-    m_bintoks.resize(tilesNum);
-  
-    for(auto& pToken : m_bintoks)
-      pToken = new moodycamel::ProducerToken(m_tqueue);
-  }
+  m_tiledFb2.TestClearCheckerBoard();
+
   
   ResizeCommon(m_width, m_height); //#TODO: move memory allocation inside 'ResizeCommon'
 }
@@ -148,12 +134,6 @@ void SWGL_Context::Destroy()
   free(m_pixels2); m_pixels2 = nullptr;
   free(m_zbuffer); m_zbuffer = nullptr;
   free(m_sbuffer); m_sbuffer = nullptr;
-  
-  for(auto& pToken : m_bintoks)
-  {
-    delete pToken;
-    pToken = nullptr;
-  }
 }
 
 void SWGL_Context::CopyToScreeen()
@@ -179,7 +159,7 @@ GLXContext glXCreateContext(Display *dpy, XVisualInfo *vis, GLXContext shareList
   return ptr;
 }
 
-void glXDestroyContext( Display *dpy, GLXContext ctx )
+void glXDestroyContext(Display *dpy, GLXContext ctx )
 {
   if(ctx == nullptr)
     return;
@@ -187,7 +167,7 @@ void glXDestroyContext( Display *dpy, GLXContext ctx )
   g_allCtx[ctx->ctxId].Destroy();
 }
 
-Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx)
+Bool glXMakeCurrent(Display *dpy, GLXDrawable drawable, GLXContext ctx)
 {
   if(ctx == nullptr)
     return False;

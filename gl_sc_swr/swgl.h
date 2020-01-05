@@ -244,8 +244,6 @@ struct CVEX_ALIGNED(16) SWGL_TextureStorage
   GLint format;
 };
 
-static inline unsigned int divTileSize(unsigned int x) {return x / BIN_SIZE;}
-
 struct SWGL_DrawList
 {
   int                  m_triTop;
@@ -309,9 +307,9 @@ struct SWGL_Context
 
   static std::ofstream* m_pLog;
 
-  SWGL_DrawList        m_drawList;
-  SWGL_Timings         m_timeStats;
-  SWGL_FrameBufferTwoLvl m_tiledFb2;
+  SWGL_DrawList     m_drawList;
+  SWGL_Timings      m_timeStats;
+  FrameBufferTwoLvl<uint32_t,64,4,4> m_tiledFb2;
   
   bool m_useTiledFB;
   bool m_useTriQueue;
@@ -319,8 +317,6 @@ struct SWGL_Context
 
   std::atomic_flag*                                 m_locks;
   moodycamel::ConcurrentQueue<HWImpl::TriangleType> m_tqueue;
-  std::vector< moodycamel::ProducerToken* >         m_bintoks; // for binned (tilex 64x64) framebuffer
-  
   std::vector<FrameBuffer>                          batchFrameBuffers;
 };
 
