@@ -61,7 +61,7 @@ private:
     const int tx = x0/TILES_IN_BIN_X; 
 
     const int offToBin  = (by*m_binsX + bx)*(FB_BIN_SIZE*FB_BIN_SIZE);
-    const int offToTile = (ty*TILES_IN_BIN_X + ty)*PIXS_IN_TILE;
+    const int offToTile = (ty*TILES_IN_BIN_X + tx)*PIXS_IN_TILE;
     
     assert( (offToBin + offToTile) % 16 == 0);
 

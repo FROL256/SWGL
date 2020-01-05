@@ -134,13 +134,10 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
           int CX2 = CY2;
           int CX3 = CY3;
 
-          for (int ix = x; ix < x + blockSize; ix++)
+          for (int ix = 0; ix < blockSize; ix++)
           {
             if (CX1 > 0 && CX2 > 0 && CX3 > 0)
-            {
-              buffer[ix] = 0xFFFFFFFF;
-              //buffer[ix] = ROP::Pixel(tri, CX1, CX3, areaInv);
-            }
+              buffer[ix] = ROP::Pixel(tri, CX1, CX3, areaInv);
 
             CX1 -= FDY12;
             CX2 -= FDY23;
@@ -151,7 +148,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
           CY2 += FDX23;
           CY3 += FDX31;
 
-          buffer += blockSize;
+          buffer+= blockSize;
         }
       }
       
