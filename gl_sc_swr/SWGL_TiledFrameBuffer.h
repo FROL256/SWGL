@@ -41,6 +41,8 @@ private:
   std::vector<float,    aligned<float, 64> >                  m_depth;
   std::vector<uint32_t, aligned<PackedColor, ALIGN_OF_TILE> > m_color;
 
+  int m_width;
+  int m_height;
   int m_binsX;
   int m_binsY;
 
@@ -48,6 +50,9 @@ private:
  
   inline int TileOffset(int x, int y)
   {
+    assert(x % FB_TILE_SIZE_X == 0);
+    assert(y % FB_TILE_SIZE_Y == 0);
+
     const int by = y/FB_BIN_SIZE;     
     const int bx = x/FB_BIN_SIZE;     
 
@@ -83,6 +88,9 @@ inline static bool IsAligned(const void * ptr, std::uintptr_t alignment) noexcep
 template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>
 void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>::Resize(int a_x, int a_y)
 {
+  m_width  = a_x;
+  m_height = a_y;
+
   assert(a_x % FB_BIN_SIZE == 0);
   assert(a_y % FB_BIN_SIZE == 0);
 
@@ -156,44 +164,25 @@ template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_
 void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>::CopyToPitchLinear(uint32_t* a_data, int a_pitch)
 {
   const int binsTotal = m_binsY*m_binsX;
-
-  //#pragma omp parallel for
-  for (int binId = 0; binId < binsTotal; binId++)
+  
+  for(int y=0; y<m_width; y+= FB_TILE_SIZE_Y)
   {
-    const int offsetToBin       = binId*(FB_BIN_SIZE*FB_BIN_SIZE);
-    const uint32_t* tilecolor   = m_color.data() + offsetToBin;
-    const cvex::vint4 bMinMax   = binsMinMax[binId];
-
-    for(int tileY = 0; tileY < TILES_IN_BIN_Y; tileY++)
+    for(int x=0; x<m_height; x += FB_TILE_SIZE_X)
     {
-      const int y  = cvex::extract_1(bMinMax) + tileY*FB_TILE_SIZE_Y;
-      const int x0 = cvex::extract_0(bMinMax);
-      const int tilePitchYOffset = tileY*TILES_IN_BIN_X;
+      const PackedColor* tilecolor = TileColor(x,y);
 
-      for(int tileX = 0; tileX < TILES_IN_BIN_X; tileX++)
-      {
-        const int tilePitchOffset   = (tilePitchYOffset + tileX)*PIXS_IN_TILE;
+      const cvex::vuint4 tileRow0 = cvex::load(tilecolor + 0);
+      const cvex::vuint4 tileRow1 = cvex::load(tilecolor + 4);
+      const cvex::vuint4 tileRow2 = cvex::load(tilecolor + 8);
+      const cvex::vuint4 tileRow3 = cvex::load(tilecolor + 12);
 
-        const cvex::vuint4 tileRow0 = cvex::load(tilecolor + tilePitchOffset + 0);
-        const cvex::vuint4 tileRow1 = cvex::load(tilecolor + tilePitchOffset + 4);
-        const cvex::vuint4 tileRow2 = cvex::load(tilecolor + tilePitchOffset + 8);
-        const cvex::vuint4 tileRow3 = cvex::load(tilecolor + tilePitchOffset + 12);
-        
-        const int x = x0 + tileX*FB_TILE_SIZE_X;
-
-        cvex::store(a_data + (y + 0)*a_pitch + x, tileRow0); 
-        cvex::store(a_data + (y + 1)*a_pitch + x, tileRow1); 
-        cvex::store(a_data + (y + 2)*a_pitch + x, tileRow2); 
-        cvex::store(a_data + (y + 3)*a_pitch + x, tileRow3); 
-
-        //cvex::stream(a_data + (y + 0)*a_pitch + x, tileRow0); 
-        //cvex::stream(a_data + (y + 1)*a_pitch + x, tileRow1); 
-        //cvex::stream(a_data + (y + 2)*a_pitch + x, tileRow2); 
-        //cvex::stream(a_data + (y + 3)*a_pitch + x, tileRow3); 
-      }
+      cvex::store(a_data + (y + 0)*a_pitch + x, tileRow0); 
+      cvex::store(a_data + (y + 1)*a_pitch + x, tileRow1); 
+      cvex::store(a_data + (y + 2)*a_pitch + x, tileRow2); 
+      cvex::store(a_data + (y + 3)*a_pitch + x, tileRow3); 
     }
-
   }
+
 }
 
 template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>

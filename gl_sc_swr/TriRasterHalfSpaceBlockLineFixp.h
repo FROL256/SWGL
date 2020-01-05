@@ -5,6 +5,8 @@
 #ifndef TEST_GL_TOP_SIMDBLOCKFIXP_H
 #define TEST_GL_TOP_SIMDBLOCKFIXP_H
 
+#include <cstring>
+
 static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
@@ -98,6 +100,9 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
 
       auto* buffer = frameBuf->TileColor(x,y);
       
+      //memset(buffer, 255, 16*sizeof(uint32_t));
+
+      
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)
       {
@@ -132,22 +137,25 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
           for (int ix = x; ix < x + blockSize; ix++)
           {
             if (CX1 > 0 && CX2 > 0 && CX3 > 0)
+            {
               buffer[ix] = 0xFFFFFFFF;
+              //buffer[ix] = ROP::Pixel(tri, CX1, CX3, areaInv);
+            }
 
             CX1 -= FDY12;
             CX2 -= FDY23;
             CX3 -= FDY31;
-
-            buffer++;
           }
+
+          buffer += blockSize;
 
           CY1 += FDX12;
           CY2 += FDX23;
           CY3 += FDX31;
         }
       }
-  
-   
+      
+    
     }
   
 
