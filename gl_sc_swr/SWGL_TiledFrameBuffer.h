@@ -68,12 +68,9 @@ private:
     return offToBin + offToTile;
     */
 
-    //const int tx = x/FB_TILE_SIZE_X; 
-    //const int ty = y/FB_TILE_SIZE_Y; 
-    //return (ty*m_tilesTotalX + ty)*PIXS_IN_TILE;
-
-    const int offsetReal = m_width*y + x;
-    return (offsetReal/PIXS_IN_TILE)*PIXS_IN_TILE;
+    const int tx   = x/FB_TILE_SIZE_X; 
+    const int ty   = y/FB_TILE_SIZE_Y; 
+    return  (ty*m_tilesTotalX + tx)*PIXS_IN_TILE;
   }
 
 };
@@ -161,7 +158,7 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
   uint32_t* color = m_color.data();
 
   int counter = 0;
-  for(int y=0; y<m_height; y+= FB_TILE_SIZE_Y)
+  for(int y=0; y<m_height; y += FB_TILE_SIZE_Y)
   {
     for(int x=0; x<m_width; x += FB_TILE_SIZE_X)
     {
