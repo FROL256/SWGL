@@ -119,7 +119,7 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
           CY2 += FDX23;
           CY3 += FDX31;
 
-          buffer += 4;
+          buffer += blockSize;
         }
       }
       else
@@ -147,11 +147,11 @@ void RasterizeTriHalfSpaceBlockLineFixp2D(const typename ROP::Triangle &tri, int
             CX3 -= FDY31;
           }
 
-          buffer += blockSize;
-
           CY1 += FDX12;
           CY2 += FDX23;
           CY3 += FDX31;
+
+          buffer += blockSize;
         }
       }
       

@@ -21,11 +21,7 @@ struct FrameBufferTwoLvl
   void TestClearCheckerBoard();
 
   inline PackedColor* TileColor(int x, int y) { return m_color.data() + TileOffset(x,y); }
-  inline float*       TileDepth(int x, int y) { return m_depth.data() + TileOffset(x,y); }
-
-  inline PackedColor* PixelColor(int x, int y) { return m_color.data() + PixelOffset(x,y); }
-  inline float*       PixelDepth(int x, int y) { return m_depth.data() + PixelOffset(x,y); }
-  
+  inline float*       TileDepth(int x, int y) { return m_depth.data() + TileOffset(x,y); }  
 
 private:
   
@@ -36,8 +32,6 @@ private:
 
   constexpr static int ALIGN_OF_TILE  = sizeof(PackedColor)*(FB_TILE_SIZE_X*FB_TILE_SIZE_Y);
 
-  std::vector<cvex::vint4, aligned<cvex::vint4, 16> >         binsMinMax;
-
   std::vector<float,    aligned<float, 64> >                  m_depth;
   std::vector<uint32_t, aligned<PackedColor, ALIGN_OF_TILE> > m_color;
 
@@ -46,10 +40,14 @@ private:
   int m_binsX;
   int m_binsY;
 
+  int m_tilesTotalX;
+  int m_tilesTotalY;
+
   void FillBinColor(int bx, int by, uint32_t color);
  
   inline int TileOffset(int x, int y)
-  {
+  { 
+    /*
     assert(x % FB_TILE_SIZE_X == 0);
     assert(y % FB_TILE_SIZE_Y == 0);
 
@@ -68,6 +66,14 @@ private:
     assert( (offToBin + offToTile) % 16 == 0);
 
     return offToBin + offToTile;
+    */
+
+    //const int tx = x/FB_TILE_SIZE_X; 
+    //const int ty = y/FB_TILE_SIZE_Y; 
+    //return (ty*m_tilesTotalX + ty)*PIXS_IN_TILE;
+
+    const int offsetReal = m_width*y + x;
+    return (offsetReal/PIXS_IN_TILE)*PIXS_IN_TILE;
   }
 
 };
@@ -97,17 +103,11 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
   m_binsX = a_x/FB_BIN_SIZE;
   m_binsY = a_y/FB_BIN_SIZE;
 
+  m_tilesTotalX = a_x/FB_TILE_SIZE_X;
+  m_tilesTotalY = a_y/FB_TILE_SIZE_Y;
+
   m_depth.resize(a_x*a_y);
   m_color.resize(a_x*a_y);
-  binsMinMax.resize(m_binsX*m_binsY);
-  for(int binY = 0; binY < m_binsY; binY++)
-  {
-    const int binOffsetY = m_binsX*binY;
-    for(int binX = 0; binX < m_binsX; binX++)
-      binsMinMax[binOffsetY + binX] = cvex::vint4{binX*FB_BIN_SIZE,             binY*FB_BIN_SIZE, 
-                                                  binX*FB_BIN_SIZE+FB_BIN_SIZE, binY*FB_BIN_SIZE+FB_BIN_SIZE};
-  }
-
 }
 
 template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>
@@ -120,15 +120,13 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
 
   const cvex::vuint4 res = cvex::splat(a_color);
   
-  const uint32_t palette[20] = { 0xff06190b, 0xff3c044b, 0xff0fe109, 0xff0082c0,
-                                 0xff050201, 0xff011eb4, 0xff46f000, 0xfff002e6,
-                                 0xff02f53c, 0xff0a0ebe, 0xff008000, 0xff06beff,
-                                 0xff0a0e08, 0xff0f0ac8, 0xff800000, 0xffaa0fc3,
-                                 0xff800000, 0xf0ffd0b1, 0xff000080, 0xff008000 };
+  //std::vector<uint32_t> pallette(TILES_IN_BIN);
+  //for(int i=0;i<pallette.size();i++)
+  //  pallette[i] = LiteMath::rnd(0.0f, 1.0f) < 0.5f ? 0 : 0xFFFFFFFF;
 
   for(int i=0; i<TILES_IN_BIN; i++)
   {
-    const cvex::vuint4 tileColor = res & cvex::splat(palette[i%20]);
+    const cvex::vuint4 tileColor = cvex::splat(a_color);
 
     cvex::store(color + i*PIXS_IN_TILE + 0,  tileColor);
     cvex::store(color + i*PIXS_IN_TILE + 4,  tileColor);
@@ -141,12 +139,13 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
 template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>
 void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>::TestClearCheckerBoard()
 {
-  const uint32_t defaultpalette[20] = { 0xffe6194b, 0xff3cb44b, 0xffffe119, 0xff0082c8,
+  const uint32_t defaultpalette[19] = { 0xffe6194b, 0xff3cb44b, 0xffffe119, 0xff0082c8,
                                         0xfff58231, 0xff911eb4, 0xff46f0f0, 0xfff032e6,
                                         0xffd2f53c, 0xfffabebe, 0xff008080, 0xffe6beff,
                                         0xffaa6e28, 0xfffffac8, 0xff800000, 0xffaaffc3,
-                                        0xff808000, 0xffffd8b1, 0xff000080, 0xff808080 };
+                                        0xff808000, 0xffffd8b1, 0xff808080 };
   
+  /*
   int counter = 0;
   for(int binY = 0; binY < m_binsY; binY++)
   {
@@ -157,7 +156,29 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
       if(counter >= 20)
         counter = 0;
     }
+  }*/
+  
+  uint32_t* color = m_color.data();
+
+  int counter = 0;
+  for(int y=0; y<m_height; y+= FB_TILE_SIZE_Y)
+  {
+    for(int x=0; x<m_width; x += FB_TILE_SIZE_X)
+    {
+      const PackedColor* pColor    = TileColor(x,y);
+      const cvex::vuint4 tileColor = cvex::splat( defaultpalette[counter] );
+    
+      cvex::store(pColor + 0,  tileColor);
+      cvex::store(pColor + 4,  tileColor);
+      cvex::store(pColor + 8,  tileColor);
+      cvex::store(pColor + 12, tileColor);
+
+      counter++;
+      if(counter >= 20)
+        counter = 0;
+    }
   }
+
 }
 
 template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>
@@ -165,9 +186,9 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
 {
   const int binsTotal = m_binsY*m_binsX;
   
-  for(int y=0; y<m_width; y+= FB_TILE_SIZE_Y)
+  for(int y=0; y<m_height; y+= FB_TILE_SIZE_Y)
   {
-    for(int x=0; x<m_height; x += FB_TILE_SIZE_X)
+    for(int x=0; x<m_width; x += FB_TILE_SIZE_X)
     {
       const PackedColor* tilecolor = TileColor(x,y);
 
