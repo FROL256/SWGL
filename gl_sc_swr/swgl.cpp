@@ -531,7 +531,7 @@ void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch) // pre (a
 
   pBatch->state.worldViewProjMatrix = pBatch->state.projMatrix*pBatch->state.worldViewMatrix;
 
-  HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPos.data(), int(pBatch->vertPos.size()),
+  HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPosT.data(), int(pBatch->vertPos.size()),
                         viewportf, pBatch->state.worldViewProjMatrix);
 
 #ifdef MEASURE_STATS
@@ -589,7 +589,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
     {
 
       const bool cullFace = ((pBatch->state.cullFaceMode == GL_FRONT) && (nz > 0.0f)) ||
-                            ((pBatch->state.cullFaceMode == GL_BACK) && (nz < 0.0f));
+                            ((pBatch->state.cullFaceMode == GL_BACK)  && (nz < 0.0f));
 
       if (cullFace)
         continue;
@@ -611,14 +611,9 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
       // (1) fetch non transformed vertices
       //
-      localTri.v1 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i1]);
-      localTri.v2 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i2]);
-      localTri.v3 = mul(pBatch->state.worldViewMatrix, pBatch->vertPos[i3]);
-
-      //if(triId == 1)
-      //{
-      //  int a = 2;
-      //}
+      localTri.v1 = pBatch->state.worldViewMatrix*pBatch->vertPos[i1];
+      localTri.v2 = pBatch->state.worldViewMatrix*pBatch->vertPos[i2];
+      localTri.v3 = pBatch->state.worldViewMatrix*pBatch->vertPos[i3];
 
       // (2) clip triangle
       //
@@ -640,7 +635,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
           assert((&clipTris[i].v2)+1 == (&clipTris[i].v3)); //
         }
 
-        HWImpl::VertexShader(vpos, vpos, 3, viewportf, pBatch->state.projMatrix.L());
+        HWImpl::VertexShader(vpos, vpos, 3, viewportf, pBatch->state.projMatrix);
 
         // perform perspective correction div
         #ifdef PERSP_CORRECT
@@ -658,11 +653,6 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
         calcTriBBox(clipTris + i);
         clampTriBBox(clipTris+i, frameBuff);  // need this to prevent out of border
-
-        //if(triId == 1 && i == 0)
-        //{
-        //  int a = 0;
-        //}
 
         HWImpl::RasterizeTriangle(clipTris[i], 0, 0,
                                   &frameBuff);

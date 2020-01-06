@@ -133,6 +133,8 @@ struct Batch
   std::vector<int>    indices;
 
   std::vector<float4, aligned<float4, 16> > vertPos;
+  std::vector<float4, aligned<float4, 16> > vertPosT; // transformed
+
   std::vector<float4, aligned<float4, 16> > vertColor;
   std::vector<float2, aligned<float4, 16> > vertTexCoord;
 

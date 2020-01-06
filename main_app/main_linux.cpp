@@ -131,7 +131,7 @@ void ExposeFunc()
     //test25_clip_triangles(wa.width, wa.height, angle1);
     //test25_clip_triangles(wa.width, wa.height, 0.0f);
 
-    test26_clip_triangles2(wa.width, wa.height, angle1);
+    //test26_clip_triangles2(wa.width, wa.height, angle1);
     //test26_clip_triangles2(wa.width, wa.height, 72.0f);
     //test26_clip_triangles2(wa.width, wa.height, 73.0f);
 
