@@ -32,11 +32,12 @@ using cvex16::clamp;
 
 using cvex16::store;
 using cvex16::prefetch;
+using cvex16::tst_nz;
 
 using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::FillColor;
 
 using ROP_CVEX_2D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Colored2D;
-//using ROP_CVEX_3D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Colored3D;
+using ROP_CVEX_3D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Colored3D;
 
 //using ROP_CVEX_2D_TEX_P = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured2D;
 //using ROP_CVEX_2D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured2D;
@@ -63,10 +64,10 @@ void HWImplBlock16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMi
                                                         frameBuf);
       break;
 
-    //case ROP_Colored3D:
-    // RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D,4,4>(tri, tileMinX, tileMinY,
-    //                                                   frameBuf);
-    // break;
+    case ROP_Colored3D:
+     RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D,4,4>(tri, tileMinX, tileMinY,
+                                                       frameBuf);
+     break;
   
   };
 

@@ -118,10 +118,6 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
   this->glxrec.framebuff.resize(dpy, width, height, g_fbColorDepth);
 
   m_pixels  = (int*)this->glxrec.framebuff.data(); // #TODO: _aligned_malloc !
-  m_pixels2 = (int*)    aligned_alloc(64, (width + FB_BILLET_SIZE)*height*sizeof(int));
-  m_zbuffer = (float*)  aligned_alloc(64, (width + FB_BILLET_SIZE)*height*sizeof(float));
-  m_sbuffer = (uint8_t*)aligned_alloc(64, (width + FB_BILLET_SIZE)*height*sizeof(uint8_t));
-  
   m_tiledFb2.Resize(m_width, m_height);
   
   ResizeCommon(m_width, m_height); //#TODO: move memory allocation inside 'ResizeCommon'
@@ -129,9 +125,7 @@ void SWGL_Context::Create(Display *dpy, XVisualInfo *vis, int width, int height)
 
 void SWGL_Context::Destroy()
 {
-  free(m_pixels2); m_pixels2 = nullptr;
-  free(m_zbuffer); m_zbuffer = nullptr;
-  free(m_sbuffer); m_sbuffer = nullptr;
+
 }
 
 void SWGL_Context::CopyToScreeen()

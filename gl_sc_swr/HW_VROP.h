@@ -330,7 +330,7 @@ struct VROP
       const vfloat zOld  = load(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
-      if(test_bits_any(zTest))
+      if(tst_nz(zTest))
       {
         prefetch(pLineColor);
         const auto z = rcp_e(zInv);

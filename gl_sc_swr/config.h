@@ -26,8 +26,7 @@ using FrameBufferType = FrameBufferTwoLvl<uint32_t,64,4,4>;
 
 struct FrameBuffer
 {
-  FrameBuffer() : w(0), h(0), pitch(0), dummy(0), vx(0), vy(0), vw(0), vh(0),
-                  cbuffer(nullptr), zbuffer(nullptr), sbuffer(nullptr) {}
+  FrameBuffer() : w(0), h(0), pitch(0), dummy(0), vx(0), vy(0), vw(0), vh(0) {}
 
   int w;
   int h;
@@ -38,10 +37,6 @@ struct FrameBuffer
   int vy; // viewport min y
   int vw; // viewport width
   int vh; // viewport height
-
-  int*     cbuffer; // DEPRECATED !!!
-  float*   zbuffer; // DEPRECATED !!!
-  uint8_t* sbuffer; // DEPRECATED !!!
 
   using ColorType = FrameBufferType::ColorType;
   FrameBufferType* m_pImpl;  
@@ -191,8 +186,8 @@ struct HWImplBlock4x4Fixp_CVEX : public HWImplementationPureCpp
 //using HWImpl = HWImplementationPureCpp;
 //using HWImpl = HWImpl_SSE1;
 //using HWImpl = HWImplBlock4x4_CVEX;
-using HWImpl = HWImplBlock8x2_CVEX; // does not works with binned FB currently due to we removed FB_BILLET
-//using HWImpl = HWImplBlock16x1_CVEX;
+//using HWImpl = HWImplBlock8x2_CVEX; // does not works with binned FB currently due to we removed FB_BILLET
+using HWImpl = HWImplBlock16x1_CVEX;
 //using HWImpl = HWImplBlockLine4x4Fixp_CVEX;
 using Triangle = HWImpl::TriangleType;
 

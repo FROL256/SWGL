@@ -290,7 +290,7 @@ struct SWGL_Context
 
 #else
   
-  SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f),
+  SWGL_Context() : m_pixels(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f),
                    m_tqueue(MAX_NUM_TRIANGLES_TOTAL), m_useTriQueue(false), m_useTiledFB(false)
   {
     InitCommon();
@@ -308,10 +308,7 @@ struct SWGL_Context
   void InitCommon();
   void ResizeCommon(int width, int height);
   
-  uint8_t* m_sbuffer;
-  float*   m_zbuffer;
   int*     m_pixels;
-  int*     m_pixels2;
   int      m_width, m_height;
   float    m_fwidth, m_fheight;
 
@@ -363,9 +360,6 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
 {
   FrameBuffer frameBuff;
 
-  frameBuff.cbuffer    = a_pContext->m_pixels2;
-  frameBuff.zbuffer    = a_pContext->m_zbuffer;
-  frameBuff.sbuffer    = a_pContext->m_sbuffer;
   frameBuff.w          = a_pContext->m_width;
   frameBuff.h          = a_pContext->m_height;
   frameBuff.pitch      = frameBuff.w + FB_BILLET_SIZE;
@@ -374,12 +368,6 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
   frameBuff.vy = a_state.viewport[1];
   frameBuff.vw = a_state.viewport[2];
   frameBuff.vh = a_state.viewport[3];
-
-  if (!a_state.depthTestEnabled)
-    frameBuff.zbuffer = nullptr;
-
-  if (!a_state.stencilTestEnabled)
-    frameBuff.sbuffer = nullptr;
 
   frameBuff.m_pImpl = &a_pContext->m_tiledFb2;
 

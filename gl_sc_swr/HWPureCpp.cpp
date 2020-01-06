@@ -303,7 +303,7 @@ static void RasterizeTriHalfSpace2D_Fill(const TriangleLocal& tri, int tileMinX,
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
-  int* cbuff     = frameBuf->cbuffer;
+  int* cbuff     = nullptr; // frameBuf->cbuffer;
 
   // Constant part of half-edge functions
   const float C1 = Dy12 * x1 - Dx12 * y1;
@@ -376,7 +376,7 @@ static void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int 
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
-  int* cbuff     = frameBuf->cbuffer;
+  int* cbuff     = nullptr; //frameBuf->cbuffer;
 
   // Constant part of half-edge functions
   const float C1 = Dy12 * x1 - Dx12 * y1;
@@ -453,8 +453,8 @@ static void RasterizeTriHalfSpace3D(const TriangleLocal& tri, int tileMinX, int 
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
-  int*     cbuff = frameBuf->cbuffer;
-  float*   zbuff = frameBuf->zbuffer;
+  int*     cbuff = nullptr; // frameBuf->cbuffer;
+  float*   zbuff = nullptr; // frameBuf->zbuffer;
   //uint8_t* sbuff = frameBuf->sbuffer;
 
   // Constant part of half-edge functions
@@ -540,8 +540,8 @@ static void RasterizeTriHalfSpace3DBlend(const TriangleLocal& tri, int tileMinX,
   const int maxx = std::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1);
   const int maxy = std::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1);
 
-  int*   cbuff = frameBuf->cbuffer;
-  float* zbuff = frameBuf->zbuffer;
+  int*   cbuff = nullptr; //frameBuf->cbuffer;
+  float* zbuff = nullptr; //frameBuf->zbuffer;
   //uint8_t* sbuff = frameBuf->getSBuffer();
 
   // Constant part of half-edge functions

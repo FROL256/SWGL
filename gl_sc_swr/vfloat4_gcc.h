@@ -213,6 +213,8 @@ namespace cvex
   static inline bool cmp_ge (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpge_ps(a, b)))      == 15; }
   static inline bool cmp_le (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmple_ps(a, b)))      == 15; }
 
+  static inline bool tst_nz (const vint4 a) { return _mm_movemask_ps(as_float32(a)) != 0; }
+
   inline static unsigned int color_pack_rgba(const vfloat4 rel_col)
   {
     static constexpr vfloat4 const_255 = { 255.0f, 255.0f, 255.0f, 255.0f };

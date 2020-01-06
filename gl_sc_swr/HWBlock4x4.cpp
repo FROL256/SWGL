@@ -38,7 +38,7 @@ using cvex::clamp;
 
 using cvex::store;
 using cvex::prefetch;
-
+using cvex::tst_nz;
 
 using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::FillColor;
 
