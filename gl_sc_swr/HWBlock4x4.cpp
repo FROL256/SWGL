@@ -68,11 +68,7 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
 {
   cvex::set_ftz();
 
-  const auto a_ropT = tri.ropId;
-
-  const bool isWhite = tri.IsWhite();
-
-  switch (a_ropT)
+  switch (tri.ropId)
   {
     case ROP_Colored2D:
       RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, tileMinX, tileMinY,
@@ -85,7 +81,6 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
                                                         frameBuf);
       break;
   
-    case ROP_TexLinear2D:
     case ROP_TexNearest2D:
 
       if(tri.IsWhite())
@@ -96,14 +91,31 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
                                                                  frameBuf);
       break;
 
+    case ROP_TexLinear2D:
+      if(tri.IsWhite())
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_BW,4,4>(tri, tileMinX, tileMinY, 
+                                                                  frameBuf);
+      else
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_B,4,4>(tri, tileMinX, tileMinY, 
+                                                                 frameBuf);
+      break;
+
     case ROP_TexNearest3D:
-    case ROP_TexLinear3D:
-    
+
       if(tri.IsWhite())
         RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_PW,4,4>(tri, tileMinX, tileMinY,
                                                                 frameBuf);
       else
         RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P,4,4>(tri, tileMinX, tileMinY,
+                                                                frameBuf);
+
+    case ROP_TexLinear3D:
+    
+      if(tri.IsWhite())
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_BW,4,4>(tri, tileMinX, tileMinY,
+                                                                frameBuf);
+      else
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B,4,4>(tri, tileMinX, tileMinY,
                                                                 frameBuf);
                                                               
       break;

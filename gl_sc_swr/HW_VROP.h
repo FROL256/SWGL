@@ -50,52 +50,15 @@ struct TileOp<vint, 4>
   static inline void gather4(const int* a_data, const int pitch, const vint offset,
                              vint a_result[4])
   {
-    CVEX_ALIGNED(16) int myOffsets[4];
-    store(myOffsets, offset);
+    
+    const vint vOne   = splat(1);
+    const vint vPitch = splat(pitch);
 
-    const int* p0 = a_data + myOffsets[0];
-    const int* p1 = a_data + myOffsets[1];
-    const int* p2 = a_data + myOffsets[2];
-    const int* p3 = a_data + myOffsets[3];
-
-    const int d01 = p0[0 + 0 * pitch];
-    const int d02 = p0[1 + 0 * pitch];
-    const int d03 = p0[0 + 1 * pitch];
-    const int d04 = p0[1 + 1 * pitch];
-
-    const int d11 = p1[0 + 0 * pitch];
-    const int d12 = p1[1 + 0 * pitch];
-    const int d13 = p1[0 + 1 * pitch];
-    const int d14 = p1[1 + 1 * pitch];
-
-    const int d21 = p2[0 + 0 * pitch];
-    const int d22 = p2[1 + 0 * pitch];
-    const int d23 = p2[0 + 1 * pitch];
-    const int d24 = p2[1 + 1 * pitch];
-
-    const int d31 = p3[0 + 0 * pitch];
-    const int d32 = p3[1 + 0 * pitch];
-    const int d33 = p3[0 + 1 * pitch];
-    const int d34 = p3[1 + 1 * pitch];
-
-    a_result[0] = vint{d01, d11, d21, d31};
-    a_result[1] = vint{d02, d12, d22, d32};
-    a_result[2] = vint{d03, d13, d23, d33};
-    a_result[3] = vint{d04, d14, d24, d34};
+    a_result[0] = gather(a_data, offset);
+    a_result[1] = gather(a_data, offset + vOne);
+    a_result[2] = gather(a_data, offset + vPitch);
+    a_result[3] = gather(a_data, offset + vPitch + vOne);
   }
-
-  //static inline vint gather(const int* a_data, const int pitch, const vint offset)
-  //{
-  //  CVEX_ALIGNED(16) int myOffsets[4];
-  //  store(myOffsets, offset);
-  //
-  //  const int d01 = a_data[myOffsets[0]];
-  //  const int d11 = a_data[myOffsets[1]];
-  //  const int d21 = a_data[myOffsets[2]];
-  //  const int d31 = a_data[myOffsets[3]];
-  //
-  //  return vint{d01, d11, d21, d31};
-  //}
 
 };
 
@@ -113,82 +76,15 @@ struct TileOp<vint, 8>
   static inline void gather4(const int* a_data, const int pitch, const vint offset,
                              vint a_result[4])
   {
-    CVEX_ALIGNED(32) int myOffsets[8];
-    store(myOffsets, offset);
+    const vint vOne   = splat(1);
+    const vint vPitch = splat(pitch);
 
-    const int* p0 = a_data + myOffsets[0];
-    const int* p1 = a_data + myOffsets[1];
-    const int* p2 = a_data + myOffsets[2];
-    const int* p3 = a_data + myOffsets[3];
-
-    const int* p4 = a_data + myOffsets[4];
-    const int* p5 = a_data + myOffsets[5];
-    const int* p6 = a_data + myOffsets[6];
-    const int* p7 = a_data + myOffsets[7];
-
-    const int d01 = p0[0 + 0 * pitch];
-    const int d02 = p0[1 + 0 * pitch];
-    const int d03 = p0[0 + 1 * pitch];
-    const int d04 = p0[1 + 1 * pitch];
-
-    const int d11 = p1[0 + 0 * pitch];
-    const int d12 = p1[1 + 0 * pitch];
-    const int d13 = p1[0 + 1 * pitch];
-    const int d14 = p1[1 + 1 * pitch];
-
-    const int d21 = p2[0 + 0 * pitch];
-    const int d22 = p2[1 + 0 * pitch];
-    const int d23 = p2[0 + 1 * pitch];
-    const int d24 = p2[1 + 1 * pitch];
-
-    const int d31 = p3[0 + 0 * pitch];
-    const int d32 = p3[1 + 0 * pitch];
-    const int d33 = p3[0 + 1 * pitch];
-    const int d34 = p3[1 + 1 * pitch];
-
-    const int d41 = p4[0 + 0 * pitch];
-    const int d42 = p4[1 + 0 * pitch];
-    const int d43 = p4[0 + 1 * pitch];
-    const int d44 = p4[1 + 1 * pitch];
-
-    const int d51 = p5[0 + 0 * pitch];
-    const int d52 = p5[1 + 0 * pitch];
-    const int d53 = p5[0 + 1 * pitch];
-    const int d54 = p5[1 + 1 * pitch];
-
-    const int d61 = p6[0 + 0 * pitch];
-    const int d62 = p6[1 + 0 * pitch];
-    const int d63 = p6[0 + 1 * pitch];
-    const int d64 = p6[1 + 1 * pitch];
-
-    const int d71 = p7[0 + 0 * pitch];
-    const int d72 = p7[1 + 0 * pitch];
-    const int d73 = p7[0 + 1 * pitch];
-    const int d74 = p7[1 + 1 * pitch];
-
-    a_result[0] = vint{d01, d11, d21, d31, d41, d51, d61, d71};
-    a_result[1] = vint{d02, d12, d22, d32, d42, d52, d62, d72};
-    a_result[2] = vint{d03, d13, d23, d33, d43, d53, d63, d73};
-    a_result[3] = vint{d04, d14, d24, d34, d44, d54, d64, d74};
+    a_result[0] = gather(a_data, offset);
+    a_result[1] = gather(a_data, offset + vOne);
+    a_result[2] = gather(a_data, offset + vPitch);
+    a_result[3] = gather(a_data, offset + vPitch + vOne);
   }
 
-
-  //static inline vint gather(const int* a_data, const int pitch, const vint offset)
-  //{
-  //  CVEX_ALIGNED(32) int myOffsets[8];
-  //  store(myOffsets, offset);
-  //
-  //  const int d01 = a_data[myOffsets[0]];
-  //  const int d11 = a_data[myOffsets[1]];
-  //  const int d21 = a_data[myOffsets[2]];
-  //  const int d31 = a_data[myOffsets[3]];
-  //  const int d41 = a_data[myOffsets[4]];
-  //  const int d51 = a_data[myOffsets[5]];
-  //  const int d61 = a_data[myOffsets[6]];
-  //  const int d71 = a_data[myOffsets[7]];
-  //
-  //  return vint{d01, d11, d21, d31, d41, d51, d61, d71};
-  //}
 };
 
 
@@ -212,37 +108,14 @@ struct TileOp<vint, 16>
   static inline void gather4(const int* a_data, const int pitch, const vint offset,
                              vint a_result[4])
   {
-   
+    const vint vOne   = splat(1);
+    const vint vPitch = splat(pitch);
+
+    a_result[0] = gather(a_data, offset);
+    a_result[1] = gather(a_data, offset + vOne);
+    a_result[2] = gather(a_data, offset + vPitch);
+    a_result[3] = gather(a_data, offset + vPitch + vOne);
   }
-
-  //static inline vint gather(const int* a_data, const int pitch, const vint offset) // TODO: use _mm512_i32gather_epi32
-  //{
-  //  CVEX_ALIGNED(64) int myOffsets[16];
-  //  store(myOffsets, offset);
-  //
-  //  const int d01 = a_data[myOffsets[0]];
-  //  const int d11 = a_data[myOffsets[1]];
-  //  const int d21 = a_data[myOffsets[2]];
-  //  const int d31 = a_data[myOffsets[3]];
-  //
-  //  const int d41 = a_data[myOffsets[4]];
-  //  const int d51 = a_data[myOffsets[5]];
-  //  const int d61 = a_data[myOffsets[6]];
-  //  const int d71 = a_data[myOffsets[7]];
-  //
-  //  const int d81 = a_data[myOffsets[8]];
-  //  const int d91 = a_data[myOffsets[9]];
-  //  const int dA1 = a_data[myOffsets[10]];
-  //  const int dB1 = a_data[myOffsets[11]];
-  //
-  //  const int dC1 = a_data[myOffsets[12]];
-  //  const int dD1 = a_data[myOffsets[13]];
-  //  const int dE1 = a_data[myOffsets[14]];
-  //  const int dF1 = a_data[myOffsets[15]];
-  //
-  //  return vint{d01, d11, d21, d31, d41, d51, d61, d71, d81, d91, dA1, dB1, dC1, dD1, dE1, dF1};
-  //}
-
 };
 
 
@@ -341,14 +214,6 @@ struct VROP
         const auto a = (tri.c1.w * w1 + tri.c2.w * w2 + tri.c3.w * w3)*z;
 
         const vint colorOld = load(pLineColor);
-
-        //const vint colori = splat(int(0xFFFFFFFF));
-
-        //const vint ri = splat(255); // to_int32(r * c_255);
-        //const vint gi = splat(0); // to_int32(g * c_255);
-        //const vint bi = splat(255); // to_int32(b * c_255);
-        //const vint ai = splat(0); // to_int32(a * c_255);
-        //const vint colori = (ri << 16) | (gi << 8) | bi | (ai << 24);
 
         const vint colori = (to_int32(r * c_255) << 16) | // BGRA
                             (to_int32(g * c_255) << 8)  |
