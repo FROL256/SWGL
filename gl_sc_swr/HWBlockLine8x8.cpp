@@ -64,10 +64,11 @@ void HWImplBlockLine8x8_CVEX::RasterizeTriangle(const TriangleType& tri, int til
   switch (a_ropT)
   {
     case ROP_Colored2D:
-      RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D>(tri, tileMinX, tileMinY,
+      RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, tileMinX, tileMinY,
                                                         frameBuf);
       break;
-
+    
+    /*
     case ROP_Colored3D:
       RasterizeTriHalfSpaceBlockLineFixp3D<ROP_CVEX_3D>(tri, tileMinX, tileMinY,
                                                         frameBuf);
@@ -111,6 +112,7 @@ void HWImplBlockLine8x8_CVEX::RasterizeTriangle(const TriangleType& tri, int til
       RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D>(tri, tileMinX, tileMinY,
                                                         frameBuf);
       break;
+     */ 
   };
 
 }

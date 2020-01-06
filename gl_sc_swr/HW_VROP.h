@@ -12,9 +12,9 @@
 #endif
 
 template<typename vint, int n>
-struct LineOffs
+struct TileOp
 {
-  static inline vint w(const int CX1, const int FDY12)
+  static inline vint w(const int CX1, const int FDY12, const int FDX12)
   {
     CVEX_ALIGNED(n*4) int w1i[n];
 
@@ -25,29 +25,30 @@ struct LineOffs
     return (vint)load(w1i);
   }
 
-  static inline void load4(const int* a_data, const int pitch, const vint offset,
-                           vint a_result[4])
+  static inline void gather4(const int* a_data, const int pitch, const vint offset,
+                             vint a_result[4])
   {
 
   }
 
-  static inline vint load1(const int* a_data, const int pitch, const vint offset)
+  static inline vint gather(const int* a_data, const int pitch, const vint offset)
   {
-    vint temp = splat(0);
-    return temp;
+    return splat(0);
   }
 };
 
 template<typename vint>
-struct LineOffs<vint, 4>
+struct TileOp<vint, 4>
 {
-  static inline vint w(const int CX1, const int FDY12)
+  static inline vint w(const int CX1, const int FDY12, const int FDX12)
   {
-    return vint{CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3};
+    const vint vCX1   = splat(CX1);
+    const vint vFDY12 = splat(FDY12);
+    return vCX1 - vFDY12*vint{0,1,2,3}; 
   }
 
-  static inline void load4(const int* a_data, const int pitch, const vint offset,
-                           vint a_result[4])
+  static inline void gather4(const int* a_data, const int pitch, const vint offset,
+                             vint a_result[4])
   {
     CVEX_ALIGNED(16) int myOffsets[4];
     store(myOffsets, offset);
@@ -83,7 +84,7 @@ struct LineOffs<vint, 4>
     a_result[3] = vint{d04, d14, d24, d34};
   }
 
-  static inline vint load1(const int* a_data, const int pitch, const vint offset)
+  static inline vint gather(const int* a_data, const int pitch, const vint offset)
   {
     CVEX_ALIGNED(16) int myOffsets[4];
     store(myOffsets, offset);
@@ -98,17 +99,19 @@ struct LineOffs<vint, 4>
 
 };
 
+
 template<typename vint>
-struct LineOffs<vint, 8>
+struct TileOp<vint, 8>
 {
-  static inline vint w(const int CX1, const int FDY12)
+  static inline vint w(const int CX1, const int FDY12, const int FDX12)
   {
-    return vint{CX1, CX1 - FDY12, CX1 - FDY12*2, CX1 - FDY12*3, CX1 - FDY12*4, CX1 - FDY12*5, CX1 - FDY12*6, CX1 - FDY12*7};
+    const cvex::vint4 row0   = cvex::splat(CX1) - cvex::splat(FDY12)*cvex::vint4{0,1,2,3}; 
+    const cvex::vint4 row1   = row0 + cvex::splat(FDX12);
+    return cvex8::join(row0, row1); 
   }
 
-
-  static inline void load4(const int* a_data, const int pitch, const vint offset,
-                           vint a_result[4])
+  static inline void gather4(const int* a_data, const int pitch, const vint offset,
+                             vint a_result[4])
   {
     CVEX_ALIGNED(32) int myOffsets[8];
     store(myOffsets, offset);
@@ -170,7 +173,7 @@ struct LineOffs<vint, 8>
   }
 
 
-  static inline vint load1(const int* a_data, const int pitch, const vint offset)
+  static inline vint gather(const int* a_data, const int pitch, const vint offset)
   {
     CVEX_ALIGNED(32) int myOffsets[8];
     store(myOffsets, offset);
@@ -189,6 +192,61 @@ struct LineOffs<vint, 8>
 };
 
 
+template<typename vint>
+struct TileOp<vint, 16>
+{
+  static inline vint w(const int CX1, const int FDY12, const int FDX12)
+  {
+    const cvex::vint4 vFDX12 = cvex::splat(FDX12);
+    const cvex::vint4 row0   = splat(CX1) - splat(FDY12)*vint{0,1,2,3}; 
+    const cvex::vint4 row1   = row0 + vFDX12;
+    const cvex::vint4 row2   = row0 + vFDX12*2;
+    const cvex::vint4 row3   = row0 + vFDX12*3;
+    
+    const cvex8::vint8 half1 = cvex8::join(row0, row1); 
+    const cvex8::vint8 half2 = cvex8::join(row2, row3);
+
+    return cvex16::join(half1, half2); 
+  }
+
+  static inline void gather4(const int* a_data, const int pitch, const vint offset,
+                             vint a_result[4])
+  {
+   
+  }
+
+  static inline vint gather(const int* a_data, const int pitch, const vint offset) // TODO: use _mm512_i32gather_epi32
+  {
+    CVEX_ALIGNED(64) int myOffsets[16];
+    store(myOffsets, offset);
+
+    const int d01 = a_data[myOffsets[0]];
+    const int d11 = a_data[myOffsets[1]];
+    const int d21 = a_data[myOffsets[2]];
+    const int d31 = a_data[myOffsets[3]];
+
+    const int d41 = a_data[myOffsets[4]];
+    const int d51 = a_data[myOffsets[5]];
+    const int d61 = a_data[myOffsets[6]];
+    const int d71 = a_data[myOffsets[7]];
+
+    const int d81 = a_data[myOffsets[8]];
+    const int d91 = a_data[myOffsets[9]];
+    const int dA1 = a_data[myOffsets[10]];
+    const int dB1 = a_data[myOffsets[11]];
+
+    const int dC1 = a_data[myOffsets[12]];
+    const int dD1 = a_data[myOffsets[13]];
+    const int dE1 = a_data[myOffsets[14]];
+    const int dF1 = a_data[myOffsets[15]];
+
+    return vint{d01, d11, d21, d31, d41, d51, d61, d71, d81, d91, dA1, dB1, dC1, dD1, dE1, dF1};
+  }
+
+};
+
+
+
 
 
 template<typename TriangleT, typename vfloat, typename vint, int width, bool bilinearIsEnabled>
@@ -201,14 +259,9 @@ struct VROP
     enum {n = width};
     using Triangle = TriangleT;
 
-    static inline vint Line(const TriangleT& tri)
+    static inline vint Block(const TriangleT& tri)
     {
       return splat((int)color_pack_bgra(tri.c1));
-    }
-
-    static inline void store_line(int* line, vint data)
-    {
-      store(line, data);
     }
 
   };
@@ -220,14 +273,14 @@ struct VROP
     enum {n = width};
     using Triangle = TriangleT;
 
-    static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
-                            int* pLineColor)
+    static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
+                             int* pLineColor)
     {
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
-      const vfloat w1 = areaInv*to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
-      const vfloat w2 = areaInv*to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w1 = areaInv*to_float32( TileOp<vint,n>::w(CX1, FDY12, FDX12) );
+      const vfloat w2 = areaInv*to_float32( TileOp<vint,n>::w(CX2, FDY23, FDX23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat r = tri.c1.x*w1 + tri.c2.x*w2 + tri.c3.x*w3;
@@ -260,15 +313,15 @@ struct VROP
     enum {n = width};
     using Triangle = TriangleT;
 
-    static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
-                            int* pLineColor, float* pLineDepth)
+    static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
+                             int* pLineColor, float* pLineDepth)
     {
       prefetch(pLineDepth);
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
-      const vfloat w1 = areaInv* to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
-      const vfloat w2 = areaInv* to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w1 = areaInv*to_float32( TileOp<vint,n>::w(CX1, FDY12, FDX12) );
+      const vfloat w2 = areaInv*to_float32( TileOp<vint,n>::w(CX2, FDY23, FDX23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
@@ -376,7 +429,7 @@ struct VROP
     const vint offset = (py*pitch) + px;
 
     vint ipixels[4];
-    LineOffs<vint,width>::load4(pData, pitch, offset,
+    TileOp<vint,width>::gather4(pData, pitch, offset,
                                 ipixels);
 
     const auto mask_R = splat(0x000000FF);
@@ -434,7 +487,7 @@ struct VROP
     const vfloat mult = splat(0.003921568f); // (1.0f/255.0f);
 
     const vint offset = (py*pitch) + px;
-    const vint ipixel = LineOffs<vint,width>::load1(pData, pitch, offset);
+    const vint ipixel = TileOp<vint,width>::gather(pData, pitch, offset);
 
     const auto mask_R = splat(0x000000FF);
     const auto mask_G = splat(0x0000FF00);
@@ -503,7 +556,7 @@ struct VROP
     const vint offset = (py*pitch) + px;
 
     vint ipixels[4];
-    LineOffs<vint,width>::load4(pData, pitch, offset,
+    TileOp<vint,width>::gather4(pData, pitch, offset,
                                 ipixels);
 
     const vint mask_R = splat(int(0x000000FF));
@@ -555,7 +608,7 @@ struct VROP
     const vfloat mult = splat(0.003921568f); // (1.0f/255.0f);
 
     const vint offset = (py*pitch) + px;
-    const vint ipixel = LineOffs<vint,width>::load1(pData, pitch, offset);
+    const vint ipixel = TileOp<vint,width>::gather(pData, pitch, offset);
 
     const vint mask_R = splat(int(0x000000FF));
     const vint mask_G = splat(int(0x0000FF00));
@@ -592,14 +645,14 @@ struct VROP
     enum {n = width};
     using Triangle = TriangleT;
 
-    static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
-                            int* pLineColor)
+    static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
+                             int* pLineColor)
     {
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
-      const vfloat w1 = areaInv*to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
-      const vfloat w2 = areaInv*to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w1 = areaInv*to_float32( TileOp<vint,n>::w(CX1, FDY12, FDX12) );
+      const vfloat w2 = areaInv*to_float32( TileOp<vint,n>::w(CX2, FDY23, FDX23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat r = (tri.c1.x*w1 + tri.c2.x*w2 + tri.c3.x*w3);
@@ -639,16 +692,16 @@ struct VROP
     enum {n = width};
     using Triangle = TriangleT;
 
-    static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
-                            int* pLineColor, float* pLineDepth)
+    static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
+                             int* pLineColor, float* pLineDepth)
     {
       prefetch(pLineDepth);
 
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
-      const vfloat w1 = areaInv*to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
-      const vfloat w2 = areaInv*to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w1 = areaInv*to_float32( TileOp<vint,n>::w(CX1, FDY12, FDX12) );
+      const vfloat w2 = areaInv*to_float32( TileOp<vint,n>::w(CX2, FDY23, FDX23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
@@ -717,8 +770,8 @@ struct VROP
     enum {n = width};
     using Triangle = TriangleT;
 
-    static inline void Line(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const float areaInv,
-                            int* pLineColor, float* pLineDepth)
+    static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
+                             int* pLineColor, float* pLineDepth)
     {
       prefetch(pLineDepth);
 
@@ -726,8 +779,8 @@ struct VROP
       const vfloat c_255    = splat(255.0f);
       const vfloat c_255Inv = splat(1.0f/255.0f);
 
-      const vfloat w1 = areaInv*to_float32( LineOffs<vint,n>::w(CX1, FDY12) );
-      const vfloat w2 = areaInv*to_float32( LineOffs<vint,n>::w(CX2, FDY23) );
+      const vfloat w1 = areaInv*to_float32( TileOp<vint,n>::w(CX1, FDY12, FDX12) );
+      const vfloat w2 = areaInv*to_float32( TileOp<vint,n>::w(CX2, FDY23, FDX23) );
       const vfloat w3 = (c_one - w1 - w2);
 
       const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;

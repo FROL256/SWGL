@@ -8,6 +8,8 @@
     #include "vfloat4_arm.h"
   #else
     #include "vfloat4_gcc.h"
+    #include "vfloat8_gcc.h"
+    #include "vfloat16_gcc.h"
   #endif  
 #endif 
 
