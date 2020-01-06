@@ -1,4 +1,4 @@
-#include "HWAbstractionLayer.h"
+#include "config.h"
 #include "swgl.h"
 
 #ifdef WIN32
@@ -10,6 +10,25 @@
 
 #include "LiteMath.h"
 using namespace LiteMath;
+
+#ifdef LINUX_PPC_HS_INVERT_Y
+
+static inline inline int lineOffset(int y, int w, int h) { return (h - y - 1)*w; }
+static inline inline int nextLine(int y, int w, int h)   { return y - w; }
+
+#else
+
+static inline int lineOffset(int y, int w, int h) { return y*w; }
+static inline int nextLine(int y, int w, int h)   { return y + w; }
+
+#endif
+
+static inline float edgeFunction(LiteMath::float2 a, LiteMath::float2 b, LiteMath::float2 c) // actuattly just a mixed product ... :)
+{
+  return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
+}
+
+#define HALF_SPACE_EPSILON (-1e-4f)
 
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 

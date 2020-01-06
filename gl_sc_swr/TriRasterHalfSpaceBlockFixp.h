@@ -6,10 +6,16 @@
 #define TEST_GL_TOP_SIMDBLOCKFIXP_H
 
 #include <cstring>
+#include <cstdint>
+
+#include "config.h"
 
 static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
+
+template<typename T> float TriAreaInvCast(const int a_areaInvInt)           { return 1.0f / fabs(float(a_areaInvInt)); }                                // for floating point pixel processing
+template<> float           TriAreaInvCast<uint32_t>(const int a_areaInvInt) { return (unsigned int)(0xFFFFFFFF) / (unsigned int)(abs(a_areaInvInt)); }  // for fixed    point pixel processing
 
 template<typename ROP, int blockSizeX, int blockSizeY>
 void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
@@ -17,6 +23,8 @@ void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int til
 {
   constexpr int BLOCK_ITER = (blockSizeX*blockSizeY)/ROP::n;       
   constexpr int BMULT      = ROP::n/blockSizeX;   
+
+  typedef typename ROP::ROPType ROPType;
 
   // 28.4 fixed-point coordinates
   const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
@@ -61,7 +69,7 @@ void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int til
   if (DY23 < 0 || (DY23 == 0 && DX23 > 0)) C2++;
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
-  const float areaInv = 1.0f / fabs(float(DY31*DX12 - DX31*DY12));
+  const auto areaInv = TriAreaInvCast<ROPType>(DY31*DX12 - DX31*DY12);
   
   // Loop through blocks
   for (int y = miny; y < maxy; y += blockSizeY)
@@ -155,12 +163,12 @@ void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int til
 
 }
 
-template<typename ROP>
-void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
-                                                   FrameBuffer *frameBuf)
+template<typename ROP, int blockSizeX, int blockSizeY>
+void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
+                                      FrameBuffer *frameBuf)
 {
-  constexpr int blockSize = ROP::n;
-  typedef typename ROP::Triangle Triangle;
+  constexpr int BLOCK_ITER = (blockSizeX*blockSizeY)/ROP::n;       
+  constexpr int BMULT      = ROP::n/blockSizeX;   
 
   // 28.4 fixed-point coordinates
   const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
@@ -190,13 +198,10 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
   const int FDY31 = DY31 << 4;
 
   // Bounding rectangle
-  const int minx = ( imax(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
-  const int miny = ( imax(tri.bb_iminY - tileMinY, 0)               ) & ~(blockSize - 1);  // Start in corner of 8x8 block
-  const int maxx = ( imin(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
-  const int maxy = ( imin(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
-
-  const int pitch  = frameBuf->pitch;
-  int* colorBuffer = frameBuf->cbuffer + miny * pitch;
+  const int minx = ( LiteMath::max(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSizeX - 1);  // Start in corner of 8x8 block
+  const int miny = ( LiteMath::max(tri.bb_iminY - tileMinY, 0)               ) & ~(blockSizeY - 1);  // Start in corner of 8x8 block
+  const int maxx = ( LiteMath::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
+  const int maxy = ( LiteMath::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
 
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;
@@ -208,18 +213,18 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
   if (DY23 < 0 || (DY23 == 0 && DX23 > 0)) C2++;
   if (DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
-  const unsigned int areaInv = (unsigned int)(0xFFFFFFFF) / (unsigned int)(abs(DY31*DX12 - DX31*DY12));
+  const float areaInv = 1.0f / fabs(float(DY31*DX12 - DX31*DY12));
   
   // Loop through blocks
-  for (int y = miny; y < maxy; y += blockSize)
+  for (int y = miny; y < maxy; y += blockSizeY)
   {
-    for (int x = minx; x < maxx; x += blockSize)
+    for (int x = minx; x < maxx; x += blockSizeX)
     {
       // Corners of block
       const int x0 = x << 4;
-      const int x1 = (x + blockSize - 1) << 4;
+      const int x1 = (x + blockSizeX - 1) << 4;
       const int y0 = y << 4;
-      const int y1 = (y + blockSize - 1) << 4;
+      const int y1 = (y + blockSizeY - 1) << 4;
 
       // Evaluate half-space functions
       const bool a00 = C1 + DX12 * y0 - DY12 * x0 > 0;
@@ -244,9 +249,9 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
       if (a == 0x0 || b == 0x0 || c == 0x0)
         continue;
 
-      int *buffer = colorBuffer;
-
-
+      auto* buffer = frameBuf->TileColor(x,y);
+      auto* depth  = frameBuf->TileDepth(x,y);
+      
       // Accept whole block when totally covered
       if (a == 0xF && b == 0xF && c == 0xF)
       {
@@ -254,16 +259,17 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
         int CY2 = C2 + DX23 * y0 - DY23 * x0;
         int CY3 = C3 + DX31 * y0 - DY31 * x0;
 
-        for (int iy = 0; iy < blockSize; iy++)
+        for (int iy = 0; iy < BLOCK_ITER; iy++)
         {
           ROP::Block(tri, CY1, CY3, FDY12, FDY31, FDX12, FDX31, areaInv,
-                     buffer + x);
+                     buffer, depth);
 
-          CY1 += FDX12;
-          CY2 += FDX23;
-          CY3 += FDX31;
+          CY1 += FDX12*BMULT;
+          CY2 += FDX23*BMULT;
+          CY3 += FDX31*BMULT;
 
-          buffer += pitch;
+          buffer += blockSizeX*BMULT;
+          depth  += blockSizeX*BMULT;
         }
       }
       else
@@ -272,16 +278,19 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
         int CY2 = C2 + DX23 * y0 - DY23 * x0;
         int CY3 = C3 + DX31 * y0 - DY31 * x0;
 
-        for (int iy = y; iy < y + blockSize; iy++)
+        for (int iy = y; iy < y + blockSizeY; iy++)
         {
           int CX1 = CY1;
           int CX2 = CY2;
           int CX3 = CY3;
 
-          for (int ix = x; ix < x + blockSize; ix++)
+          for (int ix = 0; ix < blockSizeX; ix++)
           {
             if (CX1 > 0 && CX2 > 0 && CX3 > 0)
-              buffer[ix] = ROP::Pixel(tri, CX1, CX3, areaInv);
+            {
+              ROP::Pixel(tri, CX1, CX3, areaInv,
+                         buffer + ix, depth + ix);
+            }
 
             CX1 -= FDY12;
             CX2 -= FDY23;
@@ -292,15 +301,17 @@ void RasterizeTriHalfSpaceBlockLineFixp2D_FixpRast(const typename ROP::Triangle 
           CY2 += FDX23;
           CY3 += FDX31;
 
-          buffer += pitch;
+          buffer += blockSizeY;
+          depth  += blockSizeY;
         }
       }
-  
+    
     }
-
-    colorBuffer += blockSize * pitch;
   }
+  // \\ end // Loop through blocks
 
 }
+
+
 
 #endif //TEST_GL_TOP_SIMDBLOCKFIXP_H

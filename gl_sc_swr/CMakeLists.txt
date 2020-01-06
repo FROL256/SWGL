@@ -12,19 +12,15 @@ set(SOURCE_LIB
         alloc16.h
         gl_sc.h
         gl_std.h
-        HWAbstractionLayer.h
         HWPureCpp.cpp
         swgl.cpp
         TexSampler.h
-        TriRaster.h
         BatchExport.cpp
         gl_sc_minimal.cpp
         LiteMath.h
-        HWPureCpp.h
         swgl.h
         gl_sc_standart.cpp
         glx_sc.cpp
-        SWGL_TiledFrameBuffer.cpp
         Timer.h
         config.h
         gl_standart.cpp
@@ -34,7 +30,7 @@ set(SOURCE_LIB
         Timer.cpp
         HW_VROP.h HW_VROP_FIXP.h
         vfloat4_x64.h vfloat4_gcc.h vfloat8_x64.h vfloat8_gcc.h
-        HWBlock.h TriRasterHalfSpaceBlockFixp.h
+        TriRasterHalfSpaceBlockFixp.h
         HWBlock4x4.cpp HWBlock8x2.cpp HWBlock16x1.cpp)
 
 include_directories("..")

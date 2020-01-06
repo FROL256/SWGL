@@ -8,9 +8,9 @@
   #include "glx_sc.h"
 #endif
 
-#include "SWGL_TiledFrameBuffer.h"
-
 #include "LiteMath.h"
+#include "config.h"
+
 using namespace LiteMath;
 
 #include <cstdint>
@@ -25,9 +25,6 @@ using namespace LiteMath;
 #include <memory.h>
 #include <atomic>
 
-#include "TriRaster.h"
-#include "HWAbstractionLayer.h"
-
 #include "concurrentqueue.h"
 
 #define PI  ((float)3.1415926535)
@@ -39,6 +36,22 @@ using namespace LiteMath;
 
 const int MMPSTACKSIZE = 4;  ///< Projection Matrix stack size
 const int MMWSTACKSIZE = 32; ///< WolrdView  Matrix stack size
+
+struct SWGL_Timings
+{
+  SWGL_Timings() { clear(); }
+  
+  void clear() { msClear = 0.0f; msVertexShader = 0.0f; msTriSetUp = 0.0f; msRasterAndPixelShader = 0.0f; msSwapBuffers = 0.0f; msTotal = 0.0f; msBinRaster = 0.0f; }
+  
+  float msClear;
+  float msVertexShader;
+  float msTriSetUp;
+  float msRasterAndPixelShader;
+  float msSwapBuffers;
+  float msTotal;
+  float msBinRaster;
+};
+
 
 /**
 \brief This is Pipeline State Object (PSO) structure.

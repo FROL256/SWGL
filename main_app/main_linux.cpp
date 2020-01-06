@@ -21,7 +21,6 @@
 #include <iostream>
 
 #include "../gl_sc_swr/Timer.h"
-#include "../gl_sc_swr/config.h"
 
 const int WIN_WIDTH_INITIAL  = 1024;
 const int WIN_HEIGHT_INITIAL = 1024;
@@ -96,12 +95,12 @@ void ExposeFunc()
   try
   {
     //test01_colored_triangle();
-    demo01_colored_triangle(angle1);
+    //demo01_colored_triangle(angle1);
     //test02_nehe_lesson1_simplified();
 
     // paper demos
 
-    //demo04_pyramid_and_cube_3d(wa.width, wa.height, 40.0f, 20.0f);
+    demo04_pyramid_and_cube_3d(wa.width, wa.height, 40.0f, 20.0f);
     //demo03_many_small_dynamic_triangles();
     //demo19_cubes(wa.width, wa.height, 0.0f, 50.0f);
     //demo25_teapot(wa.width, wa.height, 0.0f, 0.0f);
@@ -273,6 +272,21 @@ void CheckKeyboard()
 //				MAIN PROGRAM					                                                //
 //////////////////////////////////////////////////////////////////////////////////
 #ifdef MEASURE_STATS
+struct SWGL_Timings
+{
+  SWGL_Timings() { clear(); }
+  
+  void clear() { msClear = 0.0f; msVertexShader = 0.0f; msTriSetUp = 0.0f; msRasterAndPixelShader = 0.0f; msSwapBuffers = 0.0f; msTotal = 0.0f; msBinRaster = 0.0f; }
+  
+  float msClear;
+  float msVertexShader;
+  float msTriSetUp;
+  float msRasterAndPixelShader;
+  float msSwapBuffers;
+  float msTotal;
+  float msBinRaster;
+};
+
 SWGL_Timings _swglGetStats();
 #endif
 

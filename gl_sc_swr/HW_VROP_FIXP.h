@@ -5,6 +5,7 @@
 #ifndef TEST_GL_TOP_RASTEROPERATIONS_FIXP_H
 #define TEST_GL_TOP_RASTEROPERATIONS_FIXP_H
 
+#include <cstdint>
 
 #ifndef WIN32
 #pragma GCC optimize ("unroll-loops")
@@ -43,11 +44,12 @@ template<typename TriangleT, typename vfloat, typename vint, int width, bool bil
 struct VROP_FIXP
 {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+ 
   struct FillColor
   {
     enum { n = width };
     using Triangle = TriangleT;
+    using ROPType  = uint32_t;
 
     static inline vint Line(const TriangleT &tri)
     {
@@ -67,6 +69,7 @@ struct VROP_FIXP
   {
     enum { n = width };
     using Triangle = TriangleT;
+    using ROPType  = uint32_t;
 
     static inline void Block(const TriangleT &tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const unsigned int areaInv,
                              int *pLineColor)

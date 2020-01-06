@@ -1,5 +1,4 @@
 #include "swgl.h"
-#include "HWAbstractionLayer.h"
 
 #ifdef FULL_GL
   #include "gl_std.h"

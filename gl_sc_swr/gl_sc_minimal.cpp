@@ -14,17 +14,11 @@
   #include "Timer.h"
 #endif
 
-#include "HWAbstractionLayer.h"
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// parallel tiles
 #include <algorithm>
 #include <future>
 #include <thread>
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// parallel tiles
 
 SWGL_Context* g_pContext = nullptr;
-
-
 SWGL_Timings _swglGetStats() { return g_pContext->m_timeStats; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,85 +92,6 @@ GLAPI void APIENTRY glBindTexture(GLenum target, GLuint texture)
 
 }
 
-void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
-{
-#ifdef MEASURE_NOLOAD_PERF
-  return;
-#endif
-
-  if((mask & GL_COLOR_BUFFER_BIT) != 0 && (mask & GL_DEPTH_BUFFER_BIT) != 0)
-  {
-    const int size     = (a_pContext->m_width + FB_BILLET_SIZE)*a_pContext->m_height;
-    const uint32_t val = a_pContext->input.clearColor1u;
-    const float vald   = 1.0f - a_pContext->input.clearDepth;
-
-    cvex::vfloat4 depthVal4 = {vald, vald, vald, vald};
-    cvex::vint4   colorVal4 = {val, val, val, val};
-
-    cvex::vfloat4* depth = (cvex::vfloat4*)a_pContext->m_zbuffer;
-    cvex::vint4*   color = (cvex::vint4*)a_pContext->m_pixels2;
-
-    size_t addr1 = reinterpret_cast<size_t>(depth);
-    size_t addr2 = reinterpret_cast<size_t>(color);
-
-    if(addr1%16 == 0 && addr2%16 == 0)
-    {
-      #pragma omp parallel for num_threads(NUM_THREADS_CLS)
-      for (int i = 0; i < size/4; i+=2)
-      {
-        cvex::store((float*)(depth+i+0), depthVal4);
-        cvex::store((float*)(depth+i+1), depthVal4);
-        cvex::store((int*)  (color+i+0), colorVal4);
-        cvex::store((int*)  (color+i+1), colorVal4);
-      }
-    }
-    else
-    {
-      #pragma omp parallel for num_threads(NUM_THREADS_CLS)
-      for (int i = 0; i < size/4; i+=2)
-      {
-        cvex::store_u((float*)(depth+i+0), depthVal4);
-        cvex::store_u((float*)(depth+i+1), depthVal4);
-        cvex::store_u((int*)  (color+i+0), colorVal4);
-        cvex::store_u((int*)  (color+i+1), colorVal4);
-      }
-    }
-
-    //for (int i = 0; i < size; i++)
-    //{
-    //  a_pContext->m_pixels2[i] = val;
-    //  a_pContext->m_zbuffer[i] = vald;
-    //}
-  }
-  else
-  {
-    if (mask & GL_COLOR_BUFFER_BIT)
-    {
-      const int size = a_pContext->m_width * a_pContext->m_height;
-      const uint32_t val = a_pContext->input.clearColor1u;
-
-      for (int i = 0; i < size; i++)
-        a_pContext->m_pixels2[i] = val;
-    }
-
-    if (mask & GL_DEPTH_BUFFER_BIT)
-    {
-      const int size  = a_pContext->m_width * a_pContext->m_height;
-      const float val = 1.0f - a_pContext->input.clearDepth;
-
-      for (int i = 0; i < size; i++)
-        a_pContext->m_zbuffer[i] = val;
-    }
-  }
-
-  if (mask & GL_STENCIL_BUFFER_BIT) //# TODO implement
-  {
-    const int size = a_pContext->m_width*a_pContext->m_height;
-    const uint8_t val = a_pContext->input.clearStencil & 0x000000FF;
-    memset(a_pContext->m_sbuffer, val, size*sizeof(uint8_t));
-  }
-}
-
 GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used tiled
 {
   if (g_pContext == nullptr)
@@ -190,8 +105,12 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
 #endif
 
    const auto& state = g_pContext->input;
-   g_pContext->m_tiledFb2.Clear(state.clearColor1u, state.clearDepth);
 
+  if((mask & GL_COLOR_BUFFER_BIT) != 0 && (mask & GL_DEPTH_BUFFER_BIT) != 0 )
+    g_pContext->m_tiledFb2.ClearColorAndDepth(state.clearColor1u, 1.0f - state.clearDepth);
+  else if (mask & GL_COLOR_BUFFER_BIT)
+    g_pContext->m_tiledFb2.ClearColor(state.clearColor1u);
+ 
 #ifdef MEASURE_STATS
   g_pContext->m_timeStats.msClear += timer.getElapsed()*1000.0f;
 #endif

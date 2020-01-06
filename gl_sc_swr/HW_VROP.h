@@ -258,12 +258,12 @@ struct VROP
   {
     enum {n = width};
     using Triangle = TriangleT;
+    using ROPType  = float;
 
     static inline vint Block(const TriangleT& tri)
     {
       return splat((int)color_pack_bgra(tri.c1));
     }
-
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -272,6 +272,7 @@ struct VROP
   {
     enum {n = width};
     using Triangle = TriangleT;
+    using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
                              int* pLineColor)
@@ -312,6 +313,7 @@ struct VROP
   {
     enum {n = width};
     using Triangle = TriangleT;
+    using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
                              int* pLineColor, float* pLineDepth)
@@ -644,6 +646,7 @@ struct VROP
   {
     enum {n = width};
     using Triangle = TriangleT;
+    using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
                              int* pLineColor)
@@ -691,6 +694,7 @@ struct VROP
   {
     enum {n = width};
     using Triangle = TriangleT;
+    using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
                              int* pLineColor, float* pLineDepth)
@@ -770,6 +774,7 @@ struct VROP
   {
     enum {n = width};
     using Triangle = TriangleT;
+    using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
                              int* pLineColor, float* pLineDepth)

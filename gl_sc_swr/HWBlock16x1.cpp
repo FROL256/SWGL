@@ -1,6 +1,5 @@
-#include "HWPureCpp.h"
+#include "config.h"
 #include "TriRasterHalfSpaceBlockFixp.h"
-#include "HWBlock.h"
 #include "HW_VROP.h"
 
 #ifdef WIN32
@@ -38,7 +37,7 @@ using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 
 
 using ROP_CVEX_2D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Colored2D;
 //using ROP_CVEX_3D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Colored3D;
-//
+
 //using ROP_CVEX_2D_TEX_P = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured2D;
 //using ROP_CVEX_2D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured2D;
 //
@@ -51,7 +50,7 @@ using ROP_CVEX_2D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 
 //#endif
 
 void HWImplBlock16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
-                                               FrameBuffer* frameBuf)
+                                             FrameBuffer* frameBuf)
 {
   cvex::set_ftz();
 
@@ -63,6 +62,11 @@ void HWImplBlock16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMi
       RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, tileMinX, tileMinY,
                                                         frameBuf);
       break;
+
+    //case ROP_Colored3D:
+    // RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D,4,4>(tri, tileMinX, tileMinY,
+    //                                                   frameBuf);
+    // break;
   
   };
 

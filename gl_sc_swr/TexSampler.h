@@ -2,7 +2,7 @@
 #define TEXSAMPLER_GUARDIAN
 
 #include "LiteMath.h"
-#include "TriRaster.h"
+#include "config.h"
 
 struct uchar4
 {
