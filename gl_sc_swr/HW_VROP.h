@@ -198,7 +198,7 @@ struct TileOp<vint, 16>
   static inline vint w(const int CX1, const int FDY12, const int FDX12)
   {
     const cvex::vint4 vFDX12 = cvex::splat(FDX12);
-    const cvex::vint4 row0   = splat(CX1) - splat(FDY12)*vint{0,1,2,3}; 
+    const cvex::vint4 row0   = cvex::splat(CX1) - cvex::splat(FDY12)*cvex::vint4{0,1,2,3}; 
     const cvex::vint4 row1   = row0 + vFDX12;
     const cvex::vint4 row2   = row0 + vFDX12*2;
     const cvex::vint4 row3   = row0 + vFDX12*3;

@@ -4,7 +4,7 @@ project(swgl)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx") # disable this for arm later ...
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -mavx512cd -mavx512dq ") # disable this for arm later ...
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops")
 
@@ -22,7 +22,6 @@ set(SOURCE_LIB
         LiteMath.h
         HWPureCpp.h
         swgl.h
-        tri_raster_shared.h
         gl_sc_standart.cpp
         glx_sc.cpp
         SWGL_TiledFrameBuffer.cpp
@@ -37,7 +36,7 @@ set(SOURCE_LIB
         HW_VROP.h HW_VROP_FIXP.h
         vfloat4_x64.h vfloat4_gcc.h vfloat8_x64.h vfloat8_gcc.h
         TriRasterHalfSpaceBlockLineFixp.h
-        HWBlockLine4x4.cpp HWBlockLine8x8.cpp HWBlockLine4x4Fixp.cpp)
+        HWBlockLine4x4.cpp HWBlockLine8x2.cpp HWBlockLine4x4Fixp.cpp HWBlock16x1.cpp)
 
 include_directories("..")
 
