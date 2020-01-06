@@ -688,6 +688,47 @@ struct VROP
 
   };
 
+  struct Textured2D_White
+  {
+    enum {n = width};
+    using Triangle = TriangleT;
+    using ROPType  = float;
+
+    static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
+                             int* pLineColor)
+    {
+      const vfloat c_one = splat(1.0f);
+      const vfloat c_255 = splat(255.0f);
+
+      const vfloat w1 = areaInv*to_float32( TileOp<vint,n>::w(CX1, FDY12, FDX12) );
+      const vfloat w2 = areaInv*to_float32( TileOp<vint,n>::w(CX2, FDY23, FDX23) );
+      const vfloat w3 = (c_one - w1 - w2);
+
+      const vfloat tx = tri.t1.x*w1 + tri.t2.x*w2 + tri.t3.x*w3;
+      const vfloat ty = tri.t1.y*w1 + tri.t2.y*w2 + tri.t3.y*w3;
+
+      vfloat texColor[3];
+      Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
+
+      const vint res = (to_int32(texColor[0] * c_255) << 16) | // BGRA
+                       (to_int32(texColor[1] * c_255) << 8)  |
+                       (to_int32(texColor[2] * c_255) << 0);
+
+      store(pLineColor, res);
+    }
+
+    static inline int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
+    {
+      const float w1  = areaInv*float(CX1);
+      const float w2  = areaInv*float(CX2);
+      const float w3  = (1.0f - w1 - w2);
+      const float2 t  = tri.t1*w1 + tri.t2*w2 + tri.t3*w3;
+      const float4 tc = tex2D(tri.texS, t);
+      return LiteMath::color_pack_bgra(tc);
+    }
+
+  };
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   struct Textured3D
@@ -759,6 +800,75 @@ struct VROP
         const float4 tc = tex2D(tri.texS, t);
 
         (*pPixelColor) = LiteMath::color_pack_bgra(c*tc);
+        (*pPixelDepth) = zInv;
+      }
+    }
+
+  };
+
+  struct Textured3D_White
+  {
+    enum {n = width};
+    using Triangle = TriangleT;
+    using ROPType  = float;
+
+    static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
+                             int* pLineColor, float* pLineDepth)
+    {
+      prefetch(pLineDepth);
+
+      const vfloat c_one  = splat(1.0f);
+      const vfloat c_zero = splat(0.0f);
+      const vfloat c_255  = splat(255.0f);
+
+      const vfloat w1 = areaInv*to_float32( TileOp<vint,n>::w(CX1, FDY12, FDX12) );
+      const vfloat w2 = areaInv*to_float32( TileOp<vint,n>::w(CX2, FDY23, FDX23) );
+      const vfloat w3 = (c_one - w1 - w2);
+
+      const vfloat zInv  = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*w3;
+      const vfloat zOld  = load(pLineDepth);
+      const vint   zTest = (zInv > zOld);
+
+      if(tst_nz(zTest))
+      {
+        store(pLineDepth, blend(zInv, zOld, zTest));
+        prefetch(pLineColor);
+
+        const vfloat  z = rcp_e(zInv);
+        const vfloat tx = (tri.t1.x*w1 + tri.t2.x*w2 + tri.t3.x*w3)*z;
+        const vfloat ty = (tri.t1.y*w1 + tri.t2.y*w2 + tri.t3.y*w3)*z;
+
+        vfloat texColor[3];
+        Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
+
+        const vint colorOld = load(pLineColor);
+
+        const vint colori = (to_int32(texColor[0] * c_255) << 16) | // BGRA
+                            (to_int32(texColor[1] * c_255) << 8)  |
+                            (to_int32(texColor[2] * c_255) << 0);
+
+        store(pLineColor, blend(colori, colorOld, zTest));
+      }
+    }
+
+
+    static inline void Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv,
+                             int* pPixelColor, float* pPixelDepth)
+    {
+      const float w1 = areaInv*float(CX1);
+      const float w2 = areaInv*float(CX2);
+
+      const float zInv = tri.v1.z*w1 + tri.v2.z*w2 + tri.v3.z*(1.0f - w1 - w2);
+      const float zOld = (*pPixelDepth);
+
+      if (zInv > zOld)
+      {
+        const float  z  = 1.0f/zInv;
+        const float w3  = (1.0f - w1 - w2);
+        const float2 t  = (tri.t1*w1 + tri.t2*w2 + tri.t3*w3)*z;
+        const float4 tc = tex2D(tri.texS, t);
+
+        (*pPixelColor) = LiteMath::color_pack_bgra(tc);
         (*pPixelDepth) = zInv;
       }
     }

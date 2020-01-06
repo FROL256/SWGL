@@ -86,7 +86,6 @@ struct CVEX_ALIGNED(16) TexSampler
 
 CVEX_ALIGNED(16) struct HWImplementationPureCpp
 {
-
   struct TriangleType
   {
     TriangleType()
@@ -100,8 +99,11 @@ CVEX_ALIGNED(16) struct HWImplementationPureCpp
       ropId = ROP_FillColor;
       bopId = BlendOp_None;
       fbId  = 0;
+      isWhite = 0;
     }
-
+    
+    const bool IsWhite() const { return isWhite; }
+  
     LiteMath::float4 v1;
     LiteMath::float4 v2;
     LiteMath::float4 v3;
@@ -126,6 +128,7 @@ CVEX_ALIGNED(16) struct HWImplementationPureCpp
     RasterOp   ropId;
     BlendOp    bopId;
     int        fbId;
+    int        isWhite;
     //uint8_t curr_sval;
     //uint8_t curr_smask;
   };
@@ -189,6 +192,7 @@ using HWImpl = HWImplBlock16x1_CVEX;
 //using HWImpl = HWImplBlockLine4x4Fixp_CVEX;
 
 using Triangle = HWImpl::TriangleType;
+
 
 
 #endif

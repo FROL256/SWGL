@@ -46,6 +46,13 @@ using ROP_CVEX_2D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 
 using ROP_CVEX_3D_TEX_P = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured3D;
 using ROP_CVEX_3D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured3D;
 
+using ROP_CVEX_2D_TEX_PW = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured2D_White;
+using ROP_CVEX_2D_TEX_BW = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured2D_White;
+
+using ROP_CVEX_3D_TEX_PW = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured3D_White;
+using ROP_CVEX_3D_TEX_BW = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured3D_White;
+
+
 using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured3D_Blend;
 using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured3D_Blend;
 
@@ -71,15 +78,27 @@ void HWImplBlock16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMi
 
     case ROP_TexLinear2D:
     case ROP_TexNearest2D:
-      RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_P,4,4>(tri, tileMinX, tileMinY,
-                                                              frameBuf);
+
+      if(tri.IsWhite())
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_PW,4,4>(tri, tileMinX, tileMinY, 
+                                                                  frameBuf);
+      else
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_P,4,4>(tri, tileMinX, tileMinY, 
+                                                                 frameBuf);
       break;
 
     case ROP_TexNearest3D:
     case ROP_TexLinear3D:
-      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P,4,4>(tri, tileMinX, tileMinY,
-                                                              frameBuf);
+    
+      if(tri.IsWhite())
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_PW,4,4>(tri, tileMinX, tileMinY,
+                                                                frameBuf);
+      else
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P,4,4>(tri, tileMinX, tileMinY,
+                                                                frameBuf);
+                                                              
       break;
+
   
     case ROP_TexNearest3D_Blend:
     case ROP_TexLinear3D_Blend:

@@ -485,6 +485,18 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 
   }
 
+  {
+    const LiteMath::float4 one{1.0f,1.0f,1.0f,1.0f};
+    const LiteMath::float4 diff1 = one - pTri->c1;
+    const LiteMath::float4 diff2 = one - pTri->c2;
+    const LiteMath::float4 diff3 = one - pTri->c3;
+    
+    const float diff1Dp = LiteMath::dot3f(diff1, diff1);
+    const float diff2Dp = LiteMath::dot3f(diff2, diff2);
+    const float diff3Dp = LiteMath::dot3f(diff3, diff3);
+    pTri->isWhite = (diff1Dp < 1e-3f && diff2Dp < 1e-3f && diff3Dp < 1e-3f) ? 0xFFFFFFFF : 0;
+  }
+
 #ifdef PERSP_CORRECT
 
   if (a_perspCorrect)
