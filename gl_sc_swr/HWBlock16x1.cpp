@@ -1,6 +1,6 @@
 #include "HWPureCpp.h"
-#include "TriRasterHalfSpaceBlockLineFixp.h"
-#include "HWBlockLine4x4.h"
+#include "TriRasterHalfSpaceBlockFixp.h"
+#include "HWBlock.h"
 #include "HW_VROP.h"
 
 #ifdef WIN32
@@ -50,7 +50,7 @@ using ROP_CVEX_2D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 
 //using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured3D_Blend;
 //#endif
 
-void HWImplBlockLine16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
+void HWImplBlock16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                                FrameBuffer* frameBuf)
 {
   cvex::set_ftz();
