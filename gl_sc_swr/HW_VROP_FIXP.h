@@ -11,11 +11,11 @@
 #endif
 
 template<typename vint, int n>
-struct LineOffs
+struct TileOp
 {
-  static inline vint w(const int CX1, const int FDY12)
+  static inline vint w(const int CX1, const int FDY12, const int FDX12)
   {
-    ALIGNED(n*4) int w1i[n];
+    CVEX_ALIGNED(n*4) int w1i[n];
 
     #pragma GCC ivdep
     for(int i=0;i<n;i++)
@@ -26,11 +26,14 @@ struct LineOffs
 };
 
 template<typename vint>
-struct LineOffs<vint, 4>
+struct TileOp<vint, 4>
 {
-  static inline vint w(const int CX1, const int FDY12)
+  static inline vint w(const int CX1, const int FDY12, const int FDX12)
   {
-    return make_vuint((unsigned int)CX1, (unsigned int)(CX1 - FDY12), (unsigned int)(CX1 - FDY12*2), (unsigned int)(CX1 - FDY12*3)) >> 16; // #TODO: conver this to vuint16
+    return vint{ (int)CX1, 
+                 (int)(CX1 - FDY12), 
+                 (int)(CX1 - FDY12*2), 
+                 (int)(CX1 - FDY12*3) >> 16}; // #TODO: conver this to vuint16
   }
 
 };
@@ -65,11 +68,11 @@ struct VROP_FIXP
     enum { n = width };
     using Triangle = TriangleT;
 
-    static inline void Line(const TriangleT &tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const unsigned int areaInv,
-                            int *pLineColor)
+    static inline void Block(const TriangleT &tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const unsigned int areaInv,
+                             int *pLineColor)
     {
-      const vint w1 = (areaInv * LineOffs<vint, n>::w(CX1, FDY12)) >> 8;
-      const vint w2 = (areaInv * LineOffs<vint, n>::w(CX2, FDY23)) >> 8;
+      const vint w1 = (areaInv * TileOp<vint, n>::w(CX1, FDY12, FDX12)) >> 8;
+      const vint w2 = (areaInv * TileOp<vint, n>::w(CX2, FDY23, FDX23)) >> 8;
       const vint w3 = (splat((unsigned int)255) - w1 - w2);
 
       const vint r = ((255) * w1 + (0  ) * w2 + (0  ) * w3) >> 8;

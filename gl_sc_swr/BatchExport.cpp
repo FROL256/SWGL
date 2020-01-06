@@ -31,9 +31,10 @@ void PutArrayToNode(const VectorT& a_vector, pugi::xml_node a_node)
 
 std::string ToString(const float4x4& a_matrix)
 {
+  assert(false); // not implementes!
   std::stringstream matrixStream;
-  for(int i=0;i<16;i++)
-    matrixStream << a_matrix.L()[i] << " ";
+  //for(int y=0;i<16;i++)
+  //  matrixStream << a_matrix.L()[i] << " ";
   return matrixStream.str();
 }
 

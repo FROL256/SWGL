@@ -46,12 +46,7 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
 
   // new tiled frame buffer
   //
-  if (m_useTiledFB)
-  {
-    m_tiledFrameBuffer.Resize(m_width, m_height);
-    m_tiledFrameBuffer.TestClearChessBoard();
-  }
-  
+
   ResizeCommon(m_width, m_height);
 }
 
@@ -78,23 +73,22 @@ void SWGL_Context::Destroy()
 
 void SWGL_Context::CopyToScreeen()
 {
-  if (m_useTiledFB)
-  {
-    m_tiledFrameBuffer.CopyToRowPitch(m_pixels);
-  }
-  else
-  {
-    const int pitch = (m_width + FB_BILLET_SIZE);
-
-    for (int y = 0; y < m_height; y++)
-    {
-      int offset0 = y * m_width;
-      int offset1 = y * pitch;
-      memcpy(m_pixels + offset0, m_pixels2 + offset1, m_width * sizeof(int));
-      //for (int x = 0; x < m_width; x++)
-      //  m_pixels[offset0 + x] = m_pixels2[offset1 + x];
-    }
-  }
+  //if (m_useTiledFB)
+  //{
+  //}
+  //else
+  //{
+  //  const int pitch = (m_width + FB_BILLET_SIZE);
+  //
+  //  for (int y = 0; y < m_height; y++)
+  //  {
+  //    int offset0 = y * m_width;
+  //    int offset1 = y * pitch;
+  //    memcpy(m_pixels + offset0, m_pixels2 + offset1, m_width * sizeof(int));
+  //    //for (int x = 0; x < m_width; x++)
+  //    //  m_pixels[offset0 + x] = m_pixels2[offset1 + x];
+  //  }
+  //}
 
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
 }

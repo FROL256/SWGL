@@ -11,6 +11,8 @@
 #include "SWGL_TiledFrameBuffer.h"
 
 #include "LiteMath.h"
+using namespace LiteMath;
+
 #include <cstdint>
 #include <vector>
 #include <memory>
@@ -130,12 +132,9 @@ struct Batch
   std::vector<int>    indicesLines;
   std::vector<int>    indices;
 
-  std::vector<float4, aligned16<float4> > vertPos;  // original input data
-  std::vector<float4, aligned16<float4> > vertPosT; // transformed
-  //std::vector<float4, aligned16<float4> > vertNorm;
-  std::vector<float4, aligned16<float4> > vertColor;
-  std::vector<float2, aligned16<float2> > vertTexCoord;
-
+  std::vector<float4, aligned<float4, 16> > vertPos;
+  std::vector<float4, aligned<float4, 16> > vertColor;
+  std::vector<float2, aligned<float4, 16> > vertTexCoord;
 
   Pipeline_State_Object state; // curr PSO. if changed, switch to next batch ...
 };
@@ -220,7 +219,7 @@ struct SWGL_Input
 
 };
 
-struct ALIGNED(16) SWGL_TextureStorage
+struct CVEX_ALIGNED(16) SWGL_TextureStorage
 {
   SWGL_TextureStorage()
   {
@@ -244,8 +243,6 @@ struct ALIGNED(16) SWGL_TextureStorage
   GLint modulateMode;
   GLint format;
 };
-
-static inline unsigned int divTileSize(unsigned int x) {return x / BIN_SIZE;}
 
 struct SWGL_DrawList
 {
@@ -279,7 +276,7 @@ struct SWGL_Context
 #else
   
   SWGL_Context() : m_sbuffer(0),m_zbuffer(0), m_pixels(0), m_pixels2(0), m_width(0), m_height(0), m_fwidth(0.0f), m_fheight(0.0f),
-                   m_locks(nullptr), m_tqueue(MAX_NUM_TRIANGLES_TOTAL), m_useTriQueue(false), m_useTiledFB(false)
+                   m_tqueue(MAX_NUM_TRIANGLES_TOTAL), m_useTriQueue(false), m_useTiledFB(false)
   {
     InitCommon();
   }
@@ -310,18 +307,15 @@ struct SWGL_Context
 
   static std::ofstream* m_pLog;
 
-  SWGL_DrawList        m_drawList;
-  SWGL_Timings         m_timeStats;
-  SWGL_FrameBuffer     m_tiledFrameBuffer;
+  SWGL_DrawList   m_drawList;
+  SWGL_Timings    m_timeStats;
+  FrameBufferType m_tiledFb2;
   
   bool m_useTiledFB;
   bool m_useTriQueue;
   int  m_currTileId;
 
-  std::atomic_flag*                                 m_locks;
   moodycamel::ConcurrentQueue<HWImpl::TriangleType> m_tqueue;
-  std::vector< moodycamel::ProducerToken* >         m_bintoks; // for binned (tilex 64x64) framebuffer
-  
   std::vector<FrameBuffer>                          batchFrameBuffers;
 };
 
@@ -331,7 +325,6 @@ inline float4x4* swglGetCurrMatrix(SWGL_Context* a_pContext) // pre (a_pContext 
   return (a_pContext->input.inputMatrixMode == GL_MODELVIEW) ? &a_pContext->input.batchState.worldViewMatrix : &a_pContext->input.batchState.projMatrix;
 }
 
-void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum);
 void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch);
 
@@ -361,7 +354,6 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
   frameBuff.w          = a_pContext->m_width;
   frameBuff.h          = a_pContext->m_height;
   frameBuff.pitch      = frameBuff.w + FB_BILLET_SIZE;
-  frameBuff.lockbuffer = a_pContext->m_locks;
 
   frameBuff.vx = a_state.viewport[0];
   frameBuff.vy = a_state.viewport[1];
@@ -374,7 +366,28 @@ inline static FrameBuffer swglBatchFb(SWGL_Context* a_pContext, const Pipeline_S
   if (!a_state.stencilTestEnabled)
     frameBuff.sbuffer = nullptr;
 
+  frameBuff.m_pImpl = &a_pContext->m_tiledFb2;
+
   return frameBuff;
+}
+
+
+static inline float4 swglVertexShaderTransform2D(Batch* pBatch, float4 a_pos) // pre (pBatch != nullptr)
+{
+  return pBatch->state.worldViewMatrix*a_pos;
+}
+
+
+static inline float4 swglVertexShaderTransform(Batch* pBatch, float4 a_pos) // pre (pBatch != nullptr)
+{
+  //const float4 viewPos   = mul(pBatch->state.worldViewMatrix, a_pos);
+  //const float4 clipSpace = mul(pBatch->state.projMatrix, viewPos);
+
+  const float4 clipSpace   = pBatch->state.worldViewProjMatrix*a_pos;
+
+  const float invW = (1.0f / fmax(clipSpace.w, 1e-20f));
+
+  return float4(clipSpace.x*invW, clipSpace.y*invW, invW, 1.0f);
 }
 
 static inline float4 swglClipSpaceToScreenSpaceTransform(float4 a_pos, const float4 viewportf) // pre (g_pContext != nullptr)
@@ -389,9 +402,6 @@ static inline float4 swglClipSpaceToScreenSpaceTransform(float4 a_pos, const flo
 }
 
 RasterOp swglStateIdFromPSO(const Pipeline_State_Object* a_pso, const SWGL_Context* a_pContext, const bool a_sameColor);
-
-void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch,
-                                   const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB);
 
 void swglEnqueueBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff);
 
@@ -716,9 +726,7 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
 
   swglRunBatchVertexShader(a_pContext, pBatch);
   
-  if (a_pContext->m_useTiledFB)
-    swglAppendTrianglesToDrawList(pDrawList, a_pContext, pBatch, fb, &a_pContext->m_tiledFrameBuffer);
-  else if(a_pContext->m_useTriQueue)
+  if(a_pContext->m_useTriQueue)
     swglEnqueueBatchTriangles(a_pContext, pBatch, fb);
   else
     swglDrawBatchTriangles(a_pContext, pBatch, fb);

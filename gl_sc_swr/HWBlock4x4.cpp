@@ -3,8 +3,8 @@
 //
 
 #include "HWPureCpp.h"
-#include "TriRasterHalfSpaceBlockLineFixp.h"
-#include "HWBlockLine4x4.h"
+#include "TriRasterHalfSpaceBlockFixp.h"
+#include "HWBlock.h"
 #include "HW_VROP.h"
 
 #ifdef WIN32
@@ -29,15 +29,14 @@ using cvex::to_int32;
 #ifndef WIN32
 using cvex::to_uint32;
 #endif
-using cvex::make_vint;
 
 using cvex::load_u;
 using cvex::store_u;
 using cvex::rcp_e;
 using cvex::blend;
 using cvex::test_bits_any;
+using cvex::clamp;
 
-using cvex::vclamp;
 using cvex::store;
 using cvex::prefetch;
 
@@ -58,7 +57,7 @@ using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 
 using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured3D_Blend;
 #endif
 
-void HWImplBlockLine4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
+void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                                 FrameBuffer* frameBuf)
 {
   cvex::set_ftz();
@@ -68,10 +67,11 @@ void HWImplBlockLine4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int til
   switch (a_ropT)
   {
     case ROP_Colored2D:
-      RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D>(tri, tileMinX, tileMinY,
+      RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, tileMinX, tileMinY,
                                                         frameBuf);
       break;
-
+   
+   /*
     case ROP_Colored3D:
       RasterizeTriHalfSpaceBlockLineFixp3D<ROP_CVEX_3D>(tri, tileMinX, tileMinY,
                                                         frameBuf);
@@ -113,6 +113,7 @@ void HWImplBlockLine4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int til
       RasterizeTriHalfSpaceBlockFixp2D_Fill<ROP_CVEX_FILL>(tri, tileMinX, tileMinY,
                                                            frameBuf);
       break;
+    */
   };
 
 }

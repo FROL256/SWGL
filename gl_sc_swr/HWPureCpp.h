@@ -7,7 +7,7 @@
 struct SWGL_Context;
 struct Batch;
 
-ALIGNED(16) struct HWImplementationPureCpp
+CVEX_ALIGNED(16) struct HWImplementationPureCpp
 {
 
   struct TriangleType
@@ -25,17 +25,17 @@ ALIGNED(16) struct HWImplementationPureCpp
       fbId  = 0;
     }
 
-    ALIGNED(16) float4 v1;
-    ALIGNED(16) float4 v2;
-    ALIGNED(16) float4 v3;
+    LiteMath::float4 v1;
+    LiteMath::float4 v2;
+    LiteMath::float4 v3;
 
-    ALIGNED(16) float4 c1;
-    ALIGNED(16) float4 c2;
-    ALIGNED(16) float4 c3;
+    LiteMath::float4 c1;
+    LiteMath::float4 c2;
+    LiteMath::float4 c3;
 
-    float2 t1;
-    float2 t2;
-    float2 t3;
+    LiteMath::float2 t1;
+    LiteMath::float2 t2;
+    LiteMath::float2 t3;
 
     int bb_iminX;
     int bb_imaxX;
@@ -60,15 +60,15 @@ ALIGNED(16) struct HWImplementationPureCpp
 
   static inline bool TriVertsAreOfSameColor(const TriangleType& a_tri) 
   {
-    const float4 diff1 = a_tri.c1 - a_tri.c2;
-    const float4 diff2 = a_tri.c1 - a_tri.c3;
+    const LiteMath::float4 diff1 = a_tri.c1 - a_tri.c2;
+    const LiteMath::float4 diff2 = a_tri.c1 - a_tri.c3;
 
     return (diff1.x < 1e-5f) && (diff1.y < 1e-5f) && (diff1.z < 1e-5f) && (diff1.w < 1e-5f) && 
            (diff2.x < 1e-5f) && (diff2.y < 1e-5f) && (diff2.z < 1e-5f) && (diff2.w < 1e-5f);
   }
 
   static void VertexShader(const float* v_in4f, float* v_out4f, int a_numVert, 
-                           const float viewportData[4], const float worldViewProjMatrix[16]);
+                           const float viewportData[4], const LiteMath::float4x4 worldViewProjMatrix);
 
   static void RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                 FrameBuffer* frameBuf);

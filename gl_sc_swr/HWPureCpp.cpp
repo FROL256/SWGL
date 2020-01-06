@@ -8,6 +8,9 @@
 
 #include <algorithm>
 
+#include "LiteMath.h"
+using namespace LiteMath;
+
 using TriangleLocal = HWImplementationPureCpp::TriangleType;
 
 void HWImplementationPureCpp::memset32(int32_t* a_data, int32_t a_val, int32_t numElements)
@@ -40,8 +43,8 @@ void HWImplementationPureCpp::memset32(int32_t* a_data, int32_t a_val, int32_t n
 
 bool HWImplementationPureCpp::AABBTriangleOverlap(const TriangleType& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY)
 {
-  const bool overlapBoxBox = IntersectBoxBox(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
-                                             int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));
+  const bool overlapBoxBox = LiteMath::IntersectBox2Box2(int2(a_tri.bb_iminX, a_tri.bb_iminY), int2(a_tri.bb_imaxX, a_tri.bb_imaxY),
+                                                         int2(tileMinX, tileMinY),             int2(tileMaxX, tileMaxY));
 
   if (!overlapBoxBox)
     return false;
@@ -85,18 +88,17 @@ bool HWImplementationPureCpp::AABBTriangleOverlap(const TriangleType& a_tri, con
 
 
 void HWImplementationPureCpp::VertexShader(const float* v_in4f, float* v_out4f, int a_numVert,
-                                           const float viewportData[4], const float a_worldViewProjMatrix[16])
+                                           const float viewportData[4], const float4x4 worldViewProjMatrix)
 {
   const float4   viewportf(viewportData[0], viewportData[1], viewportData[2], viewportData[3]);
-  const float4x4 worldViewProjMatrix(a_worldViewProjMatrix);
   
   const float4* inVert  = (const float4*)v_in4f;
   float4* outVert       = (float4*)v_out4f;
 
   for (int i = 0; i < a_numVert; i++) // this implementations became broken if posCamSpace.z > -1.0f ...
   {
-    const float4 clipSpace = mul(worldViewProjMatrix, inVert[i]);
-    if(clipSpace.w >= NEAR_CLIP_PLANE2)
+    const float4 clipSpace = worldViewProjMatrix*inVert[i];
+    if(clipSpace.w > 0.0f)
     {
       const float invW          = 1.0f/clipSpace.w;                                           // its ok, no zero division, see (clipSpace.w >= NEAR_CLIP_PLANE2) condition
       const float4 vClipSpace   = float4(clipSpace.x * invW, clipSpace.y * invW, invW, 1.0f);
@@ -152,10 +154,10 @@ inline float4 read_imagef(const int* pData, const int w, const int h, int pitch,
 
   const float mult = 0.003921568f; // (1.0f/255.0f);
 
-  const float4 f1 = mult * make_float4((float)p1.x, (float)p1.y, (float)p1.z, (float)p1.w);
-  const float4 f2 = mult * make_float4((float)p2.x, (float)p2.y, (float)p2.z, (float)p2.w);
-  const float4 f3 = mult * make_float4((float)p3.x, (float)p3.y, (float)p3.z, (float)p3.w);
-  const float4 f4 = mult * make_float4((float)p4.x, (float)p4.y, (float)p4.z, (float)p4.w);
+  const float4 f1 = mult * float4((float)p1.x, (float)p1.y, (float)p1.z, (float)p1.w);
+  const float4 f2 = mult * float4((float)p2.x, (float)p2.y, (float)p2.z, (float)p2.w);
+  const float4 f3 = mult * float4((float)p3.x, (float)p3.y, (float)p3.z, (float)p3.w);
+  const float4 f4 = mult * float4((float)p4.x, (float)p4.y, (float)p4.z, (float)p4.w);
 
   // Calculate the weighted sum of pixels (for each color channel)
   //
@@ -164,18 +166,18 @@ inline float4 read_imagef(const int* pData, const int w, const int h, int pitch,
   float outb = f1.z * w1 + f2.z * w2 + f3.z * w3 + f4.z * w4;
   float outa = f1.w * w1 + f2.w * w2 + f3.w * w3 + f4.w * w4;
 
-  return make_float4(outr, outg, outb, outa);
+  return float4(outr, outg, outb, outa);
 }
 
 
 inline static float2 wrapTexCoord(float2 a_texCoord)
 {
-  a_texCoord = a_texCoord - make_float2((float)((int)(a_texCoord.x)), (float)((int)(a_texCoord.y)));
+  a_texCoord = a_texCoord - float2((float)((int)(a_texCoord.x)), (float)((int)(a_texCoord.y)));
 
   float x = a_texCoord.x < 0.0f ? a_texCoord.x + 1.0f : a_texCoord.x;
   float y = a_texCoord.y < 0.0f ? a_texCoord.y + 1.0f : a_texCoord.y;
 
-  return make_float2(x, y);
+  return float2(x, y);
 }
 
 
@@ -247,9 +249,9 @@ struct Blend_Alpha_OneMinusAlpha
 {
   inline static int BlendPixel(const int a_colorBefore, const float4 newColor)
   {
-    const float4 oldColor = Uint32_BGRAToRealColor(a_colorBefore);
+    const float4 oldColor = color_unpack_bgra(a_colorBefore);
     const float alpha     = newColor.w;
-    return RealColorToUint32_BGRA(oldColor*(1.0f - alpha) + alpha*newColor);
+    return color_pack_bgra(oldColor*(1.0f - alpha) + alpha*newColor);
   }
 };
 
@@ -297,7 +299,7 @@ static void RasterizeTriHalfSpace2D_Fill(const TriangleLocal& tri, int tileMinX,
 
   int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
-  const int fillColorI = RealColorToUint32_BGRA(tri.c1*(1.0f/tri.v1.z)); // #TODO: need opt for color fill mode
+  const int fillColorI = color_pack_bgra(tri.c1*(1.0f/tri.v1.z)); // #TODO: need opt for color fill mode
 
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
@@ -373,8 +375,6 @@ static void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int 
 
   int offset = lineOffset(miny, frameBuf->pitch, frameBuf->h);
 
-  //const int fillColorI = RealColorToUint32_BGRA(tri.c1); // #TODO: need opt for color fill mode
-
   // Scan through bounding rectangle
   for (int y = miny; y <= maxy; y++)
   {
@@ -388,7 +388,7 @@ static void RasterizeTriHalfSpace2D(const TriangleLocal& tri, int tileMinX, int 
       if (Cx1 > HALF_SPACE_EPSILON && Cx2 > HALF_SPACE_EPSILON && Cx3 > HALF_SPACE_EPSILON)
       {
         const float4 color = ROP::DrawPixel(tri, areaInv*float3(Cx1, Cx3, Cx2));
-        cbuff[offset + x]  = RealColorToUint32_BGRA(color);
+        cbuff[offset + x]  = LiteMath::color_pack_bgra(color);
       }
 
       Cx1 -= Dy12;
@@ -473,7 +473,7 @@ static void RasterizeTriHalfSpace3D(const TriangleLocal& tri, int tileMinX, int 
         if (zInv > zBuffVal)
         {
           const float4 col  = ROP::DrawPixel(tri, areaInv*float3(Cx1, Cx3, Cx2), zInv);
-          cbuff[offset + x] = RealColorToUint32_BGRA(col);
+          cbuff[offset + x] = LiteMath::color_pack_bgra(col);
           zbuff[offset + x] = zInv;
         }
       }

@@ -14,8 +14,6 @@ extern bool g_kill_all;
 SWGL_Context::~SWGL_Context()
 {
   g_kill_all = true;
-  delete [] m_locks;
-  m_locks = nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,21 +96,13 @@ void SWGL_Context::InitCommon()
   m_useTiledFB  = false;
   m_useTriQueue = false;
 
-  if(m_useTiledFB)
-    swglClearDrawListAndTiles(&m_drawList, &m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
-
   batchFrameBuffers.reserve(100); // approximate "different" batches number
 }
 
 void SWGL_Context::ResizeCommon(int width, int height)
 {
-  delete [] m_locks;
-  
-  const int tileSize = 4; // when we have 8x8 tiles, we just alloc a bit more memory then needed, but it should work fine
-  const int size     = (width/tileSize)*(height/tileSize);
-  m_locks = new std::atomic_flag[size];
-  for(int i=0;i<size;i++)
-    m_locks[i].clear(std::memory_order_release);
+
+
 }
 
 
@@ -539,10 +529,10 @@ void swglRunBatchVertexShader(SWGL_Context* a_pContext, Batch* pBatch) // pre (a
                                (float)pBatch->state.viewport[2], 
                                (float)pBatch->state.viewport[3] };
 
-  pBatch->state.worldViewProjMatrix = mul(pBatch->state.projMatrix, pBatch->state.worldViewMatrix);
+  pBatch->state.worldViewProjMatrix = pBatch->state.projMatrix*pBatch->state.worldViewMatrix;
 
-  HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPosT.data(), int(pBatch->vertPos.size()),
-                        viewportf, pBatch->state.worldViewProjMatrix.L());
+  HWImpl::VertexShader((const float*)pBatch->vertPos.data(), (float*)pBatch->vertPos.data(), int(pBatch->vertPos.size()),
+                        viewportf, pBatch->state.worldViewProjMatrix);
 
 #ifdef MEASURE_STATS
   a_pContext->m_timeStats.msVertexShader += timer.getElapsed()*1000.0f;
@@ -566,120 +556,6 @@ void clampTriBBox(Triangle* t1, const FrameBuffer& frameBuff)
 
   if (t1->bb_iminX >= frameBuff.w) t1->bb_iminX = frameBuff.w - 1;
   if (t1->bb_iminY >= frameBuff.h) t1->bb_iminY = frameBuff.h - 1;
-}
-
-
-void swglClearDrawListAndTiles(SWGL_DrawList* a_pDrawList, SWGL_FrameBuffer* a_pTiledFB, const int triNum)
-{
-  a_pDrawList->m_triTop = 0;
-
-  const size_t tilesNum = a_pTiledFB->tiles.size();
-
-  if (triNum == 0 || tilesNum == 0)
-    return;
-
-  for (size_t i = 0; i < tilesNum; i++)
-  {
-    auto& tile2   = a_pTiledFB->tiles[i];
-    tile2.begOffs = i*triNum;
-    tile2.endOffs = tile2.begOffs;
-  }
-
-  if (a_pDrawList->m_psoArray.capacity() < 100)
-    a_pDrawList->m_psoArray.reserve(100);
-
-  a_pDrawList->m_psoArray.resize(0);
-}
-
-
-void swglAppendTrianglesToDrawList(SWGL_DrawList* a_pDrawList, SWGL_Context* a_pContext, const Batch* pBatch, 
-                                   const FrameBuffer& frameBuff, SWGL_FrameBuffer* a_pTiledFB)
-{
-
-#ifdef MEASURE_STATS
-  Timer timer(true);
-#endif
-
-  const int  triNum = int(pBatch->indices.size() / 3);
-  const int top = atomic_add(&a_pDrawList->m_triTop, triNum);
-
-  a_pDrawList->m_psoArray.push_back(pBatch->state);
-  int psoId = a_pDrawList->m_psoArray.size() - 1;
-  
-  const std::vector<int>& indices = pBatch->indices;
-
-  //#pragma omp parallel for if(triNum > 1000) num_threads(2)
-  for (int triId = 0; triId < triNum; triId++)
-  {
-    int i1 = indices[triId * 3 + 0];
-    int i2 = indices[triId * 3 + 1];
-    int i3 = indices[triId * 3 + 2];
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    const float4 v1 = pBatch->vertPos[i1];
-    const float4 v2 = pBatch->vertPos[i2];
-    const float4 v3 = pBatch->vertPos[i3];
-
-    const float4 u  = v2 - v1;
-    const float4 v  = v3 - v1;
-    const float nz  = u.x*v.y - u.y*v.x;
-
-    if (pBatch->state.cullFaceEnabled && pBatch->state.cullFaceMode != 0)
-    {
-      const bool cullFace = ((pBatch->state.cullFaceMode == GL_FRONT) && (nz > 0.0f)) ||
-                            ((pBatch->state.cullFaceMode == GL_BACK)  && (nz < 0.0f));
-
-      if (cullFace)
-        continue;
-      else if (nz < 0.0f)
-        std::swap(i2, i3);
-    }
-    else if (nz < 0.0f)
-      std::swap(i2, i3);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    Triangle localTri;
-    localTri.psoId = psoId;
-    swglTriangleSetUp(a_pContext, pBatch, i1, i2, i3, 0, pBatch->state.depthTestEnabled,
-                      &localTri);
-
-    clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    const unsigned int tMinX = divTileSize(localTri.bb_iminX);
-    const unsigned int tMinY = divTileSize(localTri.bb_iminY);
- 
-    const unsigned int tMaxX = divTileSize(localTri.bb_imaxX);
-    const unsigned int tMaxY = divTileSize(localTri.bb_imaxY);
-
-    for (unsigned int ty = tMinY; ty <= tMaxY; ty++)
-    {
-      for (unsigned int tx = tMinX; tx <= tMaxX; tx++)
-      {
-        const int tileMinX = tx*BIN_SIZE;
-        const int tileMinY = ty*BIN_SIZE;
-        
-        const int tileMaxX = tx*BIN_SIZE + BIN_SIZE;
-        const int tileMaxY = ty*BIN_SIZE + BIN_SIZE;
-
-        const int binId    = ty*a_pTiledFB->sizeX + tx;
-        auto& tile         = a_pTiledFB->tiles[binId];  // auto& tile = a_pDrawList->tiles[tx][ty];
-
-        if (HWImpl::AABBTriangleOverlap(localTri, tileMinX, tileMinY, tileMaxX, tileMaxY))
-        {
-          tile.endOffs++; //  atomic_add((int*)&tile.endOffs, 1);  // signal that this tile is not empty!; needd for sorting tiles;
-          a_pContext->m_tqueue.enqueue(*a_pContext->m_bintoks[binId], localTri);
-        }
-      }
-    }
-  }
-
-#ifdef MEASURE_STATS
-  a_pContext->m_timeStats.msTriSetUp += timer.getElapsed()*1000.0f;
-#endif
-
 }
 
 void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer& frameBuff) // pre (a_pContext != nullptr && pBatch != nullptr)
@@ -707,7 +583,7 @@ void swglDrawBatchTriangles(SWGL_Context* a_pContext, Batch* pBatch, FrameBuffer
 
     const float4 u = v2 - v1;
     const float4 v = v3 - v1;
-    const float nz = u.x*v.y - u.y*v.x;
+    const float nz = u.x*v.y - u.y*v.x; // todo: use extract functions for accesing members
 
     if (pBatch->state.cullFaceEnabled && pBatch->state.cullFaceMode != 0)
     {
@@ -924,7 +800,7 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
                                (float)a_input.batchState.viewport[3] };
 
   dummy.state = a_input.batchState;
-  dummy.state.worldViewProjMatrix = mul(dummy.state.projMatrix, dummy.state.worldViewMatrix);
+  dummy.state.worldViewProjMatrix = dummy.state.projMatrix*dummy.state.worldViewMatrix;
 
 
   ////
@@ -954,7 +830,7 @@ void swglEnqueueTrianglesFromInput(SWGL_Context* a_pContext, const int* indices,
     dummy.vertTexCoord[2] = vtexf2[i3];
 
     HWImpl::VertexShader((const float*)dummy.vertPos.data(), (float*)dummy.vertPos.data(), 3,
-                         viewportf, dummy.state.worldViewProjMatrix.L());
+                         viewportf, dummy.state.worldViewProjMatrix);
 
     i1 = 0;
     i2 = 1;

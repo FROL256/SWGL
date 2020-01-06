@@ -111,7 +111,7 @@ void swglSlowClear(SWGL_Context* a_pContext, GLbitfield mask)
     const float vald   = 1.0f - a_pContext->input.clearDepth;
 
     cvex::vfloat4 depthVal4 = {vald, vald, vald, vald};
-    cvex::vint4   colorVal4 = cvex::make_vint(val, val, val, val);
+    cvex::vint4   colorVal4 = {val, val, val, val};
 
     cvex::vfloat4* depth = (cvex::vfloat4*)a_pContext->m_zbuffer;
     cvex::vint4*   color = (cvex::vint4*)a_pContext->m_pixels2;
@@ -189,26 +189,12 @@ GLAPI void APIENTRY glClear(GLbitfield mask) // #TODO: clear tilef fb if used ti
   Timer timer(true);
 #endif
 
-  if (g_pContext->m_useTiledFB) // #TODO: implement opt clear both for depth and color in a single loop
-  {
-    if((mask & GL_COLOR_BUFFER_BIT) != 0 && (mask & GL_DEPTH_BUFFER_BIT) != 0 )
-      g_pContext->m_tiledFrameBuffer.ClearColorAndDepth(g_pContext->input.clearColor1u, 1.0f - g_pContext->input.clearDepth);
-    else if (mask & GL_COLOR_BUFFER_BIT)
-      g_pContext->m_tiledFrameBuffer.ClearColor(g_pContext->input.clearColor1u);
-    else if(mask & GL_DEPTH_BUFFER_BIT)
-      g_pContext->m_tiledFrameBuffer.ClearDepth(1.0f - g_pContext->input.clearDepth);
-
-    swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
-  }
-  else
-  {
-    swglSlowClear(g_pContext, mask);
-  }
+   const auto& state = g_pContext->input;
+   g_pContext->m_tiledFb2.Clear(state.clearColor1u, state.clearDepth);
 
 #ifdef MEASURE_STATS
   g_pContext->m_timeStats.msClear += timer.getElapsed()*1000.0f;
 #endif
-
 }
 
 GLAPI void APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
@@ -222,7 +208,7 @@ GLAPI void APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GL
   auto& state = g_pContext->input;
 
   state.clearColor4f = float4(red, green, blue, alpha);
-  state.clearColor1u = RealColorToUint32_BGRA(state.clearColor4f);
+  state.clearColor1u = color_pack_bgra(state.clearColor4f);
 }
 
 GLAPI void APIENTRY glClearDepthf(GLclampf a_depth)
@@ -623,93 +609,12 @@ GLAPI void APIENTRY glFinish(void)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-struct TileRef
-{
-  bool operator<(TileRef a) const { return triNum < a.triNum; }
-  int tileId;
-  int triNum;
-};
-
-std::vector<TileRef> g_tileRefs;
-std::thread          g_threads[NUM_THREADS];
-int                  g_active [NUM_THREADS]; //#TODO: use std::atomics
+std::thread          g_threads[NUM_THREADS_AUX];
+int                  g_active [NUM_THREADS_AUX]; //#TODO: use std::atomics
 
 bool          g_initialized_rast = false;
 bool          g_kill_all         = false;
 
-int SWGL_TileRenderThread(int a_threadId)
-{
-  if (g_pContext == nullptr)
-    return 0;
-
-  const int tilesNum     = int(g_pContext->m_tiledFrameBuffer.tiles.size());
-  const bool infinitLoop = (a_threadId >= 0);
-  int tileRefId = 0;
-
-  while(true)
-  {
-    tileRefId = atomic_add(&g_pContext->m_currTileId, 1);
-
-    if(infinitLoop)
-    {
-      if (tileRefId >= tilesNum || tileRefId < 0)
-      {
-        g_active[a_threadId] = 0;
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-        continue;
-      }
-      else
-        g_active[a_threadId] = 1;
-    }
-    else
-    {
-      if (g_pContext->m_currTileId >= tilesNum || tileRefId < 0)
-        break;
-    }
-
-    //*(g_pContext->m_pLog) << "Thread on CPU " << sched_getcpu() << std::endl;
-
-    const int tileId = g_tileRefs[tileRefId].tileId;
-    auto &tile       = g_pContext->m_tiledFrameBuffer.tiles[tileId];
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// do useful work here
-    FrameBuffer fb;
-    fb.w     = BIN_SIZE;
-    fb.h     = BIN_SIZE;
-    fb.pitch = BIN_SIZE;
-    fb.vx    = 0;
-    fb.vy    = 0;
-    fb.vw    = BIN_SIZE;
-    fb.vh    = BIN_SIZE;
-
-    fb.sbuffer    = nullptr;
-    fb.zbuffer    = tile.m_depth;
-    fb.cbuffer    = tile.m_color;
-    fb.lockbuffer = g_pContext->m_locks;
-
-    HWImpl::TriangleType localTri;
-    
-    auto* pDrawList = &g_pContext->m_drawList;
-    while(g_pContext->m_tqueue.try_dequeue_from_producer(*g_pContext->m_bintoks[tileId], localTri))
-    {
-      auto& tri            = localTri;
-      const auto* pso      = &(pDrawList->m_psoArray[tri.psoId]);
-      const bool sameColor = HWImpl::TriVertsAreOfSameColor(tri);
-
-      auto stateId = swglStateIdFromPSO(pso, g_pContext, sameColor);
-      tri.ropId    = stateId;
-
-      HWImpl::RasterizeTriangle(tri, tile.minX, tile.minY,
-                                &fb);
-    }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// do useful work here
-
-    if (!infinitLoop)
-      break;
-  };
-  
-  return 0;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -768,60 +673,7 @@ GLAPI void APIENTRY glFlush(void)
 
   auto* pDrawList = &g_pContext->m_drawList;
 
-  if (g_pContext->m_useTiledFB)
-  {
-  #ifdef MEASURE_STATS
-    Timer timer(true);
-  #endif
-    
-    // launch threads for first time
-    //
-    const int tilesNum = int(g_pContext->m_tiledFrameBuffer.tiles.size());
-    if(g_tileRefs.size() != tilesNum)
-    {
-      g_tileRefs.resize(tilesNum);
-      g_pContext->m_currTileId = tilesNum; // signal for threads to wait ...
-      for(int i=0;i<NUM_THREADS_AUX;i++)
-        g_threads[i] = std::thread(&SWGL_TileRenderThread, i);
-    }
-    
-    // sort tiles to get most heavy in the begin of the array
-    //
-    {
-      for (int i = 0; i < tilesNum; i++)
-      {
-        auto &tile = g_pContext->m_tiledFrameBuffer.tiles[i];
-        g_tileRefs[i].tileId = i;
-        g_tileRefs[i].triNum = tile.endOffs - tile.begOffs;
-      }
-    
-      std::sort(g_tileRefs.rbegin(), g_tileRefs.rend());
-    }
-    
-    g_pContext->m_currTileId = 0;
-    while(g_pContext->m_currTileId < tilesNum)
-      SWGL_TileRenderThread(-1);
-
-    while (true) // waiting for all threads to finish
-    {
-      bool allFinished = true;
-      for (int i = 0; i < NUM_THREADS_AUX; i++)
-        allFinished = allFinished && (g_active[i] == 0);
-
-      if (!allFinished)
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-      else
-        break;
-    }
-
-    #ifdef MEASURE_STATS
-    g_pContext->m_timeStats.msRasterAndPixelShader += timer.getElapsed()*1000.0f;
-    #endif
-
-    if (pDrawList->m_triTop != 0)
-      swglClearDrawListAndTiles(pDrawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
-  }
-  else if(g_pContext->m_useTriQueue)
+  if(g_pContext->m_useTriQueue)
   {
    #ifdef MEASURE_STATS
      Timer timer(true);
@@ -925,10 +777,10 @@ GLAPI void APIENTRY glGetFloatv(GLenum pname, GLfloat *params)
     for (int i = 0; i < 4; i++)
     {
       for (int j = 0; j < 4; j++)
-        m2.M(i, j) = m1.M(j, i);
+        m2(i, j) = m1(j, i);
     }
 
-    memcpy(params, m2.L(), 16 * sizeof(float));
+    memcpy(params, &m2, 16 * sizeof(float));
   }
   else if (pname == GL_VIEWPORT)
   {
@@ -1047,14 +899,7 @@ GLAPI void APIENTRY glLoadMatrixf(const GLfloat *m) // pre (g_pContext->state.in
     *(g_pContext->m_pLog) << "glLoadMatrixf(" << m << ")" << std::endl;
 
   float4x4* pmatrix = swglGetCurrMatrix(g_pContext);
-
-  // opengl use transpose matrix layout
-  //
-  pmatrix->row[0] = float4(m[0], m[4], m[8],  m[12]);
-  pmatrix->row[1] = float4(m[1], m[5], m[9],  m[13]);
-  pmatrix->row[2] = float4(m[2], m[6], m[10], m[14]);
-  pmatrix->row[3] = float4(m[3], m[7], m[11], m[15]);
-
+  memcpy(pmatrix, m, 16*sizeof(float)); // opengl use transpose matrix layout
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// matrix
@@ -1094,30 +939,7 @@ GLAPI void APIENTRY glReadPixels(GLint a_x, GLint a_y, GLsizei a_width, GLsizei 
   {
     int* outPixels = (int*)pixels;
 
-    if(g_pContext->m_useTiledFB)
-    {
-      g_pContext->m_tiledFrameBuffer.CopyToRowPitch(outPixels);
-    }
-    else
-    {
-      const int pitch = (a_width + FB_BILLET_SIZE);
-
-      for (int y = 0; y < a_height; y++)
-      {
-        int offset0 = y * a_width;
-        int offset1 = y * pitch;
-
-        for (int x = 0; x < a_width; x++)
-        {
-          const uint32_t BGRA = (uint32_t) g_pContext->m_pixels2[offset1 + x];
-          const uint32_t R = (BGRA & 0x000000FF);
-          const uint32_t G = (BGRA & 0x0000FF00);
-          const uint32_t B = (BGRA & 0x00FF0000) >> 16;
-
-          outPixels[offset0 + x] = (R << 16) | G | B;
-        }
-      }
-    }
+  
   }
   else
   {
@@ -1341,7 +1163,6 @@ GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     HDC currHDC = g_pContext->m_hdc;
     g_pContext->Destroy();
     g_pContext->Create(currHDC, width, height);
-    swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
 
   #else // linux path
@@ -1350,7 +1171,6 @@ GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
   {
     g_pContext->Destroy();
     g_pContext->Create(g_pContext->glxrec.dpy, nullptr, width, height);
-    swglClearDrawListAndTiles(&g_pContext->m_drawList, &g_pContext->m_tiledFrameBuffer, MAX_NUM_TRIANGLES_TOTAL);
   }
   
   #endif
@@ -1484,12 +1304,12 @@ GLAPI void APIENTRY glMultMatrixf(const GLfloat *m)
 
   // opengl use transpose matrix layout
   //
-  newMat.row[0] = float4(m[0], m[4], m[8], m[12]);
-  newMat.row[1] = float4(m[1], m[5], m[9], m[13]);
-  newMat.row[2] = float4(m[2], m[6], m[10], m[14]);
-  newMat.row[3] = float4(m[3], m[7], m[11], m[15]);
+  newMat.col(0) = float4(m[0], m[1], m[2], m[3]);
+  newMat.col(1) = float4(m[4], m[5], m[6], m[7]);
+  newMat.col(2) = float4(m[8], m[9], m[10],m[11]);
+  newMat.col(3) = float4(m[12],m[13],m[14],m[15]);
 
-  (*pmatrix) = mul((*pmatrix), newMat);
+  (*pmatrix) = (*pmatrix)*newMat;
 
 }
 
@@ -1511,12 +1331,12 @@ GLAPI void APIENTRY glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 
   float4x4 newMat;
 
-  newMat.row[0].x = v.x*v.x*(1.0f - c) + c;     newMat.row[0].y = v.x*v.y*(1.0f - c) - v.z*s;  newMat.row[0].z = v.x*v.z*(1.0f - c) + v.y*s; newMat.row[0].w = 0.0f;
-  newMat.row[1].x = v.y*v.x*(1.0f - c) + v.z*s; newMat.row[1].y = v.y*v.y*(1.0f - c) + c;      newMat.row[1].z = v.y*v.z*(1.0f - c) - v.x*s; newMat.row[1].w = 0.0f;
-  newMat.row[2].x = v.x*v.z*(1.0f - c) - v.y*s; newMat.row[2].y = v.y*v.z*(1.0f - c) + v.x*s;  newMat.row[2].z = v.z*v.z*(1.0f - c) + c;     newMat.row[2].w = 0.0f;
-  newMat.row[3].x = 0.0f;                       newMat.row[3].y = 0.0f;                        newMat.row[3].z = 0.0f;                       newMat.row[3].w = 1.0f;
+  newMat(0,0) = v.x*v.x*(1.0f - c) + c;     newMat(0,1) = v.x*v.y*(1.0f - c) - v.z*s;  newMat(0,2) = v.x*v.z*(1.0f - c) + v.y*s; newMat(0,3) = 0.0f;
+  newMat(1,0) = v.y*v.x*(1.0f - c) + v.z*s; newMat(1,1) = v.y*v.y*(1.0f - c) + c;      newMat(1,2) = v.y*v.z*(1.0f - c) - v.x*s; newMat(1,3) = 0.0f;
+  newMat(2,0) = v.x*v.z*(1.0f - c) - v.y*s; newMat(2,1) = v.y*v.z*(1.0f - c) + v.x*s;  newMat(2,2) = v.z*v.z*(1.0f - c) + c;     newMat(2,3) = 0.0f;
+  newMat(3,0) = 0.0f;                       newMat(3,1) = 0.0f;                        newMat(3,2) = 0.0f;                       newMat(3,3) = 1.0f;
 
-  (*pmatrix) = mul((*pmatrix), newMat);
+  (*pmatrix) = (*pmatrix)*newMat;
 }
 
 GLAPI void APIENTRY glScalef(GLfloat x, GLfloat y, GLfloat z)
@@ -1528,13 +1348,9 @@ GLAPI void APIENTRY glScalef(GLfloat x, GLfloat y, GLfloat z)
     *(g_pContext->m_pLog) << "glScalef(" << x << "," << y << ", " << z << ")" << std::endl;
 
   float4x4* pmatrix = swglGetCurrMatrix(g_pContext);
+  float4x4  newMat  = scale4x4(float3(x,y,z));
 
-  float4x4 newMat;
-  newMat.row[0].x = x;
-  newMat.row[1].y = y;
-  newMat.row[2].z = z;
-
-  (*pmatrix) = mul((*pmatrix), newMat);
+  (*pmatrix) = (*pmatrix)*newMat;
 }
 
 GLAPI void APIENTRY glTranslatef(GLfloat x, GLfloat y, GLfloat z)
@@ -1546,15 +1362,8 @@ GLAPI void APIENTRY glTranslatef(GLfloat x, GLfloat y, GLfloat z)
     *(g_pContext->m_pLog) << "glTranslatef(" << x << "," << y << ", " << z << ")" << std::endl;
 
   float4x4* pmatrix = swglGetCurrMatrix(g_pContext);
+  float4x4  newMat  = translate4x4(float3(x,y,z));
 
-  float4x4 newMat;
-  newMat.row[0].w = x;
-  newMat.row[1].w = y;
-  newMat.row[2].w = z;
-
-  (*pmatrix) = mul((*pmatrix), newMat);
-
+  (*pmatrix) = (*pmatrix)*newMat;
 }
-
-
 

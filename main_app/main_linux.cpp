@@ -95,7 +95,8 @@ void ExposeFunc()
 
   try
   {
-    //demo01_colored_triangle(angle1*0.1f);
+    //test01_colored_triangle();
+    demo01_colored_triangle(angle1);
     //test02_nehe_lesson1_simplified();
 
     // paper demos

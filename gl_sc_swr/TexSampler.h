@@ -1,7 +1,6 @@
 #ifndef TEXSAMPLER_GUARDIAN
 #define TEXSAMPLER_GUARDIAN
 
-
 #include "LiteMath.h"
 #include "TriRaster.h"
 
@@ -34,6 +33,9 @@ inline float4 read_imagef(const int* pData, const int w, const int h, const int 
 
 #else
 
+using LiteMath::float4;
+using LiteMath::float2;
+
 inline float4 read_imagef(const int* pData, const int w, const int h, int pitch, const float2 a_texCoord) // look ak LaMote's integer interpolation
 {
   const float fw = (float)(w);
@@ -42,8 +44,8 @@ inline float4 read_imagef(const int* pData, const int w, const int h, int pitch,
   //const float ffx = a_texCoord.x*fw - 0.5f; 
   //const float ffy = a_texCoord.y*fh - 0.5f; 
 
-  const float ffx = clamp(a_texCoord.x*fw - 0.5f, 0.0f, fw - 1.0f);
-  const float ffy = clamp(a_texCoord.y*fh - 0.5f, 0.0f, fh - 1.0f);
+  const float ffx = LiteMath::clamp(a_texCoord.x*fw - 0.5f, 0.0f, fw - 1.0f);
+  const float ffy = LiteMath::clamp(a_texCoord.y*fh - 0.5f, 0.0f, fh - 1.0f);
 
   const int px = (int)(ffx);
   const int py = (int)(ffy);
@@ -70,10 +72,10 @@ inline float4 read_imagef(const int* pData, const int w, const int h, int pitch,
 
   const float mult = 0.003921568f; // (1.0f/255.0f);
 
-  const float4 f1 = mult*make_float4((float)p1.x, (float)p1.y, (float)p1.z, (float)p1.w);
-  const float4 f2 = mult*make_float4((float)p2.x, (float)p2.y, (float)p2.z, (float)p2.w);
-  const float4 f3 = mult*make_float4((float)p3.x, (float)p3.y, (float)p3.z, (float)p3.w);
-  const float4 f4 = mult*make_float4((float)p4.x, (float)p4.y, (float)p4.z, (float)p4.w);
+  const float4 f1 = mult*float4((float)p1.x, (float)p1.y, (float)p1.z, (float)p1.w);
+  const float4 f2 = mult*float4((float)p2.x, (float)p2.y, (float)p2.z, (float)p2.w);
+  const float4 f3 = mult*float4((float)p3.x, (float)p3.y, (float)p3.z, (float)p3.w);
+  const float4 f4 = mult*float4((float)p4.x, (float)p4.y, (float)p4.z, (float)p4.w);
 
   // Calculate the weighted sum of pixels (for each color channel)
   //
@@ -82,19 +84,19 @@ inline float4 read_imagef(const int* pData, const int w, const int h, int pitch,
   float outb = f1.z * w1 + f2.z * w2 + f3.z * w3 + f4.z * w4;
   float outa = f1.w * w1 + f2.w * w2 + f3.w * w3 + f4.w * w4;
 
-  return make_float4(outr, outg, outb, outa);
+  return float4(outr, outg, outb, outa);
 }
 
 #endif
 
 inline static float2 wrapTexCoord(float2 a_texCoord)
 {
-  a_texCoord = a_texCoord - make_float2((float)((int)(a_texCoord.x)), (float)((int)(a_texCoord.y)));
+  a_texCoord = a_texCoord - float2((float)((int)(a_texCoord.x)), (float)((int)(a_texCoord.y)));
 
   float x = a_texCoord.x < 0.0f ? a_texCoord.x + 1.0f : a_texCoord.x;
   float y = a_texCoord.y < 0.0f ? a_texCoord.y + 1.0f : a_texCoord.y;
 
-  return make_float2(x, y);
+  return float2(x, y);
 }
 
 

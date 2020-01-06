@@ -17,6 +17,10 @@
 
 #include "../gl_sc_swr/LiteMath.h"
 
+using LiteMath::float2;
+using LiteMath::float3;
+using LiteMath::float4;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +28,6 @@
 
 extern int g_localWidth;
 extern int g_localHeight;
-
 
 
 void test11_alpha_tex_and_transp()
@@ -48,7 +51,7 @@ void test11_alpha_tex_and_transp()
       {
         float2 p((float)x, (float)y);
 
-        float   fval  = clamp(length(p - c) / 40.0f, 0.0f, 1.0f);
+        float   fval  = LiteMath::clamp(length(p - c) / 40.0f, 0.0f, 1.0f);
         uint8_t ival  = (uint8_t)255 - (uint8_t)(fval*255.0f);
         pixels[y*w+x] = ival;
       }
@@ -87,7 +90,7 @@ void test11_alpha_tex_and_transp()
       {
         const float2  p((float)x, (float)y);
         const float2  diff = p - c;
-        const float   fval = clamp(length(diff) / 128.0f, 0.0f, 1.0f);
+        const float   fval = LiteMath::clamp(length(diff) / 128.0f, 0.0f, 1.0f);
         const uint8_t ival = (uint8_t)255 - (uint8_t)(fval*fval*255.0f);
 
         pxx2[y*w3 + x].a = ival;
@@ -483,17 +486,17 @@ void demo24_draw_elements_terrain(int width, int height, float algle1, float ang
         const int px2 = heighpMap[id2];
         const int px3 = heighpMap[id3];
 
-        const float4 px0f = Uint32_BGRAToRealColor(px0);
-        const float4 px1f = Uint32_BGRAToRealColor(px1);
-        const float4 px2f = Uint32_BGRAToRealColor(px2);
-        const float4 px3f = Uint32_BGRAToRealColor(px3);
+        const float4 px0f = LiteMath::color_unpack_bgra(px0);
+        const float4 px1f = LiteMath::color_unpack_bgra(px1);
+        const float4 px2f = LiteMath::color_unpack_bgra(px2);
+        const float4 px3f = LiteMath::color_unpack_bgra(px3);
 
         const float4 one(1, 1, 1, 0);
 
-        const float h0 = dot(px0f, one);
-        const float h1 = dot(px1f, one);
-        const float h2 = dot(px2f, one);
-        const float h3 = dot(px3f, one);
+        const float h0 = dot3f(px0f, one);
+        const float h1 = dot3f(px1f, one);
+        const float h2 = dot3f(px2f, one);
+        const float h3 = dot3f(px3f, one);
 
         vertPos[id0]  = float3((float)x0, h0, (float)y0) - cornerLeft;
         vertPos[id1]  = float3((float)x1, h1, (float)y0) - cornerLeft;
@@ -1753,7 +1756,7 @@ void test_box_tri_overlap()
   float2 bmin2(-0.65f, -0.85f);
   float2 bmax2(-0.45f, 0.55f);
 
-  if (IntersectBoxBox(bmin, bmax, bmin2, bmax2))
+  if (LiteMath::IntersectBox2Box2(bmin, bmax, bmin2, bmax2))
     glColor4f(0, 1, 0, 1);
   else
     glColor4f(1, 0, 0, 1);
