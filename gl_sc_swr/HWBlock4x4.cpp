@@ -39,6 +39,7 @@ using cvex::clamp;
 using cvex::store;
 using cvex::prefetch;
 using cvex::tst_nz;
+using cvex::gather;
 
 using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::FillColor;
 
@@ -76,44 +77,26 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
                                                         frameBuf);
       break;
 
-    /*
+    
     case ROP_TexNearest2D:
-      RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D_TEX_P>(tri, tileMinX, tileMinY,
+    case ROP_TexLinear2D:
+      RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_P,4,4>(tri, tileMinX, tileMinY,
                                                               frameBuf);
       break;
 
-    case ROP_TexLinear2D:
-      RasterizeTriHalfSpaceBlockLineFixp2D<ROP_CVEX_2D_TEX_B>(tri, tileMinX, tileMinY,
-                                                              frameBuf);
-      break;
 
     case ROP_TexNearest3D:
-      RasterizeTriHalfSpaceBlockLineFixp3D<ROP_CVEX_3D_TEX_P>(tri, tileMinX, tileMinY,
-                                                              frameBuf);
-      break;
-
     case ROP_TexLinear3D:
-      RasterizeTriHalfSpaceBlockLineFixp3D<ROP_CVEX_3D_TEX_B>(tri, tileMinX, tileMinY,
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P,4,4>(tri, tileMinX, tileMinY,
                                                               frameBuf);
       break;
-    
-    #ifndef WIN32
+
     case ROP_TexNearest3D_Blend:
-      RasterizeTriHalfSpaceBlockLineFixp3D<ROP_CVEX_3D_TEX_P_Blend>(tri, tileMinX, tileMinY,
-                                                                    frameBuf);
-      break;
-
     case ROP_TexLinear3D_Blend:
-      RasterizeTriHalfSpaceBlockLineFixp3D<ROP_CVEX_3D_TEX_B_Blend>(tri, tileMinX, tileMinY,
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P_Blend,4,4>(tri, tileMinX, tileMinY,
                                                                     frameBuf);
       break;
-    #endif
 
-    default :
-      RasterizeTriHalfSpaceBlockFixp2D_Fill<ROP_CVEX_FILL>(tri, tileMinX, tileMinY,
-                                                           frameBuf);
-      break;
-    */
   };
 
 }

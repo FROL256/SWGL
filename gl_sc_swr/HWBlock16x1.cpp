@@ -33,22 +33,22 @@ using cvex16::clamp;
 using cvex16::store;
 using cvex16::prefetch;
 using cvex16::tst_nz;
+using cvex16::gather;
 
 using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::FillColor;
 
 using ROP_CVEX_2D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Colored2D;
 using ROP_CVEX_3D       = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Colored3D;
 
-//using ROP_CVEX_2D_TEX_P = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured2D;
-//using ROP_CVEX_2D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured2D;
-//
-//using ROP_CVEX_3D_TEX_P = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 8, false>::Textured3D;
-//using ROP_CVEX_3D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 8, true >::Textured3D;
-//
-//#ifndef WIN32
-//using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured3D_Blend;
-//using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured3D_Blend;
-//#endif
+using ROP_CVEX_2D_TEX_P = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured2D;
+using ROP_CVEX_2D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured2D;
+
+using ROP_CVEX_3D_TEX_P = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured3D;
+using ROP_CVEX_3D_TEX_B = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured3D;
+
+using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, false>::Textured3D_Blend;
+using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, cvex16::vfloat16, cvex16::vint16, 16, true >::Textured3D_Blend;
+
 
 void HWImplBlock16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                              FrameBuffer* frameBuf)
@@ -68,7 +68,24 @@ void HWImplBlock16x1_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMi
      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D,4,4>(tri, tileMinX, tileMinY,
                                                        frameBuf);
      break;
+
+    case ROP_TexLinear2D:
+    case ROP_TexNearest2D:
+      RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_P,4,4>(tri, tileMinX, tileMinY,
+                                                              frameBuf);
+      break;
+
+    case ROP_TexNearest3D:
+    case ROP_TexLinear3D:
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P,4,4>(tri, tileMinX, tileMinY,
+                                                              frameBuf);
+      break;
   
+    case ROP_TexNearest3D_Blend:
+    case ROP_TexLinear3D_Blend:
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P_Blend,4,4>(tri, tileMinX, tileMinY,
+                                                                    frameBuf);
+      break;
   };
 
 }

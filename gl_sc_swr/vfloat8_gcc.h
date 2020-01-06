@@ -98,6 +98,8 @@ namespace cvex8
   static inline vint8   join(cvex::vint4 a,   cvex::vint4 b)   { return (vint8) _mm256_insertf128_si256(_mm256_castsi128_si256((__m128i)a), (__m128i)b,1); }
   static inline vuint8  join(cvex::vuint4 a,  cvex::vuint4 b)  { return (vuint8)_mm256_insertf128_si256(_mm256_castsi128_si256((__m128i)a), (__m128i)b,1); }
 
+  static inline vint8   gather(const int* a_data, const vint8 offset) { return (vint8)_mm256_i32gather_epi32(a_data, (__m256i)offset, 4); }
+
 #else
   
   static inline void set_ftz() {}
