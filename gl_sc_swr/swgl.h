@@ -425,7 +425,8 @@ inline void calcTriBBox(SetupTriangleType *pTri)
   pTri->bb_imaxX = (int)maxX;
   pTri->bb_iminY = (int)minY;
   pTri->bb_imaxY = (int)maxY;
-  pTri->triSize  = fmax(maxX - minX, maxY - minY);
+  pTri->triSize  = int(fmax(maxX - minX, maxY - minY));
+  pTri->triArea  = int(maxX - minX)*int(maxY - minY);
 }
 
 template<typename SetupTriangleType>

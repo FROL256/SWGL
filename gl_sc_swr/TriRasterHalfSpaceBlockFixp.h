@@ -163,6 +163,19 @@ void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int til
 
 }
 
+template<typename T>
+int EvalSubpixelBits(const T& tri) // #TODO: implement this carefully
+{
+  if (tri.triSize < 1024)
+    return 4;
+  if (tri.triSize < 32768)
+    return 3;
+  else if (tri.triSize < 65536)
+    return 2;
+  else
+    return 0;
+}
+
 template<typename ROP, int blockSizeX, int blockSizeY>
 void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
                                       FrameBuffer *frameBuf)
@@ -170,14 +183,19 @@ void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int til
   constexpr int BLOCK_ITER = (blockSizeX*blockSizeY)/ROP::n;       
   constexpr int BMULT      = ROP::n/blockSizeX;   
 
-  // 28.4 fixed-point coordinates
-  const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
-  const int Y2 = iround(16.0f * tri.v2.y) - 16*tileMinY;
-  const int Y3 = iround(16.0f * tri.v1.y) - 16*tileMinY;
+  // 28.4 or 30.2 or else fixed-point coordinates
+  //
+  const int   SUBPIXELBITS  = EvalSubpixelBits(tri); // clipped (by a nearest clipping plane) triangles could be very big, so we have to estimate this or clip triangle also in 2D.
+  const int   SUBPIXELMULTI = (1 << SUBPIXELBITS);
+  const float SUBPIXELMULTF = float(SUBPIXELMULTI);
 
-  const int X1 = iround(16.0f * tri.v3.x) - 16*tileMinX;
-  const int X2 = iround(16.0f * tri.v2.x) - 16*tileMinX;
-  const int X3 = iround(16.0f * tri.v1.x) - 16*tileMinX;
+  const int Y1 = iround(tri.v3.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
+  const int Y2 = iround(tri.v2.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
+  const int Y3 = iround(tri.v1.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
+
+  const int X1 = iround(tri.v3.x*SUBPIXELMULTF) - tileMinX*SUBPIXELMULTI;
+  const int X2 = iround(tri.v2.x*SUBPIXELMULTF) - tileMinX*SUBPIXELMULTI;
+  const int X3 = iround(tri.v1.x*SUBPIXELMULTF) - tileMinX*SUBPIXELMULTI;
 
   // Deltas
   const int DX12 = X1 - X2;
@@ -189,13 +207,13 @@ void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int til
   const int DY31 = Y3 - Y1;
 
   // Fixed-point deltas
-  const int FDX12 = DX12 << 4;
-  const int FDX23 = DX23 << 4;
-  const int FDX31 = DX31 << 4;
+  const int FDX12 = DX12 << SUBPIXELBITS;
+  const int FDX23 = DX23 << SUBPIXELBITS;
+  const int FDX31 = DX31 << SUBPIXELBITS;
 
-  const int FDY12 = DY12 << 4;
-  const int FDY23 = DY23 << 4;
-  const int FDY31 = DY31 << 4;
+  const int FDY12 = DY12 << SUBPIXELBITS;
+  const int FDY23 = DY23 << SUBPIXELBITS;
+  const int FDY31 = DY31 << SUBPIXELBITS;
 
   // Bounding rectangle
   const int minx = ( LiteMath::max(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSizeX - 1);  // Start in corner of 8x8 block
@@ -221,10 +239,10 @@ void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int til
     for (int x = minx; x < maxx; x += blockSizeX)
     {
       // Corners of block
-      const int x0 = x << 4;
-      const int x1 = (x + blockSizeX - 1) << 4;
-      const int y0 = y << 4;
-      const int y1 = (y + blockSizeY - 1) << 4;
+      const int x0 = x                    << SUBPIXELBITS;
+      const int y0 = y                    << SUBPIXELBITS;
+      const int x1 = (x + blockSizeX - 1) << SUBPIXELBITS;
+      const int y1 = (y + blockSizeY - 1) << SUBPIXELBITS;
 
       // Evaluate half-space functions
       const bool a00 = C1 + DX12 * y0 - DY12 * x0 > 0;
