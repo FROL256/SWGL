@@ -203,7 +203,7 @@ struct VROP
       const vfloat zOld  = load(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
-      if(tst_nz(zTest))
+      if(any_of(zTest))
       {
         prefetch(pLineColor);
         const auto z = rcp_e(zInv);
@@ -619,7 +619,7 @@ struct VROP
       const vfloat zOld  = load(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
-      if(tst_nz(zTest))
+      if(any_of(zTest))
       {
         store(pLineDepth, blend(zInv, zOld, zTest));
         prefetch(pLineColor);
@@ -694,7 +694,7 @@ struct VROP
       const vfloat zOld  = load(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
-      if(tst_nz(zTest))
+      if(any_of(zTest))
       {
         store(pLineDepth, blend(zInv, zOld, zTest));
         prefetch(pLineColor);
@@ -768,7 +768,7 @@ struct VROP
       const vfloat zOld  = load(pLineDepth);
       const vint   zTest = (zInv > zOld);
 
-      if(tst_nz(zTest))
+      if(any_of(zTest))
       {
         store(pLineDepth, blend(zInv, zOld, zTest));
         prefetch(pLineColor);

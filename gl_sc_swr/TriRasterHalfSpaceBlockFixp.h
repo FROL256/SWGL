@@ -331,5 +331,4 @@ void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int til
 }
 
 
-
 #endif //TEST_GL_TOP_SIMDBLOCKFIXP_H

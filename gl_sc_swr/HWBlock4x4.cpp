@@ -13,7 +13,7 @@
 
 #include <algorithm>
 
-using TriangleLocal = HWImplementationPureCpp::TriangleType;
+using TriangleLocal = HWImpl::TriangleType;
 
 #ifdef WIN32
   #include "vfloat4_x64.h"
@@ -38,7 +38,7 @@ using cvex::clamp;
 
 using cvex::store;
 using cvex::prefetch;
-using cvex::tst_nz;
+using cvex::any_of;
 using cvex::gather;
 
 using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::FillColor;

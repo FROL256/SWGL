@@ -97,7 +97,7 @@ namespace cvex16
   static inline bool cmp_eq(const vfloat16 a, const vfloat16 b) { return (_mm512_cmp_ps_mask(a, b, _MM_CMPINT_EQ) == __mmask16(65535) ); }
   static inline bool cmp_ne(const vfloat16 a, const vfloat16 b) { return (_mm512_cmp_ps_mask(a, b, _MM_CMPINT_NE) == __mmask16(65535) ); }
 
-  static inline bool tst_nz(const vint16 a) { return _mm512_cmp_ps_mask(as_float32(a), _mm512_setzero_ps(), _MM_CMPINT_EQ) != __mmask16(65535); }
+  static inline bool any_of(const vint16 a) { return _mm512_cmp_ps_mask(as_float32(a), _mm512_setzero_ps(), _MM_CMPINT_EQ) != __mmask16(65535); }
 
   static inline vfloat16 join(const cvex8::vfloat8 a, const cvex8::vfloat8 b) { return _mm512_insertf32x8(_mm512_castps256_ps512(a),b,1); }
   static inline vint16   join(const cvex8::vint8   a, const cvex8::vint8   b) { return (vint16)_mm512_inserti32x8(_mm512_castsi256_si512((__m256i)a), (__m256i)b,1); }

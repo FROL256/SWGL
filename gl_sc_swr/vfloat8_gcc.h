@@ -92,7 +92,7 @@ namespace cvex8
   static inline bool cmp_eq(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_EQ))) == 255; }
   static inline bool cmp_ne(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_NE))) == 255; }
   
-  static inline bool tst_nz (const vint8 a) { return _mm256_movemask_ps(as_float32(a)) != 0; }
+  static inline bool any_of(const vint8 a) { return _mm256_movemask_ps(as_float32(a)) != 0; }
   
   static inline vfloat8 join(cvex::vfloat4 a, cvex::vfloat4 b) { return         _mm256_insertf128_ps   (_mm256_castps128_ps256(a),b,1); }
   static inline vint8   join(cvex::vint4 a,   cvex::vint4 b)   { return (vint8) _mm256_insertf128_si256(_mm256_castsi128_si256((__m128i)a), (__m128i)b,1); }
