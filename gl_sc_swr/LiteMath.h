@@ -137,12 +137,7 @@ namespace LiteMath
   static inline float4 ceil (const float4 a_val) { return cvex::ceil(a_val.v);  }
   static inline float4 fabs (const float4& a)    { return cvex::fabs (a.v);} 
   static inline float4 rcp_e(const float4& a)    { return cvex::rcp_e(a.v);     }
-
-  static inline bool cmp_gt3(const float4& a, const float4& b) { return cvex::cmp_gt3(a.v, b.v); }
-  static inline bool cmp_lt3(const float4& a, const float4& b) { return cvex::cmp_lt3(a.v, b.v); }
-  static inline bool cmp_ge3(const float4& a, const float4& b) { return cvex::cmp_ge3(a.v, b.v); }
-  static inline bool cmp_le3(const float4& a, const float4& b) { return cvex::cmp_le3(a.v, b.v); }
-
+  
   static inline unsigned int color_pack_rgba(const float4 rel_col) { return cvex::color_pack_rgba(rel_col.v); }
   static inline unsigned int color_pack_bgra(const float4 rel_col) { return cvex::color_pack_bgra(rel_col.v); }
 

@@ -4,8 +4,6 @@
 #define NUM_THREADS     1
 #define NUM_THREADS_AUX (NUM_THREADS-1)
 
-#define NUM_THREADS_CLS 2
-
 #define NOWINDOW false
 #define PERSP_CORRECT
 
@@ -15,8 +13,6 @@
 #ifndef FULL_GL
   #define FULL_GL
 #endif
-
-#define FB_BILLET_SIZE 8
 
 #include <cstdint>
 #include "LiteMath.h"

@@ -39,11 +39,6 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
   hdcMem = CreateCompatibleDC(a_hdc);
   hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);
 
-  //m_pixels2 = m_pixels;
-  m_pixels2 = (int*)    _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(int),     64);
-  m_zbuffer = (float*)  _aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(float),   64);
-  m_sbuffer = (uint8_t*)_aligned_malloc((width + FB_BILLET_SIZE)*height*sizeof(uint8_t), 64);
-
   // new tiled frame buffer
   //
 
@@ -65,31 +60,11 @@ void SWGL_Context::Destroy()
   hbmp   = NULL;
   hdcMem = NULL;
   m_hdc  = NULL;
-
-  m_pixels2 = nullptr;
-  m_zbuffer = nullptr;
-  m_sbuffer = nullptr;
 }
 
 void SWGL_Context::CopyToScreeen()
 {
-  //if (m_useTiledFB)
-  //{
-  //}
-  //else
-  //{
-  //  const int pitch = (m_width + FB_BILLET_SIZE);
-  //
-  //  for (int y = 0; y < m_height; y++)
-  //  {
-  //    int offset0 = y * m_width;
-  //    int offset1 = y * pitch;
-  //    memcpy(m_pixels + offset0, m_pixels2 + offset1, m_width * sizeof(int));
-  //    //for (int x = 0; x < m_width; x++)
-  //    //  m_pixels[offset0 + x] = m_pixels2[offset1 + x];
-  //  }
-  //}
-
+  m_tiledFb2.CopyToPitchLinear((uint32_t*)m_pixels, m_width);
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
 }
 

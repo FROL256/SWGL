@@ -201,17 +201,8 @@ namespace cvex
     return _mm_andnot_ps(absmask, a_val);
   }
 
-  static inline bool cmp_gt3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) & 7)  == 7; }
-  static inline bool cmp_lt3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmplt_ps(a, b)) & 7)  == 7; }
-  static inline bool cmp_ge3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpge_ps(a, b)) & 7)  == 7; }
-  static inline bool cmp_le3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmple_ps(a, b)) & 7)  == 7; }
-
-  static inline bool cmp_gt (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)))      == 15; }
-  static inline bool cmp_lt (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmplt_ps(a, b)))      == 15; }
-  static inline bool cmp_ge (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpge_ps(a, b)))      == 15; }
-  static inline bool cmp_le (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmple_ps(a, b)))      == 15; }
-
   static inline bool any_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) != 0; }
+  static inline bool all_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) == 15; }
 
   inline static unsigned int color_pack_rgba(const vfloat4 rel_col)
   {
@@ -246,16 +237,9 @@ namespace cvex
 
   static inline void set_ftz() { _MM_SET_ROUNDING_MODE(_MM_ROUND_TOWARD_ZERO); }
 
-  static inline void stream(int* p,       vint4   a_val)   { _mm_stream_ps((float*)p, as_float32(a_val)); }
-  static inline void stream(_uint32_t* p, vuint4  a_val)   { _mm_stream_ps((float*)p, as_float32(a_val)); }
-  static inline void stream(float* p,     vfloat4 a_val)   { _mm_stream_ps(p, a_val); }
-
   static inline vint4 gather(const int* a_data, const vint4 offset) { return (vint4)_mm_i32gather_epi32(a_data, (__m128i)offset, 4); }
 
   #else
-  static inline void stream(int* p,       vint4   a_val)   { *((vint4*)(p))   = a_val; }
-  static inline void stream(_uint32_t* p, vuint4  a_val)   { *((vuint4*)(p))  = a_val; }
-  static inline void stream(float* p,     vfloat4 a_val)   { *((vfloat4*)(p)) = a_val; }
 
   static inline float   dot3f(const vfloat4 a, const vfloat4 b) 
   {
@@ -318,10 +302,9 @@ namespace cvex
     return res;
   }
 
-  static inline bool cmpgt3(const vfloat4 a, const vfloat4 b) { return (a[0] > b[0]) && (a[1] > b[1]) && (a[2] > b[2]); }
-  static inline bool cmplt3(const vfloat4 a, const vfloat4 b) { return (a[0] < b[0]) && (a[1] < b[1]) && (a[2] < b[2]); }
-  static inline bool cmpge3(const vfloat4 a, const vfloat4 b) { return (a[0] >= b[0]) && (a[1] >= b[1]) && (a[2] >= b[2]); }
-  static inline bool cmple3(const vfloat4 a, const vfloat4 b) { return (a[0] <= b[0]) && (a[1] <= b[1]) && (a[2] <= b[2]); }
+  static inline bool any_of (const vint4 a) { return (a[0] != 0) || (a[1] != 0) || (a[2] != 0) || (a[3] != 0); }
+  static inline bool all_of (const vint4 a) { return (a[0] != 0) && (a[1] != 0) && (a[2] != 0) && (a[3] != 0); }
+
 
   inline static unsigned int color_pack_rgba(const vfloat4 rel_col)
   {
