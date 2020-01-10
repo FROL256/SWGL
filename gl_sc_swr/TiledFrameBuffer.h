@@ -214,6 +214,70 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
   
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace FB
+{
+
+template<typename SrcType, typename DstType>
+static inline DstType ColorPack(const SrcType r, const SrcType g, const SrcType b, const SrcType a)
+{
+  return DstType(0);
+}
+
+template<typename SrcType, typename DstType>
+static inline DstType ColorPack(const SrcType r, const SrcType g, const SrcType b)
+{
+  return DstType(0);
+}
+
+
+template<typename SrcType, typename DstType>
+static inline void ColorUNPack(const DstType colorOld, SrcType& r, SrcType& g, SrcType& b, SrcType& a)
+{
+  
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+template<> 
+inline uint32_t ColorPack<float,uint32_t>(const float r, const float g, const float b, const float a)
+{
+  constexpr float c_255 = 255.0f;
+  return (uint32_t(r * c_255) << 16) | // BGRA
+         (uint32_t(g * c_255) << 8)  |
+         (uint32_t(b * c_255) << 0)  |
+         (uint32_t(a * c_255) << 24);
+}
+
+
+template<> 
+inline uint32_t ColorPack<float,uint32_t>(const float r, const float g, const float b)
+{
+  constexpr float c_255 = 255.0f;
+  return (uint32_t(r * c_255) << 16) | // BGRA
+         (uint32_t(g * c_255) << 8)  |
+         (uint32_t(b * c_255) << 0);
+}
 
 
 
+template<>
+inline void ColorUNPack<float,uint32_t>(const uint32_t colorOld, float& r, float& g, float& b, float& a)
+{
+  constexpr float c_255Inv = 1.0f/255.0f;
+  r = float( (colorOld & 0x00FF0000) >> 16)*c_255Inv;
+  g = float( (colorOld & 0x0000FF00) >> 8 )*c_255Inv;
+  b = float( (colorOld & 0x000000FF) >> 0 )*c_255Inv;
+  a = float( (colorOld & 0xFF000000) >> 24)*c_255Inv;
+}
+
+
+
+
+
+};

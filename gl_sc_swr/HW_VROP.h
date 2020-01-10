@@ -119,12 +119,15 @@ struct TileOp<vint, 16>
 };
 
 
-
-
-
-template<typename TriangleT, typename vfloat, typename vint, int width, bool bilinearIsEnabled>
+template<typename TriangleT, typename VTYPES, bool bilinearIsEnabled>
 struct VROP
-{
+{ 
+  typedef typename VTYPES::vint   vint;
+  typedef typename VTYPES::vuint  vuint;
+  typedef typename VTYPES::vfloat vfloat;
+  
+  enum {width = VTYPES::width};
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   struct FillColor

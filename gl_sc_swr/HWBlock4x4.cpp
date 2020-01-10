@@ -41,27 +41,28 @@ using cvex::prefetch;
 using cvex::any_of;
 using cvex::gather;
 
-using ROP_CVEX_FILL     = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::FillColor;
+struct VT
+{
+  typedef typename cvex::vint4   vint;
+  typedef typename cvex::vuint4  vuint;
+  typedef typename cvex::vfloat4 vfloat;
+  enum {width = 4};
+};
 
-using ROP_CVEX_2D       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Colored2D;
-using ROP_CVEX_3D       = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Colored3D;
+using ROP_CVEX_FILL      = VROP<TriangleLocal, VT, false>::FillColor;
+using ROP_CVEX_2D        = VROP<TriangleLocal, VT, false>::Colored2D;
+using ROP_CVEX_3D        = VROP<TriangleLocal, VT, false>::Colored3D;
+using ROP_CVEX_2D_TEX_P  = VROP<TriangleLocal, VT, false>::Textured2D;
+using ROP_CVEX_2D_TEX_B  = VROP<TriangleLocal, VT, true >::Textured2D;
+using ROP_CVEX_3D_TEX_P  = VROP<TriangleLocal, VT, false>::Textured3D;
+using ROP_CVEX_3D_TEX_B  = VROP<TriangleLocal, VT, true >::Textured3D;
+using ROP_CVEX_2D_TEX_PW = VROP<TriangleLocal, VT, false>::Textured2D_White;
+using ROP_CVEX_2D_TEX_BW = VROP<TriangleLocal, VT, true >::Textured2D_White;
+using ROP_CVEX_3D_TEX_PW = VROP<TriangleLocal, VT, false>::Textured3D_White;
+using ROP_CVEX_3D_TEX_BW = VROP<TriangleLocal, VT, true >::Textured3D_White;
 
-using ROP_CVEX_2D_TEX_P = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured2D;
-using ROP_CVEX_2D_TEX_B = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured2D;
-
-using ROP_CVEX_3D_TEX_P = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured3D;
-using ROP_CVEX_3D_TEX_B = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured3D;
-
-using ROP_CVEX_2D_TEX_PW = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured2D_White;
-using ROP_CVEX_2D_TEX_BW = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured2D_White;
-
-using ROP_CVEX_3D_TEX_PW = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured3D_White;
-using ROP_CVEX_3D_TEX_BW = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured3D_White;
-
-#ifndef WIN32
-using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, false>::Textured3D_Blend;
-using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, cvex::vfloat4, cvex::vint4, 4, true >::Textured3D_Blend;
-#endif
+using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, VT, false>::Textured3D_Blend;
+using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, VT, true >::Textured3D_Blend;
 
 void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                             FrameBuffer* frameBuf)

@@ -16,7 +16,7 @@
 
 #include <cstdint>
 #include "LiteMath.h"
-#include "SWGL_TiledFrameBuffer.h"
+#include "TiledFrameBuffer.h"
 
 using FrameBufferType = FrameBufferTwoLvl<uint32_t,64,4,4>;
 
