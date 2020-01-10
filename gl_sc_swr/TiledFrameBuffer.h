@@ -241,8 +241,8 @@ static inline void ColorUNPack(const DstType colorOld, SrcType& r, SrcType& g, S
   
 }
 
-////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////// scalar
+//////////////////////////////////////////////////////////////////////////////////////// float to uint32_t
 
 template<> 
 inline uint32_t ColorPack<float,uint32_t>(const float r, const float g, const float b, const float a)
@@ -267,7 +267,8 @@ inline uint32_t ColorPack<float,uint32_t>(const float r, const float g, const fl
 
 
 template<>
-inline void ColorUNPack<float,uint32_t>(const uint32_t colorOld, float& r, float& g, float& b, float& a)
+inline void ColorUNPack<float,uint32_t>(const uint32_t colorOld, 
+                                        float& r, float& g, float& b, float& a)
 {
   constexpr float c_255Inv = 1.0f/255.0f;
   r = float( (colorOld & 0x00FF0000) >> 16)*c_255Inv;
@@ -276,6 +277,109 @@ inline void ColorUNPack<float,uint32_t>(const uint32_t colorOld, float& r, float
   a = float( (colorOld & 0xFF000000) >> 24)*c_255Inv;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////// vector4
+//////////////////////////////////////////////////////////////////////////////////////// float to uint32_t
+
+template<> 
+inline cvex::vuint4 ColorPack<cvex::vfloat4,cvex::vuint4>(const cvex::vfloat4 r, const cvex::vfloat4 g, const cvex::vfloat4 b, const cvex::vfloat4 a)
+{
+  const cvex::vfloat4 c_255 = cvex::splat(255.0f);
+  return (cvex::to_uint32(r * c_255) << 16) | // BGRA
+         (cvex::to_uint32(g * c_255) << 8)  |
+         (cvex::to_uint32(b * c_255) << 0)  |
+         (cvex::to_uint32(a * c_255) << 24);
+}
+
+template<> 
+inline cvex::vuint4 ColorPack<cvex::vfloat4,cvex::vuint4>(const cvex::vfloat4 r, const cvex::vfloat4 g, const cvex::vfloat4 b)
+{
+  const cvex::vfloat4 c_255 = cvex::splat(255.0f);
+  return (cvex::to_uint32(r * c_255) << 16) | // BGRA
+         (cvex::to_uint32(g * c_255) << 8)  |
+         (cvex::to_uint32(b * c_255) << 0);
+}
+
+template<>
+inline void ColorUNPack<cvex::vfloat4,cvex::vuint4>(const cvex::vuint4 colorOld, 
+                                                    cvex::vfloat4& r, cvex::vfloat4& g, cvex::vfloat4& b, cvex::vfloat4& a)
+{
+  const cvex::vfloat4 c_255Inv = cvex::splat(1.0f/255.0f);
+  r = cvex::to_float32( (colorOld & 0x00FF0000) >> 16)*c_255Inv;
+  g = cvex::to_float32( (colorOld & 0x0000FF00) >> 8 )*c_255Inv;
+  b = cvex::to_float32( (colorOld & 0x000000FF) >> 0 )*c_255Inv;
+  a = cvex::to_float32( (colorOld & 0xFF000000) >> 24)*c_255Inv;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////// vector8
+//////////////////////////////////////////////////////////////////////////////////////// float to uint32_t
+
+
+template<> 
+inline cvex8::vuint8 ColorPack<cvex8::vfloat8,cvex8::vuint8>(const cvex8::vfloat8 r, const cvex8::vfloat8 g, const cvex8::vfloat8 b, const cvex8::vfloat8 a)
+{
+  const cvex8::vfloat8 c_255 = cvex8::splat(255.0f);
+  return (cvex8::to_uint32(r * c_255) << 16) | // BGRA
+         (cvex8::to_uint32(g * c_255) << 8)  |
+         (cvex8::to_uint32(b * c_255) << 0)  |
+         (cvex8::to_uint32(a * c_255) << 24);
+}
+
+
+template<> 
+inline cvex8::vuint8 ColorPack<cvex8::vfloat8,cvex8::vuint8>(const cvex8::vfloat8 r, const cvex8::vfloat8 g, const cvex8::vfloat8 b)
+{
+  const cvex8::vfloat8 c_255 = cvex8::splat(255.0f);
+  return (cvex8::to_uint32(r * c_255) << 16) | // BGRA
+         (cvex8::to_uint32(g * c_255) << 8)  |
+         (cvex8::to_uint32(b * c_255) << 0);
+}
+
+template<>
+inline void ColorUNPack<cvex8::vfloat8,cvex8::vuint8>(const cvex8::vuint8 colorOld, 
+                                                      cvex8::vfloat8& r, cvex8::vfloat8& g, cvex8::vfloat8& b, cvex8::vfloat8& a)
+{
+  const cvex8::vfloat8 c_255Inv = cvex8::splat(1.0f/255.0f);
+  r = cvex8::to_float32( (colorOld & 0x00FF0000) >> 16)*c_255Inv;
+  g = cvex8::to_float32( (colorOld & 0x0000FF00) >> 8 )*c_255Inv;
+  b = cvex8::to_float32( (colorOld & 0x000000FF) >> 0 )*c_255Inv;
+  a = cvex8::to_float32( (colorOld & 0xFF000000) >> 24)*c_255Inv;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////// vector16
+//////////////////////////////////////////////////////////////////////////////////////// float to uint32_t
+
+
+template<> 
+inline cvex16::vuint16 ColorPack<cvex16::vfloat16,cvex16::vuint16>(const cvex16::vfloat16 r, const cvex16::vfloat16 g, const cvex16::vfloat16 b, const cvex16::vfloat16 a)
+{
+  const cvex16::vfloat16 c_255 = cvex16::splat(255.0f);
+  return (cvex16::to_uint32(r * c_255) << 16) | // BGRA
+         (cvex16::to_uint32(g * c_255) << 8)  |
+         (cvex16::to_uint32(b * c_255) << 0)  |
+         (cvex16::to_uint32(a * c_255) << 24);
+}
+
+template<> 
+inline cvex16::vuint16 ColorPack<cvex16::vfloat16,cvex16::vuint16>(const cvex16::vfloat16 r, const cvex16::vfloat16 g, const cvex16::vfloat16 b)
+{
+  const cvex16::vfloat16 c_255 = cvex16::splat(255.0f);
+  return (cvex16::to_uint32(r * c_255) << 16) | // BGRA
+         (cvex16::to_uint32(g * c_255) << 8)  |
+         (cvex16::to_uint32(b * c_255) << 0);
+}
+
+
+template<>
+inline void ColorUNPack<cvex16::vfloat16,cvex16::vuint16>(const cvex16::vuint16 colorOld, 
+                                                          cvex16::vfloat16& r, cvex16::vfloat16& g, cvex16::vfloat16& b, cvex16::vfloat16& a)
+{
+  const cvex16::vfloat16 c_255Inv = cvex16::splat(1.0f/255.0f);
+  r = cvex16::to_float32( (colorOld & 0x00FF0000) >> 16)*c_255Inv;
+  g = cvex16::to_float32( (colorOld & 0x0000FF00) >> 8 )*c_255Inv;
+  b = cvex16::to_float32( (colorOld & 0x000000FF) >> 0 )*c_255Inv;
+  a = cvex16::to_float32( (colorOld & 0xFF000000) >> 24)*c_255Inv;
+}
 
 
 

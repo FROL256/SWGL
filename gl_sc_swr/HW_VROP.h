@@ -138,7 +138,7 @@ struct VROP
 
     static inline vint Block(const TriangleT& tri)
     {
-      return splat((int)color_pack_bgra(tri.c1));
+      return splat(0xFFFFFFFF);
     }
   };
 
@@ -163,12 +163,8 @@ struct VROP
       const vfloat r = tri.c1.x*w1 + tri.c2.x*w2 + tri.c3.x*w3;
       const vfloat g = tri.c1.y*w1 + tri.c2.y*w2 + tri.c3.y*w3;
       const vfloat b = tri.c1.z*w1 + tri.c2.z*w2 + tri.c3.z*w3;
-      const vfloat a = tri.c1.w*w1 + tri.c2.w*w2 + tri.c3.w*w3;
 
-      const vint res = (to_int32(r * c_255) << 16) | // BGRA
-                       (to_int32(g * c_255) << 8)  |
-                       (to_int32(b * c_255) << 0)  |
-                       (to_int32(a * c_255) << 24);
+      const vuint res = FB::ColorPack<vfloat,vuint>(r,g,b);
 
       store(pLineColor, res);
     }
@@ -214,14 +210,9 @@ struct VROP
         const auto r = (tri.c1.x * w1 + tri.c2.x * w2 + tri.c3.x * w3)*z;
         const auto g = (tri.c1.y * w1 + tri.c2.y * w2 + tri.c3.y * w3)*z;
         const auto b = (tri.c1.z * w1 + tri.c2.z * w2 + tri.c3.z * w3)*z;
-        const auto a = (tri.c1.w * w1 + tri.c2.w * w2 + tri.c3.w * w3)*z;
 
         const vint colorOld = load(pLineColor);
-
-        const vint colori = (to_int32(r * c_255) << 16) | // BGRA
-                            (to_int32(g * c_255) << 8)  |
-                            (to_int32(b * c_255) << 0)  |
-                            (to_int32(a * c_255) << 24);
+        const vuint colori  = FB::ColorPack<vfloat,vuint>(r,g,b);
 
         store(pLineColor, blend(colori, colorOld, zTest));
         store(pLineDepth, blend(zInv,   zOld,     zTest));
@@ -536,9 +527,7 @@ struct VROP
       vfloat texColor[3];
       Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-      const vint res = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
-                       (to_int32(g * texColor[1] * c_255) << 8)  |
-                       (to_int32(b * texColor[2] * c_255) << 0);
+      const vuint res = FB::ColorPack<vfloat,vuint>(r*texColor[0], g*texColor[1], b*texColor[2]);                      
 
       store(pLineColor, res);
     }
@@ -578,9 +567,7 @@ struct VROP
       vfloat texColor[3];
       Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-      const vint res = (to_int32(texColor[0] * c_255) << 16) | // BGRA
-                       (to_int32(texColor[1] * c_255) << 8)  |
-                       (to_int32(texColor[2] * c_255) << 0);
+      const vuint res = FB::ColorPack<vfloat,vuint>(texColor[0], texColor[1], texColor[2]);                      
 
       store(pLineColor, res);
     }
@@ -640,10 +627,7 @@ struct VROP
         Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
         const vint colorOld = load(pLineColor);
-
-        const vint colori = (to_int32(r * texColor[0] * c_255) << 16) | // BGRA
-                            (to_int32(g * texColor[1] * c_255) << 8)  |
-                            (to_int32(b * texColor[2] * c_255) << 0);
+        const vuint colori  = FB::ColorPack<vfloat,vuint>(r*texColor[0], g*texColor[1], b*texColor[2]);                            
 
         store(pLineColor, blend(colori, colorOld, zTest));
       }
@@ -710,10 +694,7 @@ struct VROP
         Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
         const vint colorOld = load(pLineColor);
-
-        const vint colori = (to_int32(texColor[0] * c_255) << 16) | // BGRA
-                            (to_int32(texColor[1] * c_255) << 8)  |
-                            (to_int32(texColor[2] * c_255) << 0);
+        const vuint colori  = FB::ColorPack<vfloat,vuint>(texColor[0], texColor[1], texColor[2]);
 
         store(pLineColor, blend(colori, colorOld, zTest));
       }
@@ -790,12 +771,11 @@ struct VROP
         Tex2DSample4f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
         const vint colorOld = load(pLineColor);
-
-        const vfloat redOld   = to_float32( (to_uint32(colorOld) & 0x00FF0000) >> 16)*c_255Inv;
-        const vfloat greenOld = to_float32( (to_uint32(colorOld) & 0x0000FF00) >> 8 )*c_255Inv;
-        const vfloat blueOld  = to_float32( (to_uint32(colorOld) & 0x000000FF) >> 0 )*c_255Inv;
-        const vfloat alphaOld = to_float32( (to_uint32(colorOld) & 0xFF000000) >> 24)*c_255Inv;
-
+        
+        vfloat redOld, greenOld, blueOld, alphaOld;
+        FB::ColorUNPack<vfloat,vuint>(to_uint32(colorOld), 
+                                      redOld, greenOld, blueOld, alphaOld);
+       
         const vfloat alpha    = (a * texColor[3]);
 
         const vfloat redNew   = (r * texColor[0]) * alpha + (c_one - alpha)*redOld;
@@ -803,10 +783,7 @@ struct VROP
         const vfloat blueNew  = (b * texColor[2]) * alpha + (c_one - alpha)*blueOld;
         const vfloat alphaNew = alpha             * alpha + (c_one - alpha)*alphaOld;
 
-        const auto colori = (to_uint32(redNew   * c_255) << 16) | // BGRA
-                            (to_uint32(greenNew * c_255) << 8)  |
-                            (to_uint32(blueNew  * c_255) << 0)  |
-                            (to_uint32(alphaNew * c_255) << 24);
+        const vuint colori = FB::ColorPack<vfloat,vuint>(redNew, greenNew, blueNew, alphaNew);
 
         store(pLineColor, blend(colori, colorOld, zTest));
       }

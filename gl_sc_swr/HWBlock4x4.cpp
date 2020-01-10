@@ -122,8 +122,12 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
       break;
 
     case ROP_TexNearest3D_Blend:
-    case ROP_TexLinear3D_Blend:
       RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P_Blend,4,4>(tri, tileMinX, tileMinY,
+                                                                    frameBuf);
+      break; 
+                                                                        
+    case ROP_TexLinear3D_Blend:
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B_Blend,4,4>(tri, tileMinX, tileMinY,
                                                                     frameBuf);
       break;
 
