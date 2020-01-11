@@ -41,7 +41,7 @@ void SWGL_Context::Create(HDC a_hdc, int width, int height)
 
   // new tiled frame buffer
   //
-
+  m_tiledFb2.Resize(m_width, m_height);
   ResizeCommon(m_width, m_height);
 }
 
@@ -60,7 +60,7 @@ void SWGL_Context::Destroy()
 
 void SWGL_Context::CopyToScreeen()
 {
-  m_tiledFb2.CopyToPitchLinear((uint32_t*)m_pixels, m_width);
+  m_tiledFb2.CopyToPitchLinear((uint32_t*)m_pixels, m_width, false); 
   BitBlt(m_hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
 }
 

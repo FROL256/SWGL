@@ -130,7 +130,7 @@ void FrameBufferTwoLvl<PackedColor,FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>:
 {
   const int binsTotal = m_binsY*m_binsX;
   
-  if(true)
+  if(invertY)
   {
     for(int y=0; y<m_height; y+= FB_TILE_SIZE_Y)
     {

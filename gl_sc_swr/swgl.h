@@ -116,16 +116,15 @@ struct Pipeline_State_Object
 */
 struct Batch
 {
-  Batch()
+  void reserve(const size_t a_vertNum)
   {
-    vertPos.reserve(MAX_NUM_VERTICES_IN_BATCH);
-    //vertNorm.reserve(vertPos.size());
-    vertColor.reserve(vertPos.size());
-    vertTexCoord.reserve(vertPos.size());
-    indices.reserve(vertPos.size()*3);
-    indicesLines.reserve(vertPos.size()*2);
-    indicesPoints.reserve(vertPos.size());
-    pointSize.reserve(indicesPoints.capacity()/2);
+    vertPos.reserve(a_vertNum);
+    vertColor.reserve(vertPos.capacity());
+    vertTexCoord.reserve(vertPos.capacity());
+    indices.reserve(vertPos.capacity() * 3);
+    indicesLines.reserve(vertPos.capacity() * 2);
+    indicesPoints.reserve(vertPos.capacity());
+    pointSize.reserve(indicesPoints.capacity() / 2);
   }
 
   void clear()
@@ -135,7 +134,6 @@ struct Batch
     indicesLines.clear();
     indices.clear();
     vertPos.clear();
-    //vertNorm.clear();
     vertColor.clear();
     vertTexCoord.clear();
   }
@@ -180,6 +178,8 @@ struct SWGL_Input
 
     top_mw = 0;
     top_mp = 0;
+
+    m_currBatch.reserve(MAX_NUM_VERTICES_IN_BATCH);
   }
 
   Batch* getCurrBatch() { return &m_currBatch; } // post (ret != nullptr)
