@@ -52,10 +52,6 @@ void SWGL_Context::Destroy()
   DeleteDC(hdcMem);
   DeleteObject(hbmp);
 
-  _aligned_free(m_pixels2);
-  _aligned_free(m_zbuffer);
-  _aligned_free(m_sbuffer);
-
   hbmOld = NULL;
   hbmp   = NULL;
   hdcMem = NULL;

@@ -19,21 +19,18 @@
     </ClCompile>
     <ClCompile Include="BatchExport.cpp" />
     <ClCompile Include="pugixml.cpp" />
-    <ClCompile Include="SWGL_TiledFrameBuffer.cpp" />
     <ClCompile Include="HWPureCpp.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
-    <ClCompile Include="HWBlockLine4x4.cpp">
+    <ClCompile Include="HWBlock4x4.cpp">
       <Filter>Rasterizers</Filter>
     </ClCompile>
-    <ClCompile Include="HWBlockLine8x8.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="LiteMath.h" />
     <ClInclude Include="TexSampler.h" />
     <ClInclude Include="Timer.h" />
-    <ClInclude Include="TriRaster.h" />
     <ClInclude Include="gl_sc.h">
       <Filter>gl_common</Filter>
     </ClInclude>
@@ -45,20 +42,10 @@
     </ClInclude>
     <ClInclude Include="pugiconfig.hpp" />
     <ClInclude Include="pugixml.hpp" />
-    <ClInclude Include="SWGL_TiledFrameBuffer.h" />
-    <ClInclude Include="HWAbstractionLayer.h">
-      <Filter>Rasterizers</Filter>
-    </ClInclude>
     <ClInclude Include="HW_VROP.h" />
-    <ClInclude Include="TriRasterHalfSpaceBlockLineFixp.h" />
     <ClInclude Include="vfloat4_x64.h" />
     <ClInclude Include="vfloat8_x64.h" />
-    <ClInclude Include="HWBlockLine4x4.h">
-      <Filter>Rasterizers</Filter>
-    </ClInclude>
-    <ClInclude Include="HWPureCpp.h">
-      <Filter>Rasterizers</Filter>
-    </ClInclude>
+    <ClInclude Include="TriRasterHalfSpaceBlockFixp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl32.def" />

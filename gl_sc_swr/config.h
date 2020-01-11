@@ -1,7 +1,7 @@
 #ifndef SWGL_CONFIG_GUARDIAN
 #define SWGL_CONFIG_GUARDIAN
 
-#define NUM_THREADS     1
+#define NUM_THREADS     2
 #define NUM_THREADS_AUX (NUM_THREADS-1)
 
 #define NOWINDOW false
@@ -183,9 +183,9 @@ struct HWImplBlock4x4Fixp_CVEX : public HWImplementationPureCpp
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//using HWImpl = HWImplBlock4x4_CVEX;
+using HWImpl = HWImplBlock4x4_CVEX;
 //using HWImpl = HWImplBlock8x2_CVEX; // does not works with binned FB currently due to we removed FB_BILLET
-using HWImpl = HWImplBlock16x1_CVEX;
+//using HWImpl = HWImplBlock16x1_CVEX;
 //using HWImpl = HWImplBlockLine4x4Fixp_CVEX;
 
 using Triangle = HWImpl::TriangleType;

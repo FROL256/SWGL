@@ -178,6 +178,12 @@ namespace cvex
                      _mm_andnot_ps(as_float32(mask), as_float32(b))));
   }
 
+  static inline vuint4 blend(const vuint4 a, const vuint4 b, const vint4 mask)
+  {
+    return as_uint32(_mm_or_ps(_mm_and_ps(as_float32(mask), as_float32(a)),
+                     _mm_andnot_ps(as_float32(mask), as_float32(b))));
+  }
+
 
   static inline void transpose4(const vfloat4 a[4], vfloat4 RES[4])
   {
@@ -308,15 +314,10 @@ namespace cvex
 
   inline static unsigned int color_pack_bgra(const vfloat4 rel_col) { return color_pack_rgba(cvex::shuffle_zyxw(rel_col)); }
 
-  static inline bool cmp_gt3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) & 7) == 7; }
-  static inline bool cmp_lt3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmplt_ps(a, b)) & 7) == 7; }
-  static inline bool cmp_ge3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpge_ps(a, b)) & 7) == 7; }
-  static inline bool cmp_le3(const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmple_ps(a, b)) & 7) == 7; }
-
-  static inline bool cmp_gt (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)))     == 15; }
-  static inline bool cmp_lt (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmplt_ps(a, b)))     == 15; }
-  static inline bool cmp_ge (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmpge_ps(a, b)))     == 15; }
-  static inline bool cmp_le (const vfloat4 a, const vfloat4 b) { return (_mm_movemask_ps(_mm_cmple_ps(a, b)))     == 15; }
+  static inline bool any_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) != 0; }
+  static inline bool all_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) == 15; }
+  
+  static inline vint4 gather(const int* a_data, const vint4 offset) { return (vint4)_mm_i32gather_epi32(a_data, (__m128i)offset, 4); }
 
   static inline void prefetch(const float* ptr) {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
   static inline void prefetch(const int* ptr)   {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
@@ -461,6 +462,7 @@ static inline cvex::vuint4 operator|(const cvex::vuint4 a, const cvex::vuint4 b)
 static inline cvex::vuint4 operator&(const cvex::vuint4 a, const cvex::vuint4 b) { return _mm_and_si128(a, b); }
 static inline cvex::vuint4 operator~(const cvex::vuint4 a)                       { return _mm_andnot_si128(a, _mm_set1_epi32(0xFFFFFFFF)); }
 
+static inline cvex::vuint4 operator&(const cvex::vuint4 a, _uint32_t b) { return _mm_and_si128(a, cvex::splat(b)); }
 
 };
 

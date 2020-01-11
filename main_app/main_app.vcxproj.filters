@@ -18,9 +18,6 @@
     <ClInclude Include="tests_sc1.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="Timer.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="HydraExport.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>

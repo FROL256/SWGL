@@ -151,7 +151,7 @@ struct VROP
     using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
-                             int* pLineColor)
+                             unsigned int* pLineColor)
     {
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
@@ -169,7 +169,7 @@ struct VROP
       store(pLineColor, res);
     }
 
-    static inline int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
+    static inline unsigned int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
     {
       const float w1 = areaInv*float(CX1);
       const float w2 = areaInv*float(CX2);
@@ -188,9 +188,8 @@ struct VROP
     using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
-                             int* pLineColor, float* pLineDepth)
+                             unsigned int* pLineColor, float* pLineDepth)
     {
-      prefetch(pLineDepth);
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
 
@@ -204,15 +203,14 @@ struct VROP
 
       if(any_of(zTest))
       {
-        prefetch(pLineColor);
         const auto z = rcp_e(zInv);
 
         const auto r = (tri.c1.x * w1 + tri.c2.x * w2 + tri.c3.x * w3)*z;
         const auto g = (tri.c1.y * w1 + tri.c2.y * w2 + tri.c3.y * w3)*z;
         const auto b = (tri.c1.z * w1 + tri.c2.z * w2 + tri.c3.z * w3)*z;
 
-        const vint colorOld = load(pLineColor);
-        const vuint colori  = FB::ColorPack<vfloat,vuint>(r,g,b);
+        const vuint colorOld = load(pLineColor);
+        const vuint colori   = FB::ColorPack<vfloat,vuint>(r,g,b);
 
         store(pLineColor, blend(colori, colorOld, zTest));
         store(pLineDepth, blend(zInv,   zOld,     zTest));
@@ -221,7 +219,7 @@ struct VROP
 
 
     static inline void Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv,
-                             int* pPixelColor, float* pPixelDepth)
+                             unsigned int* pPixelColor, float* pPixelDepth)
     {
       const float w1 = areaInv*float(CX1);
       const float w2 = areaInv*float(CX2);
@@ -508,7 +506,7 @@ struct VROP
     using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
-                             int* pLineColor)
+                             unsigned int* pLineColor)
     {
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
@@ -532,7 +530,7 @@ struct VROP
       store(pLineColor, res);
     }
 
-    static inline int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
+    static inline unsigned int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
     {
       const float w1  = areaInv*float(CX1);
       const float w2  = areaInv*float(CX2);
@@ -552,7 +550,7 @@ struct VROP
     using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
-                             int* pLineColor)
+                             unsigned int* pLineColor)
     {
       const vfloat c_one = splat(1.0f);
       const vfloat c_255 = splat(255.0f);
@@ -572,7 +570,7 @@ struct VROP
       store(pLineColor, res);
     }
 
-    static inline int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
+    static inline unsigned int Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv)
     {
       const float w1  = areaInv*float(CX1);
       const float w2  = areaInv*float(CX2);
@@ -593,10 +591,8 @@ struct VROP
     using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
-                             int* pLineColor, float* pLineDepth)
+                             unsigned int* pLineColor, float* pLineDepth)
     {
-      prefetch(pLineDepth);
-
       const vfloat c_one  = splat(1.0f);
       const vfloat c_zero = splat(0.0f);
       const vfloat c_255  = splat(255.0f);
@@ -612,7 +608,6 @@ struct VROP
       if(any_of(zTest))
       {
         store(pLineDepth, blend(zInv, zOld, zTest));
-        prefetch(pLineColor);
 
         const vfloat  z = rcp_e(zInv);
 
@@ -626,8 +621,8 @@ struct VROP
         vfloat texColor[3];
         Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-        const vint colorOld = load(pLineColor);
-        const vuint colori  = FB::ColorPack<vfloat,vuint>(r*texColor[0], g*texColor[1], b*texColor[2]);                            
+        const vuint colorOld = load(pLineColor);
+        const vuint colori   = FB::ColorPack<vfloat,vuint>(r*texColor[0], g*texColor[1], b*texColor[2]);                            
 
         store(pLineColor, blend(colori, colorOld, zTest));
       }
@@ -635,7 +630,7 @@ struct VROP
 
 
     static inline void Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv,
-                             int* pPixelColor, float* pPixelDepth)
+                             unsigned int* pPixelColor, float* pPixelDepth)
     {
       const float w1 = areaInv*float(CX1);
       const float w2 = areaInv*float(CX2);
@@ -665,10 +660,8 @@ struct VROP
     using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
-                             int* pLineColor, float* pLineDepth)
+                             unsigned int* pLineColor, float* pLineDepth)
     {
-      prefetch(pLineDepth);
-
       const vfloat c_one  = splat(1.0f);
       const vfloat c_zero = splat(0.0f);
       const vfloat c_255  = splat(255.0f);
@@ -684,7 +677,6 @@ struct VROP
       if(any_of(zTest))
       {
         store(pLineDepth, blend(zInv, zOld, zTest));
-        prefetch(pLineColor);
 
         const vfloat  z = rcp_e(zInv);
         const vfloat tx = (tri.t1.x*w1 + tri.t2.x*w2 + tri.t3.x*w3)*z;
@@ -693,8 +685,8 @@ struct VROP
         vfloat texColor[3];
         Tex2DSample3f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-        const vint colorOld = load(pLineColor);
-        const vuint colori  = FB::ColorPack<vfloat,vuint>(texColor[0], texColor[1], texColor[2]);
+        const vuint colorOld = load(pLineColor);
+        const vuint colori   = FB::ColorPack<vfloat,vuint>(texColor[0], texColor[1], texColor[2]);
 
         store(pLineColor, blend(colori, colorOld, zTest));
       }
@@ -702,7 +694,7 @@ struct VROP
 
 
     static inline void Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv,
-                             int* pPixelColor, float* pPixelDepth)
+                             unsigned int* pPixelColor, float* pPixelDepth)
     {
       const float w1 = areaInv*float(CX1);
       const float w2 = areaInv*float(CX2);
@@ -736,10 +728,8 @@ struct VROP
     using ROPType  = float;
 
     static inline void Block(const TriangleT& tri, const int CX1, const int CX2, const int FDY12, const int FDY23, const int FDX12, const int FDX23, const float areaInv,
-                             int* pLineColor, float* pLineDepth)
+                             unsigned int* pLineColor, float* pLineDepth)
     {
-      prefetch(pLineDepth);
-
       const vfloat c_one    = splat(1.0f);
       const vfloat c_255    = splat(255.0f);
       const vfloat c_255Inv = splat(1.0f/255.0f);
@@ -755,7 +745,6 @@ struct VROP
       if(any_of(zTest))
       {
         store(pLineDepth, blend(zInv, zOld, zTest));
-        prefetch(pLineColor);
 
         const vfloat  z = rcp_e(zInv);
 
@@ -791,7 +780,7 @@ struct VROP
 
 
     static inline void Pixel(const TriangleT& tri, const int CX1, const int CX2, const float areaInv,
-                             int* pPixelColor, float* pPixelDepth)
+                             unsigned int* pPixelColor, float* pPixelDepth)
     {
       const float w1 = areaInv*float(CX1);
       const float w2 = areaInv*float(CX2);
