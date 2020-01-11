@@ -348,15 +348,10 @@ struct VROP
     const vint offset = (py*pitch) + px;
     const vint ipixel = gather(pData, offset);
 
-    const auto mask_R = splat(0x000000FF);
-    const auto mask_G = splat(0x0000FF00);
-    const auto mask_B = splat(0x00FF0000);
-    const auto mask_A = splat(0xFF000000);
-
-    a_result[0] = mult*to_float32((ipixel & mask_R) >> 0);
-    a_result[1] = mult*to_float32((ipixel & mask_G) >> 8);
-    a_result[2] = mult*to_float32((ipixel & mask_B) >> 16);
-    a_result[3] = mult*to_float32((ipixel & mask_A) >> 24);
+    a_result[0] = mult*to_float32((ipixel & 0x000000FF) >> 0);
+    a_result[1] = mult*to_float32((ipixel & 0x0000FF00) >> 8);
+    a_result[2] = mult*to_float32((ipixel & 0x00FF0000) >> 16);
+    a_result[3] = mult*to_float32((ipixel & 0xFF000000) >> 24);
   }
 
 
@@ -719,8 +714,6 @@ struct VROP
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  #ifndef WIN32
-
   struct Textured3D_Blend
   {
     enum {n = width};
@@ -759,10 +752,10 @@ struct VROP
         vfloat texColor[4];
         Tex2DSample4f<bilinearIsEnabled>(tri, tx, ty, texColor);
 
-        const vint colorOld = load(pLineColor);
+        const vuint colorOld = load(pLineColor);
         
         vfloat redOld, greenOld, blueOld, alphaOld;
-        FB::ColorUNPack<vfloat,vuint>(to_uint32(colorOld), 
+        FB::ColorUNPack<vfloat,vuint>(colorOld, 
                                       redOld, greenOld, blueOld, alphaOld);
        
         const vfloat alpha    = (a * texColor[3]);
@@ -807,7 +800,6 @@ struct VROP
 
   };
 
-  #endif
 
 };
 

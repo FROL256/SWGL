@@ -3,6 +3,7 @@
 
 #ifdef WIN32
   #include "vfloat4_x64.h"
+  #include "vfloat8_x64.h"
 #else
   #ifdef __arm__
     #include "vfloat4_arm.h"

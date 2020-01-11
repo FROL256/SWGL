@@ -61,10 +61,8 @@ using ROP_CVEX_2D_TEX_BW = VROP<TriangleLocal, VT, true >::Textured2D_White;
 using ROP_CVEX_3D_TEX_PW = VROP<TriangleLocal, VT, false>::Textured3D_White;
 using ROP_CVEX_3D_TEX_BW = VROP<TriangleLocal, VT, true >::Textured3D_White;
 
-#ifndef WIN32
 using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, VT, false>::Textured3D_Blend;
 using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, VT, true >::Textured3D_Blend;
-#endif
 
 void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
                                             FrameBuffer* frameBuf)
@@ -123,7 +121,6 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
                                                               
       break;
 
-    #ifndef WIN32
     case ROP_TexNearest3D_Blend:
       RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P_Blend,4,4>(tri, tileMinX, tileMinY,
                                                                     frameBuf);
@@ -133,7 +130,6 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
       RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B_Blend,4,4>(tri, tileMinX, tileMinY,
                                                                     frameBuf);
       break;
-    #endif
   };
 
 }

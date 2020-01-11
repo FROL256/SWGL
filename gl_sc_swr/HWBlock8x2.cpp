@@ -27,11 +27,9 @@ using cvex8::load_u;
 using cvex8::store_u;
 using cvex8::rcp_e;
 using cvex8::blend;
-using cvex8::test_bits_any;
 using cvex8::clamp;
 
 using cvex8::store;
-using cvex8::prefetch;
 using cvex8::any_of;
 using cvex8::gather;
 

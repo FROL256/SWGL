@@ -313,7 +313,6 @@ inline void ColorUNPack<cvex::vfloat4,cvex::vuint4>(const cvex::vuint4 colorOld,
 //////////////////////////////////////////////////////////////////////////////////////// vector8
 //////////////////////////////////////////////////////////////////////////////////////// float to uint32_t
 
-#ifndef WIN32
 
 template<> 
 inline cvex8::vuint8 ColorPack<cvex8::vfloat8,cvex8::vuint8>(const cvex8::vfloat8 r, const cvex8::vfloat8 g, const cvex8::vfloat8 b, const cvex8::vfloat8 a)
@@ -350,6 +349,7 @@ inline void ColorUNPack<cvex8::vfloat8,cvex8::vuint8>(const cvex8::vuint8 colorO
 //////////////////////////////////////////////////////////////////////////////////////// vector16
 //////////////////////////////////////////////////////////////////////////////////////// float to uint32_t
 
+#ifndef WIN32
 
 template<> 
 inline cvex16::vuint16 ColorPack<cvex16::vfloat16,cvex16::vuint16>(const cvex16::vfloat16 r, const cvex16::vfloat16 g, const cvex16::vfloat16 b, const cvex16::vfloat16 a)

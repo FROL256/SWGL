@@ -307,6 +307,7 @@
     <ClCompile Include="gl_standart.cpp" />
     <ClCompile Include="gl_win.cpp" />
     <ClCompile Include="HWBlock4x4.cpp" />
+    <ClCompile Include="HWBlock8x2.cpp" />
     <ClCompile Include="HWPureCpp.cpp" />
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="swgl.cpp" />

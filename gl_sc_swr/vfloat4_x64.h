@@ -412,9 +412,13 @@ static inline cvex::vint4 operator/(const int a, const cvex::vint4 b)
 static inline cvex::vint4 operator<<(const cvex::vint4 a, const int val) { return _mm_slli_epi32(a, val); }
 static inline cvex::vint4 operator>>(const cvex::vint4 a, const int val) { return _mm_srai_epi32(a, val); }
 
-static inline cvex::vint4 operator|(const cvex::vint4 a, const cvex::vint4 b) { return _mm_or_si128(a,b); }
-static inline cvex::vint4 operator&(const cvex::vint4 a, const cvex::vint4 b) { return _mm_and_si128(a, b); }
-static inline cvex::vint4 operator~(const cvex::vint4 a)                      { return _mm_andnot_si128(a, _mm_set1_epi32(0xFFFFFFFF)); }
+static inline cvex::vint4 operator|(const cvex::vint4 a, const cvex::vint4 b)  { return _mm_or_si128(a,b); }
+static inline cvex::vint4 operator&(const cvex::vint4 a, const cvex::vint4 b)  { return _mm_and_si128(a, b); }
+static inline cvex::vint4 operator&(const cvex::vint4 a, const cvex::vuint4 b) { return _mm_and_si128(a, b); }
+static inline cvex::vint4 operator~(const cvex::vint4 a)                       { return _mm_andnot_si128(a, _mm_set1_epi32(0xFFFFFFFF)); }
+static inline cvex::vint4 operator&(const cvex::vint4 a, _uint32_t b)          { return _mm_and_si128(a, cvex::splat(b)); }
+static inline cvex::vint4 operator&(const cvex::vint4 a, int b)                { return _mm_and_si128(a, cvex::splat(b)); }
+
 
 static inline cvex::vint4 operator> (const cvex::vfloat4 a, const cvex::vfloat4 b) { return cvex::as_int32(_mm_cmpgt_ps(a, b)); }
 static inline cvex::vint4 operator< (const cvex::vfloat4 a, const cvex::vfloat4 b) { return cvex::as_int32(_mm_cmplt_ps(a, b)); }
@@ -461,7 +465,6 @@ static inline cvex::vuint4 operator>>(const cvex::vuint4 a, const int val) { ret
 static inline cvex::vuint4 operator|(const cvex::vuint4 a, const cvex::vuint4 b) { return _mm_or_si128(a, b); }
 static inline cvex::vuint4 operator&(const cvex::vuint4 a, const cvex::vuint4 b) { return _mm_and_si128(a, b); }
 static inline cvex::vuint4 operator~(const cvex::vuint4 a)                       { return _mm_andnot_si128(a, _mm_set1_epi32(0xFFFFFFFF)); }
-
 static inline cvex::vuint4 operator&(const cvex::vuint4 a, _uint32_t b) { return _mm_and_si128(a, cvex::splat(b)); }
 
 };
