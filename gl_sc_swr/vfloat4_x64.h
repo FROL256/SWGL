@@ -184,6 +184,11 @@ namespace cvex
                      _mm_andnot_ps(as_float32(mask), as_float32(b))));
   }
 
+  static inline bool any_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) != 0; }
+  static inline bool all_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) == 15; }
+  
+  static inline vint4  gather(const int* a_data, const vint4 offset)       { return (vint4)_mm_i32gather_epi32(a_data, (__m128i)offset, 4); }
+  static inline vuint4 gather(const _uint32_t* a_data, const vint4 offset) { return (vuint4)_mm_i32gather_epi32(a_data, (__m128i)offset, 4); }
 
   static inline void transpose4(const vfloat4 a[4], vfloat4 RES[4])
   {
@@ -196,54 +201,6 @@ namespace cvex
     RES[1] = _mm_castsi128_ps(_mm_unpackhi_epi64(b0, b2));
     RES[2] = _mm_castsi128_ps(_mm_unpacklo_epi64(b1, b3));
     RES[3] = _mm_castsi128_ps(_mm_unpackhi_epi64(b1, b3));
-  }
-
-  static inline bool test_bits_any(const vint4 a)
-  {
-    const _sint64_t* p1 = (const _sint64_t*)&a;
-    const _sint64_t* p2 = p1 + 1;
-    const _sint64_t a2 = (*p1) | (*p2);
-    return (a2 != 0);
-  }
-
-  static inline bool test_bits_any(const vuint4 a)
-  {
-    const _uint64_t* p1 = (const _uint64_t*)&a;
-    const _uint64_t* p2 = p1 + 1;
-    const _uint64_t a2 = (*p1) | (*p2);
-    return (a2 != 0);
-  }
-
-  static inline bool test_bits_any(const vfloat4 a) 
-  { 
-    const _sint64_t* p1 = (const _sint64_t*)&a;
-    const _sint64_t* p2 = p1 + 1;
-    const _sint64_t a2  = (*p1) | (*p2);
-    return (a2 != 0);
-  }
-
-  static inline bool test_bits_all(const vint4 a)
-  {
-    const _uint64_t* p1 = (const _uint64_t*)&a;
-    const _uint64_t* p2 = p1 + 1;
-    const _uint64_t a2 = (*p1) & (*p2);
-    return (a2 == _uint64_t(0xFFFFFFFFFFFFFFFF));
-  }
-
-  static inline bool test_bits_all(const vuint4 a)
-  {
-    const _uint64_t* p1 = (const _uint64_t*)&a;
-    const _uint64_t* p2 = p1 + 1;
-    const _uint64_t a2 = (*p1) & (*p2);
-    return (a2 == _uint64_t(0xFFFFFFFFFFFFFFFF));
-  }
-
-  static inline bool test_bits_all(const vfloat4 a)
-  {
-    const _uint64_t* p1 = (const _uint64_t*)&a;
-    const _uint64_t* p2 = p1 + 1;
-    const _uint64_t a2 = (*p1) & (*p2);
-    return (a2 == _uint64_t(0xFFFFFFFFFFFFFFFF));
   }
 
   static inline vfloat4 dot3v(const vfloat4 a, const vfloat4 b) { return _mm_dp_ps(a, b, 0x7f); }
@@ -313,14 +270,6 @@ namespace cvex
   }
 
   inline static unsigned int color_pack_bgra(const vfloat4 rel_col) { return color_pack_rgba(cvex::shuffle_zyxw(rel_col)); }
-
-  static inline bool any_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) != 0; }
-  static inline bool all_of (const vint4 a) { return _mm_movemask_ps(as_float32(a)) == 15; }
-  
-  static inline vint4 gather(const int* a_data, const vint4 offset) { return (vint4)_mm_i32gather_epi32(a_data, (__m128i)offset, 4); }
-
-  static inline void prefetch(const float* ptr) {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
-  static inline void prefetch(const int* ptr)   {  _mm_prefetch((const char*)ptr, _MM_HINT_T0); }
 
   static inline void mat4_rowmajor_mul_mat4(float* __restrict M, const float* __restrict A, const float* __restrict B) // modern gcc compiler succesfuly vectorize such implementation!
   {

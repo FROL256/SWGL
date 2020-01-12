@@ -124,9 +124,6 @@ namespace cvex16
   static inline vuint16 max  (const vuint16 a, const vuint16 b)                            { return a > b ? a : b; }
   static inline vuint16 clamp(const vuint16 x, const vuint16 minVal, const vuint16 maxVal) { return max(min(x, maxVal), minVal); } 
 
-  static inline void prefetch(const float* ptr) {  __builtin_prefetch(ptr); }
-  static inline void prefetch(const int* ptr)   {  __builtin_prefetch(ptr); }
-
 };
 
 #endif //TEST_GL_TOP_vfloat16_GCC_H

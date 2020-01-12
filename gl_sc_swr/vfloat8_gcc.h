@@ -89,21 +89,16 @@ namespace cvex8
     const __m256 absmask = _mm256_castsi256_ps(_mm256_set1_epi32((1<<31)));
     return _mm256_andnot_ps(absmask, a_val);
   }
-
-  static inline bool cmp_gt(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_GT))) == 255; }
-  static inline bool cmp_lt(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_LT))) == 255; }
-  static inline bool cmp_ge(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_GE))) == 255; }
-  static inline bool cmp_le(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_LE))) == 255; }
-  static inline bool cmp_eq(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_EQ))) == 255; }
-  static inline bool cmp_ne(const vfloat8 a, const vfloat8 b) { return (_mm256_movemask_ps(_mm256_cmp_ps(a, b, _MM_CMPINT_NE))) == 255; }
   
   static inline bool any_of(const vint8 a) { return _mm256_movemask_ps(as_float32(a)) != 0; }
+  static inline bool all_of(const vint8 a) { return _mm256_movemask_ps(as_float32(a)) == 255; }
   
   static inline vfloat8 join(cvex::vfloat4 a, cvex::vfloat4 b) { return         _mm256_insertf128_ps   (_mm256_castps128_ps256(a),b,1); }
   static inline vint8   join(cvex::vint4 a,   cvex::vint4 b)   { return (vint8) _mm256_insertf128_si256(_mm256_castsi128_si256((__m128i)a), (__m128i)b,1); }
   static inline vuint8  join(cvex::vuint4 a,  cvex::vuint4 b)  { return (vuint8)_mm256_insertf128_si256(_mm256_castsi128_si256((__m128i)a), (__m128i)b,1); }
 
-  static inline vint8   gather(const int* a_data, const vint8 offset) { return (vint8)_mm256_i32gather_epi32(a_data, (__m256i)offset, 4); }
+  static inline vint8   gather(const int* a_data, const vint8 offset)       { return (vint8)_mm256_i32gather_epi32(a_data, (__m256i)offset, 4); }
+  static inline vuint8  gather(const _uint32_t* a_data, const vint8 offset) { return (vuint8)_mm256_i32gather_epi32(a_data, (__m256i)offset, 4); }
 
 #else
   

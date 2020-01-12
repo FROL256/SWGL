@@ -19,19 +19,16 @@ using TriangleLocal = HWImpl::TriangleType;
 
 using cvex16::load;
 using cvex16::splat;
+using cvex16::store;
+
 using cvex16::to_float32;
 using cvex16::to_int32;
 using cvex16::to_uint32;
 
-using cvex16::load_u;
-using cvex16::store_u;
 using cvex16::rcp_e;
 using cvex16::blend;
-//using cvex16::test_bits_any;
 using cvex16::clamp;
 
-using cvex16::store;
-using cvex16::prefetch;
 using cvex16::any_of;
 using cvex16::gather;
 
