@@ -19,6 +19,7 @@
 #include "TiledFrameBuffer.h"
 
 using FrameBufferType = FrameBufferTwoLvl<uint32_t,64,4,4>;
+using FBColorType     = FrameBufferType::ColorType;
 
 struct FrameBuffer
 {
@@ -95,10 +96,13 @@ CVEX_ALIGNED(16) struct HWImplementationPureCpp
       ropId = ROP_FillColor;
       bopId = BlendOp_None;
       fbId  = 0;
-      isWhite = 0;
+      flags = 0;
     }
     
-    const bool IsWhite() const { return isWhite; }
+    enum {TRI_VERT_COLOR_WHITE = 1, TRI_VERT_SAME_COLOR = 2};
+
+    const bool IsWhite()          const { return (flags & TRI_VERT_COLOR_WHITE) != 0; }
+    const bool HasSameVertColor() const { return (flags & TRI_VERT_SAME_COLOR) != 0; }
   
     LiteMath::float4 v1;
     LiteMath::float4 v2;
@@ -120,12 +124,13 @@ CVEX_ALIGNED(16) struct HWImplementationPureCpp
     int triSize; // it is important for fixpoint rasterizer to know triangle size. VL triangles have to be clipped again.
     int triArea;
 
-    int        psoId;
-    TexSampler texS;
-    RasterOp   ropId;
-    BlendOp    bopId;
-    int        fbId;
-    int        isWhite;
+    int         psoId;
+    TexSampler  texS;
+    RasterOp    ropId;
+    BlendOp     bopId;
+    int         fbId;
+    int         flags;
+    FBColorType fillCol;
     //uint8_t curr_sval;
     //uint8_t curr_smask;
   };
@@ -134,15 +139,6 @@ CVEX_ALIGNED(16) struct HWImplementationPureCpp
   static void memset32(int32_t* a_data, int32_t val, int32_t numElements);
 
   static bool AABBTriangleOverlap(const TriangleType& a_tri, const int tileMinX, const int tileMinY, const int tileMaxX, const int tileMaxY);
-
-  static inline bool TriVertsAreOfSameColor(const TriangleType& a_tri) 
-  {
-    const LiteMath::float4 diff1 = a_tri.c1 - a_tri.c2;
-    const LiteMath::float4 diff2 = a_tri.c1 - a_tri.c3;
-
-    return (diff1.x < 1e-5f) && (diff1.y < 1e-5f) && (diff1.z < 1e-5f) && (diff1.w < 1e-5f) && 
-           (diff2.x < 1e-5f) && (diff2.y < 1e-5f) && (diff2.z < 1e-5f) && (diff2.w < 1e-5f);
-  }
 
   static void VertexShader(const float* v_in4f, float* v_out4f, int a_numVert, 
                            const float viewportData[4], const LiteMath::float4x4 worldViewProjMatrix);

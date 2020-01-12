@@ -14,7 +14,7 @@ static inline int imax(int a, int b) { return (a > b) ? a : b; }
 static inline int imin(int a, int b) { return (a < b) ? a : b; }
 static inline int iround(float f)    { return (int)f; }
 
-template<typename T> inline  T        TriAreaInvCast(const int a_areaInvInt)           { return T(1.0f / fabs(float(a_areaInvInt))); }                             // for floating point pixel processing
+template<typename T> static inline  T TriAreaInvCast(const int a_areaInvInt)           { return T(1.0f / fabs(float(a_areaInvInt))); }                             // for floating point pixel processing
 template<>           inline  float    TriAreaInvCast<float>(const int a_areaInvInt)    { return 1.0f / fabs(float(a_areaInvInt)); }                                // for floating point pixel processing
 template<>           inline  uint32_t TriAreaInvCast<uint32_t>(const int a_areaInvInt) { return (unsigned int)(0xFFFFFFFF) / (unsigned int)(abs(a_areaInvInt)); }  // for fixed    point pixel processing
 

@@ -65,10 +65,15 @@ void HWImplBlock8x2_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
   switch (tri.ropId)
   {
     case ROP_Colored2D:
-      RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, tileMinX, tileMinY,
-                                                        frameBuf);
+    {
+      if(tri.HasSameVertColor())
+        RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_FILL,4,4>(tri, tileMinX, tileMinY,
+                                                            frameBuf);
+      else                                                  
+        RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, tileMinX, tileMinY,
+                                                          frameBuf);
       break;
-   
+    }
    
     case ROP_Colored3D:
       RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D,4,4>(tri, tileMinX, tileMinY,

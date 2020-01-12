@@ -432,10 +432,6 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
   pTri->t2 = pBatch->vertTexCoord[i2];
   pTri->t3 = pBatch->vertTexCoord[i3];
 
-  pTri->ropId = swglStateIdFromPSO(&pBatch->state, a_pContext, HWImpl::TriVertsAreOfSameColor(*pTri));
-  pTri->bopId = BlendOp_None;
-  pTri->fbId  = frameBufferId;
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -473,8 +469,9 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
 
   }
 
+  // TODO: move this block to a function and opt it, make without dot product
   {
-    const LiteMath::float4 one{1.0f,1.0f,1.0f,1.0f};
+    const LiteMath::float4 one(1.0f,1.0f,1.0f,1.0f);
     const LiteMath::float4 diff1 = one - pTri->c1;
     const LiteMath::float4 diff2 = one - pTri->c2;
     const LiteMath::float4 diff3 = one - pTri->c3;
@@ -482,8 +479,24 @@ inline void swglTriangleSetUp(const SWGL_Context *a_pContext, const Batch *pBatc
     const float diff1Dp = LiteMath::dot3f(diff1, diff1);
     const float diff2Dp = LiteMath::dot3f(diff2, diff2);
     const float diff3Dp = LiteMath::dot3f(diff3, diff3);
-    pTri->isWhite = (diff1Dp < 1e-3f && diff2Dp < 1e-3f && diff3Dp < 1e-3f) ? 0xFFFFFFFF : 0;
+
+    const LiteMath::float4 diff4 = pTri->c1 - pTri->c2;
+    const LiteMath::float4 diff5 = pTri->c1 - pTri->c3;
+
+    const float diff4Dp = LiteMath::dot3f(diff4, diff4);
+    const float diff5Dp = LiteMath::dot3f(diff5, diff5);
+
+    if(diff1Dp < 1e-4f && diff2Dp < 1e-4f && diff3Dp < 1e-4f)
+      pTri->flags |= (Triangle::TRI_VERT_COLOR_WHITE | Triangle::TRI_VERT_SAME_COLOR);
+    else if (diff4Dp < 1e-4f && diff5Dp < 1e-4f)
+      pTri->flags |= Triangle::TRI_VERT_SAME_COLOR;
+
+    pTri->fillCol = FB::ColorPack<float,FBColorType>(pTri->c1[0], pTri->c1[1], pTri->c1[2], pTri->c1[3]);  
   }
+
+  pTri->ropId = swglStateIdFromPSO(&pBatch->state, a_pContext, pTri->HasSameVertColor());
+  pTri->bopId = BlendOp_None;
+  pTri->fbId  = frameBufferId;
 
 #ifdef PERSP_CORRECT
 
