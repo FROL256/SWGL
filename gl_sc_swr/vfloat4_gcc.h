@@ -113,27 +113,13 @@ namespace cvex
     return reinterpret_cast<vfloat4>((mask & ia) | (~mask & ib));
   }
 
-  static inline bool test_bits_any(const vint4 a)
+  static inline vuint4 blend(const vuint4 a, const vuint4 b, const vint4 a_mask)
   {
-    const _sint64_t a2 = ( *(_sint64_t*)&a ) | ( *(_sint64_t*)&a[2] );
-    return (a2 != 0);
+    const vuint4 mask = reinterpret_cast<vuint4>(a_mask);
+    return (mask & a) | (~mask & b);
   }
 
-  static inline bool test_bits_all(const vint4 a)
-  {
-    const _uint64_t* p1 = (const _uint64_t*)&a;
-    const _uint64_t* p2 = p1 + 1;
-    const _uint64_t a2 = (*p1) & (*p2);
-    return (a2 == _uint64_t(0xFFFFFFFFFFFFFFFF));
-  }
 
-  static inline bool test_bits_any(const vuint4 a)  { return test_bits_any(reinterpret_cast<vint4>(a)); }
-  static inline bool test_bits_any(const vfloat4 a) { return test_bits_any(reinterpret_cast<vint4>(a)); }
-  static inline bool test_bits_all(const vuint4 a)  { return test_bits_all(reinterpret_cast<vint4>(a)); }
-  static inline bool test_bits_all(const vfloat4 a) { return test_bits_all(reinterpret_cast<vint4>(a)); }
-
-  static inline void prefetch(const float* ptr) {  __builtin_prefetch(ptr); }
-  static inline void prefetch(const int* ptr)   {  __builtin_prefetch(ptr); }
 
   static inline vfloat4 shuffle_zyxw(vfloat4 a_src) { return __builtin_shuffle(a_src, vint4{2,1,0,3}); }
   static inline vfloat4 shuffle_yzxw(vfloat4 a_src) { return __builtin_shuffle(a_src, vint4{1,2,0,3}); }

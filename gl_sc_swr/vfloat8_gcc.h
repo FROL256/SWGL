@@ -69,6 +69,11 @@ namespace cvex8
   static inline vint8  blend(const vint8 a, const vint8 b, const vint8 mask)    { return ((mask & a) | (~mask & b)); }
   static inline vuint8 blend(const vuint8 a, const vuint8 b, const vuint8 mask) { return ((mask & a) | (~mask & b)); }
   static inline vint8  blend(const vuint8 a, const vint8 b, const vint8 mask)   { return ((mask & (vint8)a) | (~mask & b)); }
+  static inline vuint8 blend(const vuint8 a, const vuint8 b, const vint8 a_mask) 
+  {
+    const vuint8 mask = reinterpret_cast<vuint8>(a_mask);
+    return (mask & a) | (~mask & b);
+  }
 
 #ifdef __x86_64
   

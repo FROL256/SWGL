@@ -25,19 +25,15 @@ using cvex::load;
 using cvex::splat;
 using cvex::to_float32;
 using cvex::to_int32;
-#ifndef WIN32
 using cvex::to_uint32;
-#endif
 
 using cvex::load_u;
 using cvex::store_u;
 using cvex::rcp_e;
 using cvex::blend;
-using cvex::test_bits_any;
 using cvex::clamp;
 
 using cvex::store;
-using cvex::prefetch;
 using cvex::any_of;
 using cvex::gather;
 

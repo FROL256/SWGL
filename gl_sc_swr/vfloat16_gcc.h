@@ -72,8 +72,13 @@ namespace cvex16
     return reinterpret_cast<vfloat16>((mask & ia) | (~mask & ib));
   }
 
-  static inline vint16 blend(const vint16 a, const vint16 b, const vint16 mask)  { return ((mask & a)        | (~mask & b)); }
-  static inline vint16 blend(const vuint16 a, const vint16 b, const vint16 mask) { return ((mask & (vint16)a) | (~mask & b)); }
+  static inline vint16  blend(const vint16 a, const vint16 b, const vint16 mask)  { return ((mask & a)        | (~mask & b)); }
+  static inline vint16  blend(const vuint16 a, const vint16 b, const vint16 mask) { return ((mask & (vint16)a) | (~mask & b)); }
+  static inline vuint16 blend(const vuint16 a, const vuint16 b, const vint16 a_mask) 
+  {
+    const vuint16 mask = reinterpret_cast<vuint16>(a_mask);
+    return (mask & a) | (~mask & b);
+  }
 
   #ifdef __x86_64
   
