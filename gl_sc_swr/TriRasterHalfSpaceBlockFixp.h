@@ -19,8 +19,7 @@ template<>           inline  float    TriAreaInvCast<float>(const int a_areaInvI
 template<>           inline  uint32_t TriAreaInvCast<uint32_t>(const int a_areaInvInt) { return (unsigned int)(0xFFFFFFFF) / (unsigned int)(abs(a_areaInvInt)); }  // for fixed    point pixel processing
 
 template<typename ROP, int blockSizeX, int blockSizeY>
-void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
-                                      FrameBuffer *frameBuf)
+void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, FrameBuffer *frameBuf)
 {
   constexpr int BLOCK_ITER = (blockSizeX*blockSizeY)/ROP::n;       
   constexpr int BMULT      = ROP::n/blockSizeX;   
@@ -28,13 +27,13 @@ void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int til
   typedef typename ROP::ROPType ROPType;
 
   // 28.4 fixed-point coordinates
-  const int Y1 = iround(16.0f * tri.v3.y) - 16*tileMinY;
-  const int Y2 = iround(16.0f * tri.v2.y) - 16*tileMinY;
-  const int Y3 = iround(16.0f * tri.v1.y) - 16*tileMinY;
+  const int Y1 = iround(16.0f * tri.v3.y);
+  const int Y2 = iround(16.0f * tri.v2.y);
+  const int Y3 = iround(16.0f * tri.v1.y);
 
-  const int X1 = iround(16.0f * tri.v3.x) - 16*tileMinX;
-  const int X2 = iround(16.0f * tri.v2.x) - 16*tileMinX;
-  const int X3 = iround(16.0f * tri.v1.x) - 16*tileMinX;
+  const int X1 = iround(16.0f * tri.v3.x);
+  const int X2 = iround(16.0f * tri.v2.x);
+  const int X3 = iround(16.0f * tri.v1.x);
 
   // Deltas
   const int DX12 = X1 - X2;
@@ -55,10 +54,10 @@ void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int til
   const int FDY31 = DY31 << 4;
 
   // Bounding rectangle
-  const int minx = ( LiteMath::max(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSizeX - 1);  // Start in corner of 8x8 block
-  const int miny = ( LiteMath::max(tri.bb_iminY - tileMinY, 0)               ) & ~(blockSizeY - 1);  // Start in corner of 8x8 block
-  const int maxx = ( LiteMath::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
-  const int maxy = ( LiteMath::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
+  const int minx = ( LiteMath::max(tri.bb_iminX, 0)               ) & ~(blockSizeX - 1);  // Start in corner of 8x8 block
+  const int miny = ( LiteMath::max(tri.bb_iminY, 0)               ) & ~(blockSizeY - 1);  // Start in corner of 8x8 block
+  const int maxx = ( LiteMath::min(tri.bb_imaxX, frameBuf->w - 1) );
+  const int maxy = ( LiteMath::min(tri.bb_imaxY, frameBuf->h - 1) );
 
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;
@@ -167,7 +166,7 @@ void RasterizeTriHalfSpaceBlockFixp2D(const typename ROP::Triangle &tri, int til
 template<typename T>
 int EvalSubpixelBits(const T& tri) // #TODO: implement this carefully
 {
-  if (tri.triSize < 1024)
+  if (tri.triSize < 4096)
     return 4;
   if (tri.triSize < 32768)
     return 3;
@@ -178,8 +177,7 @@ int EvalSubpixelBits(const T& tri) // #TODO: implement this carefully
 }
 
 template<typename ROP, int blockSizeX, int blockSizeY>
-void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int tileMinX, int tileMinY,
-                                      FrameBuffer *frameBuf)
+void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, FrameBuffer *frameBuf)
 {
   constexpr int BLOCK_ITER = (blockSizeX*blockSizeY)/ROP::n;       
   constexpr int BMULT      = ROP::n/blockSizeX;   
@@ -190,13 +188,13 @@ void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int til
   const int   SUBPIXELMULTI = (1 << SUBPIXELBITS);
   const float SUBPIXELMULTF = float(SUBPIXELMULTI);
 
-  const int Y1 = iround(tri.v3.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
-  const int Y2 = iround(tri.v2.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
-  const int Y3 = iround(tri.v1.y*SUBPIXELMULTF) - tileMinY*SUBPIXELMULTI;
+  const int Y1 = iround(tri.v3.y*SUBPIXELMULTF);
+  const int Y2 = iround(tri.v2.y*SUBPIXELMULTF);
+  const int Y3 = iround(tri.v1.y*SUBPIXELMULTF);
 
-  const int X1 = iround(tri.v3.x*SUBPIXELMULTF) - tileMinX*SUBPIXELMULTI;
-  const int X2 = iround(tri.v2.x*SUBPIXELMULTF) - tileMinX*SUBPIXELMULTI;
-  const int X3 = iround(tri.v1.x*SUBPIXELMULTF) - tileMinX*SUBPIXELMULTI;
+  const int X1 = iround(tri.v3.x*SUBPIXELMULTF);
+  const int X2 = iround(tri.v2.x*SUBPIXELMULTF);
+  const int X3 = iround(tri.v1.x*SUBPIXELMULTF);
 
   // Deltas
   const int DX12 = X1 - X2;
@@ -217,10 +215,10 @@ void RasterizeTriHalfSpaceBlockFixp3D(const typename ROP::Triangle &tri, int til
   const int FDY31 = DY31 << SUBPIXELBITS;
 
   // Bounding rectangle
-  const int minx = ( LiteMath::max(tri.bb_iminX - tileMinX, 0)               ) & ~(blockSizeX - 1);  // Start in corner of 8x8 block
-  const int miny = ( LiteMath::max(tri.bb_iminY - tileMinY, 0)               ) & ~(blockSizeY - 1);  // Start in corner of 8x8 block
-  const int maxx = ( LiteMath::min(tri.bb_imaxX - tileMinX, frameBuf->w - 1) );
-  const int maxy = ( LiteMath::min(tri.bb_imaxY - tileMinY, frameBuf->h - 1) );
+  const int minx = ( LiteMath::max(tri.bb_iminX, 0)               ) & ~(blockSizeX - 1);  // Start in corner of 8x8 block
+  const int miny = ( LiteMath::max(tri.bb_iminY, 0)               ) & ~(blockSizeY - 1);  // Start in corner of 8x8 block
+  const int maxx = ( LiteMath::min(tri.bb_imaxX, frameBuf->w - 1) );
+  const int maxy = ( LiteMath::min(tri.bb_imaxY, frameBuf->h - 1) );
 
   // Half-edge constants
   int C1 = DY12 * X1 - DX12 * Y1;
