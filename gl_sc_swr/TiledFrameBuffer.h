@@ -29,6 +29,9 @@ struct FrameBufferTwoLvl
   inline PackedColor* TileColor(int x, int y) { return m_color.data() + TileOffset(x,y); }
   inline float*       TileDepth(int x, int y) { return m_depth.data() + TileOffset(x,y); }  
 
+  inline PackedColor* PixelColor(int x, int y) { return m_color.data() + PixelOffset(x,y); }
+  inline float*       PixelDepth(int x, int y) { return m_depth.data() + PixelOffset(x,y); }  
+
 private:
   
   constexpr static int TILES_IN_BIN_X = FB_BIN_SIZE/FB_TILE_SIZE_X; 
@@ -50,7 +53,7 @@ private:
   int m_tilesTotalY;
  
   inline int TileOffset(int x, int y);
-
+  inline int PixelOffset(int x, int y);
 };
 
 
@@ -88,6 +91,14 @@ inline int FrameBufferTwoLvl<PackedColor, FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_S
     const int ty = y/FB_TILE_SIZE_Y; 
     return  (ty*m_tilesTotalX + tx)*PIXS_IN_TILE; 
   }
+}
+
+template<typename PackedColor, int FB_BIN_SIZE, int FB_TILE_SIZE_X, int FB_TILE_SIZE_Y>
+inline int FrameBufferTwoLvl<PackedColor, FB_BIN_SIZE, FB_TILE_SIZE_X, FB_TILE_SIZE_Y>::PixelOffset(int x, int y)
+{
+  const int lx = x%FB_TILE_SIZE_X; 
+  const int ly = y%FB_TILE_SIZE_Y; 
+  return TileOffset(x,y) + ly*FB_TILE_SIZE_X + lx;
 }
 
 

@@ -8,29 +8,19 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -mavx512cd -mavx512dq ") # dis
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops")
 
+if ( CMAKE_BUILD_TYPE STREQUAL "Release" )
+  add_definitions( -DNDEBUG )
+endif()
+
 set(SOURCE_LIB
-        alloc16.h
-        gl_sc.h
-        gl_std.h
         HWPureCpp.cpp
         swgl.cpp
-        TexSampler.h
         BatchExport.cpp
         gl_sc_minimal.cpp
-        LiteMath.h
-        swgl.h
         gl_sc_standart.cpp
         glx_sc.cpp
-        Timer.h
-        config.h
         gl_standart.cpp
-        glx_sc.h
-        pugiconfig.hpp
-        SWGL_TiledFrameBuffer.h
         Timer.cpp
-        HW_VROP.h HW_VROP_FIXP.h
-        vfloat4_x64.h vfloat4_gcc.h vfloat8_x64.h vfloat8_gcc.h
-        TriRasterHalfSpaceBlockFixp.h
         HWBlock4x4.cpp HWBlock8x2.cpp HWBlock16x1.cpp)
 
 include_directories("..")

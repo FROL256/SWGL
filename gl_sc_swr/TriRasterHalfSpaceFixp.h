@@ -10,14 +10,6 @@
 
 #include "config.h"
 
-static inline int imax(int a, int b) { return (a > b) ? a : b; }
-static inline int imin(int a, int b) { return (a < b) ? a : b; }
-static inline int iround(float f)    { return (int)f; }
-
-template<typename T> static inline  T TriAreaInvCast(const int a_areaInvInt)           { return T(1.0f / fabs(float(a_areaInvInt))); }                             // for floating point pixel processing
-template<>           inline  float    TriAreaInvCast<float>(const int a_areaInvInt)    { return 1.0f / fabs(float(a_areaInvInt)); }                                // for floating point pixel processing
-template<>           inline  uint32_t TriAreaInvCast<uint32_t>(const int a_areaInvInt) { return (unsigned int)(0xFFFFFFFF) / (unsigned int)(abs(a_areaInvInt)); }  // for fixed    point pixel processing
-
 template<typename ROP>
 void RasterizeTriHalfSpaceFixp2D(const typename ROP::Triangle &tri, FrameBuffer *frameBuf)
 {
@@ -51,8 +43,8 @@ void RasterizeTriHalfSpaceFixp2D(const typename ROP::Triangle &tri, FrameBuffer 
   const int FDY31 = DY31 << 4;
 
   // Bounding rectangle
-  const int minx = ( LiteMath::max(tri.bb_iminX, 0)               ) & ~(blockSizeX - 1);  // Start in corner of 8x8 block
-  const int miny = ( LiteMath::max(tri.bb_iminY, 0)               ) & ~(blockSizeY - 1);  // Start in corner of 8x8 block
+  const int minx = ( LiteMath::max(tri.bb_iminX, 0)               ); 
+  const int miny = ( LiteMath::max(tri.bb_iminY, 0)               ); 
   const int maxx = ( LiteMath::min(tri.bb_imaxX, frameBuf->w - 1) );
   const int maxy = ( LiteMath::min(tri.bb_imaxY, frameBuf->h - 1) );
 
@@ -77,10 +69,13 @@ void RasterizeTriHalfSpaceFixp2D(const typename ROP::Triangle &tri, FrameBuffer 
     int CX1 = CY1;
     int CX2 = CY2;
     int CX3 = CY3;
-    for (int ix = maxx; ix < maxx; ix++)
+    for (int ix = minx; ix < maxx; ix++)
     {
       if (CX1 > 0 && CX2 > 0 && CX3 > 0)
-        buffer[ix] = 0xFFFFFFFF;
+      {
+        auto* pixPtr = frameBuf->PixelColor(ix, iy);
+        (*pixPtr) = 0xFFFFFFFF;
+      }
 
       CX1 -= FDY12;
       CX2 -= FDY23;
@@ -91,7 +86,7 @@ void RasterizeTriHalfSpaceFixp2D(const typename ROP::Triangle &tri, FrameBuffer 
     CY2 += FDX23;
     CY3 += FDX31;
 
-    buffer += blockSizeY;
+    //buffer += blockSizeY;
   }
 
   // \\ end // Loop through blocks

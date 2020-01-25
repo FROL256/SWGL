@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "TriRasterHalfSpaceBlockFixp.h"
+#include "TriRasterHalfSpaceFixp.h"
 #include "HW_VROP.h"
 
 #ifdef WIN32
@@ -64,6 +65,9 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, FrameBuffer
 {
   cvex::set_ftz();
 
+  //RasterizeTriHalfSpaceFixp2D<ROP_CVEX_2D>(tri, frameBuf);
+  //return;
+  
   switch (tri.ropId)
   {
     case ROP_Colored2D:
@@ -118,7 +122,7 @@ void HWImplBlock4x4_CVEX::RasterizeTriangle(const TriangleType& tri, FrameBuffer
       RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B_Blend,4,4>(tri, frameBuf);
       break;
   };
-
+  
 }
 
 
