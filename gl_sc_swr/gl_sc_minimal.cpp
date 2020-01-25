@@ -540,8 +540,7 @@ inline void DrawTriangle(Triangle& localTri)
 {
   FrameBuffer& frameBuff = g_pContext->batchFrameBuffers[localTri.fbId];
   clampTriBBox(&localTri, frameBuff);  // need this to prevent out of border, can be done in separate thread
-  HWImpl::RasterizeTriangle(localTri, 0, 0,
-                            &frameBuff);
+  HWImpl::RasterizeTriangle(localTri, &frameBuff);
 }
 
 

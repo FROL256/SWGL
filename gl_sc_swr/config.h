@@ -143,35 +143,30 @@ CVEX_ALIGNED(16) struct HWImplementationPureCpp
   static void VertexShader(const float* v_in4f, float* v_out4f, int a_numVert, 
                            const float viewportData[4], const LiteMath::float4x4 worldViewProjMatrix);
 
-  static void RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
-                                FrameBuffer* frameBuf);
+  static void RasterizeTriangle(const TriangleType& tri, FrameBuffer* frameBuf);
 };
 
 
 struct HWImplBlock4x4_CVEX : public HWImplementationPureCpp
 {
-  static void RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
-                                FrameBuffer* frameBuf);
+  static void RasterizeTriangle(const TriangleType& tri, FrameBuffer* frameBuf);
 };
 
 
 struct HWImplBlock8x2_CVEX : public HWImplementationPureCpp
 {
-  static void RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
-                                FrameBuffer* frameBuf);
+  static void RasterizeTriangle(const TriangleType& tri, FrameBuffer* frameBuf);
 };
 
 struct HWImplBlock16x1_CVEX : public HWImplementationPureCpp
 {
-  static void RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
-                                FrameBuffer* frameBuf);
+  static void RasterizeTriangle(const TriangleType& tri, FrameBuffer* frameBuf);
 };
 
 
 struct HWImplBlock4x4Fixp_CVEX : public HWImplementationPureCpp
 {
-  static void RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
-                                FrameBuffer* frameBuf);
+  static void RasterizeTriangle(const TriangleType& tri, FrameBuffer* frameBuf);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

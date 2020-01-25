@@ -57,8 +57,7 @@ using ROP_CVEX_3D_TEX_BW = VROP<TriangleLocal, VT, true >::Textured3D_White;
 using ROP_CVEX_3D_TEX_P_Blend = VROP<TriangleLocal, VT, false>::Textured3D_Blend;
 using ROP_CVEX_3D_TEX_B_Blend = VROP<TriangleLocal, VT, true >::Textured3D_Blend;
 
-void HWImplBlock8x2_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMinX, int tileMinY,
-                                            FrameBuffer* frameBuf)
+void HWImplBlock8x2_CVEX::RasterizeTriangle(const TriangleType& tri, FrameBuffer* frameBuf)
 {
   cvex::set_ftz();
 
@@ -67,66 +66,53 @@ void HWImplBlock8x2_CVEX::RasterizeTriangle(const TriangleType& tri, int tileMin
     case ROP_Colored2D:
     {
       if(tri.HasSameVertColor())
-        RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_FILL,4,4>(tri, tileMinX, tileMinY,
-                                                            frameBuf);
+        RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_FILL,4,4>(tri, frameBuf);
       else                                                  
-        RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, tileMinX, tileMinY,
-                                                          frameBuf);
+        RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D,4,4>(tri, frameBuf);
       break;
     }
    
     case ROP_Colored3D:
-      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D,4,4>(tri, tileMinX, tileMinY,
-                                                        frameBuf);
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D,4,4>(tri, frameBuf);
       break;
   
     case ROP_TexNearest2D:
 
       if(tri.IsWhite())
-         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_PW,4,4>(tri, tileMinX, tileMinY, 
-                                                                  frameBuf);
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_PW,4,4>(tri, frameBuf);
       else
-         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_P,4,4>(tri, tileMinX, tileMinY, 
-                                                                 frameBuf);
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_P,4,4>(tri, frameBuf);
       break;
 
     case ROP_TexLinear2D:
       if(tri.IsWhite())
-         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_BW,4,4>(tri, tileMinX, tileMinY, 
-                                                                  frameBuf);
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_BW,4,4>(tri, frameBuf);
       else
-         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_B,4,4>(tri, tileMinX, tileMinY, 
-                                                                 frameBuf);
+         RasterizeTriHalfSpaceBlockFixp2D<ROP_CVEX_2D_TEX_B,4,4>(tri, frameBuf);
       break;
 
     case ROP_TexNearest3D:
 
       if(tri.IsWhite())
-        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_PW,4,4>(tri, tileMinX, tileMinY,
-                                                                frameBuf);
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_PW,4,4>(tri, frameBuf);
       else
-        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P,4,4>(tri, tileMinX, tileMinY,
-                                                                frameBuf);
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P,4,4>(tri, frameBuf);
 
     case ROP_TexLinear3D:
     
       if(tri.IsWhite())
-        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_BW,4,4>(tri, tileMinX, tileMinY,
-                                                                frameBuf);
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_BW,4,4>(tri, frameBuf);
       else
-        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B,4,4>(tri, tileMinX, tileMinY,
-                                                                frameBuf);
+        RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B,4,4>(tri, frameBuf);
                                                               
       break;
 
     case ROP_TexNearest3D_Blend:
-      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P_Blend,4,4>(tri, tileMinX, tileMinY,
-                                                                    frameBuf);
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_P_Blend,4,4>(tri, frameBuf);
       break; 
                                                                         
     case ROP_TexLinear3D_Blend:
-      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B_Blend,4,4>(tri, tileMinX, tileMinY,
-                                                                    frameBuf);
+      RasterizeTriHalfSpaceBlockFixp3D<ROP_CVEX_3D_TEX_B_Blend,4,4>(tri, frameBuf);
       break;
 
   };
