@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(OpenMP REQUIRED)
 find_package(Threads REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer -fsanitize=leak -fsanitize=undefined -fsanitize=bounds-strict")
 
 add_executable(test_gl

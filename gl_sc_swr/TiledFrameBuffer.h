@@ -361,6 +361,7 @@ inline void ColorUNPack<cvex8::vfloat8,cvex8::vuint8>(const cvex8::vuint8 colorO
 //////////////////////////////////////////////////////////////////////////////////////// float to uint32_t
 
 #ifndef WIN32
+#ifdef USE_AVX512
 
 template<> 
 inline cvex16::vuint16 ColorPack<cvex16::vfloat16,cvex16::vuint16>(const cvex16::vfloat16 r, const cvex16::vfloat16 g, const cvex16::vfloat16 b, const cvex16::vfloat16 a)
@@ -394,7 +395,7 @@ inline void ColorUNPack<cvex16::vfloat16,cvex16::vuint16>(const cvex16::vuint16 
 }
 
 #endif
-
+#endif
 
 
 };

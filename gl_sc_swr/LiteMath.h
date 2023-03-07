@@ -10,7 +10,9 @@
   #else
     #include "vfloat4_gcc.h"
     #include "vfloat8_gcc.h"
+    #ifdef USE_AVX512
     #include "vfloat16_gcc.h"
+    #endif
   #endif  
 #endif 
 

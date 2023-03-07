@@ -87,6 +87,7 @@ struct TileOp<vint, 8>
 
 };
 
+#ifdef USE_AVX512
 
 template<typename vint>
 struct TileOp<vint, 16>
@@ -118,6 +119,7 @@ struct TileOp<vint, 16>
   }
 };
 
+#endif
 
 template<typename TriangleT, typename VTYPES, bool bilinearIsEnabled>
 struct VROP

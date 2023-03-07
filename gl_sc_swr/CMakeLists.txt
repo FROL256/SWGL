@@ -1,10 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
-
 project(swgl)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -mavx512cd -mavx512dq ") # disable this for arm later ...
+option(USE_AVX512 "Enable Vulkan implementation" OFF)
+
+IF (USE_AVX512)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -mavx512cd -mavx512dq ")
+  add_compile_definitions(USE_AVX512)
+ELSE ()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 ")
+ENDIF()
+
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops")
 
@@ -12,7 +19,8 @@ if ( CMAKE_BUILD_TYPE STREQUAL "Release" )
   add_definitions( -DNDEBUG )
 endif()
 
-set(SOURCE_LIB
+IF (USE_AVX512)
+    set(SOURCE_LIB
         HWPureCpp.cpp
         swgl.cpp
         BatchExport.cpp
@@ -21,7 +29,22 @@ set(SOURCE_LIB
         glx_sc.cpp
         gl_standart.cpp
         Timer.cpp
-        HWBlock4x4.cpp HWBlock8x2.cpp HWBlock16x1.cpp)
+        HWBlock4x4.cpp 
+        HWBlock8x2.cpp 
+        HWBlock16x1.cpp)
+ELSE ()
+    set(SOURCE_LIB
+        HWPureCpp.cpp
+        swgl.cpp
+        BatchExport.cpp
+        gl_sc_minimal.cpp
+        gl_sc_standart.cpp
+        glx_sc.cpp
+        gl_standart.cpp
+        Timer.cpp
+        HWBlock4x4.cpp 
+        HWBlock8x2.cpp)
+ENDIF()
 
 include_directories("..")
 

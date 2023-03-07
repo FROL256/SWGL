@@ -18,7 +18,7 @@
             "command": "cd cmake-build-debug && make -j 8",
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             },
         }
     ]
