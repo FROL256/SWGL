@@ -7,6 +7,18 @@
 
 static int g_chunk_id = 0;
 
+static inline std::ostream& operator<<(std::ostream& out, float4 v)
+{
+  out << v.x << "," << v.y << "," << v.z << "," << v.w;
+  return out;
+}
+
+static inline std::ostream& operator<<(std::ostream& out, float2 v)
+{
+  out << v.x << "," << v.y;
+  return out;
+}
+
 template <typename VectorT>
 void PutArrayToNode(const VectorT& a_vector, pugi::xml_node a_node)
 {
@@ -19,22 +31,38 @@ void PutArrayToNode(const VectorT& a_vector, pugi::xml_node a_node)
   a_node.append_attribute("size")     = a_vector.size();
   a_node.append_attribute("bytesize") = a_vector.size()*sizeof(a_vector[0]);
 
-  std::string fileName = nameStream.str();
-  a_node.append_attribute("location") = fileName.c_str();
+  // save binary data
+  //
 
-  std::ofstream fout(fileName.c_str(), std::ios::binary);
-  fout.write((const char*)&a_vector[0], a_vector.size() * sizeof(a_vector[0]));
-  fout.close();
+  // std::string fileName = nameStream.str();
+  // a_node.append_attribute("location") = fileName.c_str();
+  // std::ofstream fout(fileName.c_str(), std::ios::binary);
+  // fout.write((const char*)a_vector.data(), a_vector.size() * sizeof(a_vector[0]));
+  // fout.close();
+
+  // save text data
+  //
+
+  std::stringstream dataStream;
+  for(auto x : a_vector)
+    dataStream << x << ", ";
+   a_node.append_attribute("data") = dataStream.str().c_str();
 
   g_chunk_id++;
 }
 
 std::string ToString(const float4x4& a_matrix)
 {
-  assert(false); // not implementes!
+  //assert(false); // not implementes!
   std::stringstream matrixStream;
-  //for(int y=0;i<16;i++)
-  //  matrixStream << a_matrix.L()[i] << " ";
+  matrixStream << std::endl;
+  for(int row=0;row<4;row++) 
+  {
+    float4 rowData = a_matrix.get_row(row);
+    for(int i=0;i<4;i++)
+      matrixStream << rowData[i] << " ";
+    matrixStream << std::endl;
+  }
   return matrixStream.str();
 }
 

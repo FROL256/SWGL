@@ -747,6 +747,8 @@ static inline void swglProcessBatch(SWGL_Context* a_pContext) // pre (pContext !
   else
     swglDrawBatchTriangles(a_pContext, pBatch, fb);
 
+  //SaveBatchToXML(pBatch, "colored_triangle.xml", nullptr,0,0,0);
+
   pBatch->clear(); // don't clear batch if you need it further!
 
 }

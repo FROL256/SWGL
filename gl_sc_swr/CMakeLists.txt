@@ -31,7 +31,8 @@ IF (USE_AVX512)
         Timer.cpp
         HWBlock4x4.cpp 
         HWBlock8x2.cpp 
-        HWBlock16x1.cpp)
+        HWBlock16x1.cpp
+        pugixml.cpp)
 ELSE ()
     set(SOURCE_LIB
         HWPureCpp.cpp
@@ -43,7 +44,8 @@ ELSE ()
         gl_standart.cpp
         Timer.cpp
         HWBlock4x4.cpp 
-        HWBlock8x2.cpp)
+        HWBlock8x2.cpp
+        pugixml.cpp)
 ENDIF()
 
 include_directories("..")
